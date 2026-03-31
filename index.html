@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConnecThaLast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== 홈 화면 ===== -->
+  <div id="screen-home" class="screen active">
+    <div class="home-container">
+      <div class="logo-area">
+        <h1 class="game-title">ConnecThaLast</h1>
+        <p class="game-subtitle">한글 끝말잇기</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
+          <span class="btn-icon">&#9876;</span>
+          봇 대전
+        </button>
+      </div>
+      <p class="version-text">v1.0</p>
+    </div>
+  </div>
+
+  <!-- ===== 봇 선택 화면 ===== -->
+  <div id="screen-select" class="screen">
+    <div class="select-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+
+      <!-- 모드 선택 -->
+      <div class="mode-section">
+        <div class="mode-row">
+          <span class="mode-label">게임 종류</span>
+          <span class="mode-fixed">한국어 끝말잇기</span>
+        </div>
+        <div class="mode-row">
+          <span class="mode-label">모드</span>
+          <div class="mode-toggles">
+            <button class="mode-btn" id="mode-manner" onclick="toggleMode('manner')">매너</button>
+            <button class="mode-btn" id="mode-noda" onclick="toggleMode('noda')">~다 금지</button>
+            <button class="mode-btn" id="mode-injeong" onclick="toggleMode('injeong')">어인정</button>
+          </div>
+        </div>
+        <div class="mode-desc" id="mode-desc-text">모드를 선택하세요 (복수 선택 가능)</div>
+      </div>
+
+      <h2 class="select-title">봇 레벨 선택</h2>
+      <div class="bot-grid">
+        <div class="bot-card" onclick="startGame(1)">
+          <div class="bot-avatar bot-lv1">&#129302;</div>
+          <div class="bot-info">
+            <h3>초보봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
+            <p class="bot-desc">쉬운 단어 위주 사용<br>반응속도 느림 / 타이핑 느림</p>
+          </div>
+        </div>
+        <div class="bot-card" onclick="startGame(2)">
+          <div class="bot-avatar bot-lv2">&#129302;</div>
+          <div class="bot-info">
+            <h3>중수봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
+            <p class="bot-desc">보통 단어 사용<br>반응속도 보통 / 타이핑 보통</p>
+          </div>
+        </div>
+        <div class="bot-card" onclick="startGame(3)">
+          <div class="bot-avatar bot-lv3">&#129302;</div>
+          <div class="bot-info">
+            <h3>고수봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
+            <p class="bot-desc">어려운 단어도 사용<br>반응속도 빠름 / 타이핑 준수</p>
+          </div>
+        </div>
+        <div class="bot-card" onclick="startGame(4)">
+          <div class="bot-avatar bot-lv4">&#129302;</div>
+          <div class="bot-info">
+            <h3>초고수봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span></div>
+            <p class="bot-desc">희귀 단어까지 사용<br>반응속도 매우 빠름 / 타이핑 빠름</p>
+          </div>
+        </div>
+        <div class="bot-card bot-card-god" onclick="startGame(5)">
+          <div class="bot-avatar bot-lv5">&#128126;</div>
+          <div class="bot-info">
+            <h3>신봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span></div>
+            <p class="bot-desc">긴단어 60% + 한방단어 40%<br>초인적 반응 / 항상 플레이어 선공</p>
+          </div>
+        </div>
+        <div class="bot-card bot-card-long" onclick="startGame(6)">
+          <div class="bot-avatar bot-lv6">&#128009;</div>
+          <div class="bot-info">
+            <h3>롱봇</h3>
+            <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span></div>
+            <p class="bot-desc">6글자 이상 긴 단어 전문<br>반응속도 빠름 / 길이로 승부</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 게임 화면 ===== -->
+  <div id="screen-game" class="screen">
+    <div class="game-container">
+      <!-- 타이머 바 -->
+      <div class="timer-section">
+        <div class="timer-bar-bg">
+          <div id="timer-bar" class="timer-bar-fill"></div>
+        </div>
+        <div id="timer-text" class="timer-text">10.00s</div>
+      </div>
+
+      <!-- 턴 표시 -->
+      <div id="turn-indicator" class="turn-indicator">내 턴</div>
+
+      <!-- 플레이어 패널 -->
+      <div class="players-area">
+        <div class="player-panel player-me">
+          <div class="player-avatar">&#128100;</div>
+          <div class="player-name">나</div>
+          <div class="player-score" id="score-player">0점</div>
+        </div>
+
+        <div class="vs-text">VS</div>
+
+        <div class="player-panel player-bot">
+          <div class="player-avatar" id="bot-avatar">&#129302;</div>
+          <div class="player-name" id="bot-name">봇</div>
+          <div class="player-score" id="score-bot">0점</div>
+        </div>
+      </div>
+
+      <!-- 단어 표시 영역 -->
+      <div class="word-display-area">
+        <div id="current-word" class="current-word"></div>
+        <div id="next-char" class="next-char-hint"></div>
+      </div>
+
+      <!-- 입력 영역 -->
+      <div class="input-area">
+        <input type="text" id="word-input" class="word-input" placeholder="단어를 입력하세요..." autocomplete="off">
+        <button id="submit-btn" class="btn btn-submit" onclick="submitWord()" disabled>입력</button>
+      </div>
+
+      <!-- 메시지 영역 -->
+      <div id="game-message" class="game-message"></div>
+
+      <!-- 사용된 단어 -->
+      <div class="used-words-section">
+        <h4>사용된 단어</h4>
+        <div id="used-words" class="used-words-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 게임 오버 화면 ===== -->
+  <div id="screen-gameover" class="screen">
+    <div class="gameover-container">
+      <h2 id="gameover-title" class="gameover-title">게임 종료</h2>
+      <div class="gameover-result">
+        <div class="result-panel">
+          <div class="result-label">나</div>
+          <div class="result-score" id="final-player-score">0점</div>
+        </div>
+        <div class="result-vs">VS</div>
+        <div class="result-panel">
+          <div class="result-label" id="final-bot-name">봇</div>
+          <div class="result-score" id="final-bot-score">0점</div>
+        </div>
+      </div>
+      <div id="gameover-reason" class="gameover-reason"></div>
+      <div class="gameover-buttons">
+        <button class="btn btn-primary" onclick="showScreen('screen-select')">다시 하기</button>
+        <button class="btn btn-secondary" onclick="showScreen('screen-home')">홈으로</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
