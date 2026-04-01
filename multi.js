@@ -439,8 +439,8 @@ async function initMultiGameUI(room) {
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
-  // WAV 파일 프리로드 (봇전과 동일한 사운드)
-  await preloadAudio();
+  // WAV 파일 프리로드 (백그라운드)
+  preloadAudio();
 }
 
 function showMultiNextCharHint(char) {

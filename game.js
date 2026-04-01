@@ -309,10 +309,13 @@ const WAV_FILES = {
 const audioPool = {};
 
 // 모든 WAV 파일 프리로드 (HTMLAudioElement)
-async function preloadAudio() {
-  const promises = [];
+let audioLoaded = false;
+function preloadAudio() {
+  if (audioLoaded) return Promise.resolve();
 
+  const promises = [];
   for (const [key, filename] of Object.entries(WAV_FILES)) {
+    if (audioPool[key]) continue; // 이미 로드됨
     promises.push(new Promise((resolve) => {
       const audio = new Audio(filename);
       audio.preload = 'auto';
@@ -320,16 +323,17 @@ async function preloadAudio() {
         audioPool[key] = audio;
         resolve();
       }, { once: true });
-      audio.addEventListener('error', (e) => {
-        console.warn(`Failed to load ${filename}:`, e);
-        resolve();
-      }, { once: true });
+      audio.addEventListener('error', () => resolve(), { once: true });
+      // 3초 타임아웃 - 절대 멈추지 않게
+      setTimeout(resolve, 3000);
       audio.load();
     }));
   }
 
-  await Promise.all(promises);
-  console.log('All audio loaded:', Object.keys(audioPool));
+  return Promise.all(promises).then(() => {
+    audioLoaded = true;
+    console.log('Audio loaded:', Object.keys(audioPool));
+  });
 }
 
 // WAV 재생 (매번 새 Audio 클론으로 중복 재생 가능, playbackRate 지원)
