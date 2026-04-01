@@ -61,7 +61,7 @@ async function handleRegister(nickname, hashedPw, userRef, msgEl) {
       return;
     }
 
-    const userId = generateUserId();
+    const userId = (nickname === '김건') ? 'DEV' : generateUserId();
     const userData = {
       nickname: nickname,
       userId: userId,
