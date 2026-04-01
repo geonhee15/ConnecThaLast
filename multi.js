@@ -443,19 +443,14 @@ function showMultiNextCharHint(char) {
 }
 
 function playMultiWordAnimation(word) {
-  const wordEl = document.getElementById('multi-current-word');
-  const chars = word.split('');
-  wordEl.innerHTML = chars.map((c, i) => `<span class="char visible">${c}</span>`).join('');
-  wordEl.classList.add('finale-pulse');
-  setTimeout(() => wordEl.classList.remove('finale-pulse'), 400);
-
-  const n = chars.length;
-  if (n >= 2 && n <= 7) {
-    const speed = 1.0 + (10 - (multi.timerMax || 10)) * 0.05;
-    playSound(String(n), speed);
-  } else if (n >= 8) {
-    playSound('lastpart');
-  }
+  // game.js의 playWordAnimation 재사용 (WAV 리듬 + 피날레 동일)
+  // timerMax를 state에 임시 반영해서 배속도 적용
+  const origTimerMax = state.timerMax;
+  state.timerMax = multi.timerMax || 10;
+  playWordAnimation(word, () => {
+    state.isAnimating = false;
+    state.timerMax = origTimerMax;
+  }, 'multi-current-word');
 }
 
 function updateMultiUsedWords(wordsStr) {

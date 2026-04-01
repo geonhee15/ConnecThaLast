@@ -358,9 +358,9 @@ function playKickAt(delayMs) {
 
 // ==================== RHYTHM SYSTEM ====================
 
-function playWordAnimation(word, callback) {
+function playWordAnimation(word, callback, targetElId) {
   state.isAnimating = true;
-  const wordEl = document.getElementById('current-word');
+  const wordEl = document.getElementById(targetElId || 'current-word');
   const chars = word.split('');
   const n = chars.length;
 
