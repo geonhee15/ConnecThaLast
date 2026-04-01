@@ -8,9 +8,9 @@ const profile = {
   losses: 0
 };
 
-// 레벨별 필요 경험치: 1→2 = 1000, 이후 레벨당 +50씩 증가
+// 레벨별 필요 경험치: 1→2 = 100, 이후 레벨당 +5씩 증가
 function expForLevel(level) {
-  return 1000 + (level - 1) * 50;
+  return 100 + (level - 1) * 5;
 }
 
 // 경험치 테이블 (봇 레벨별 승/패)
