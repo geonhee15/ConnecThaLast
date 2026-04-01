@@ -565,8 +565,11 @@ async function handleMultiTimeout() {
 
 // ==================== SUBMIT WORD ====================
 
+let multiSubmitLock = false;
 async function submitMultiWord() {
-  if (!multi.isMyTurn || !multi.roomRef) return;
+  if (!multi.isMyTurn || !multi.roomRef || state.isAnimating || multiSubmitLock) return;
+  multiSubmitLock = true;
+  setTimeout(() => { multiSubmitLock = false; }, 500);
 
   const input = document.getElementById('multi-word-input');
   const word = input.value.trim();

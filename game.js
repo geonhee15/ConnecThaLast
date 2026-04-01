@@ -371,12 +371,6 @@ function playKickAt(delayMs) {
 
 function playWordAnimation(word, callback, targetElId) {
   state.isAnimating = true;
-  // 애니메이션 중 입력 비활성화
-  const wi = document.getElementById('word-input');
-  const mwi = document.getElementById('multi-word-input');
-  if (wi) wi.disabled = true;
-  if (mwi) mwi.disabled = true;
-
   const wordEl = document.getElementById(targetElId || 'current-word');
   const chars = word.split('');
   const n = chars.length;
@@ -411,10 +405,6 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
-      const _wi = document.getElementById('word-input');
-      const _mwi = document.getElementById('multi-word-input');
-      if (_wi) _wi.disabled = false;
-      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, totalTime);
 
@@ -447,10 +437,6 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
-      const _wi = document.getElementById('word-input');
-      const _mwi = document.getElementById('multi-word-input');
-      if (_wi) _wi.disabled = false;
-      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, totalTime);
 
@@ -459,10 +445,6 @@ function playWordAnimation(word, callback, targetElId) {
     revealChar(wordEl, 0);
     setTimeout(() => {
       state.isAnimating = false;
-      const _wi = document.getElementById('word-input');
-      const _mwi = document.getElementById('multi-word-input');
-      if (_wi) _wi.disabled = false;
-      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, 300);
   }
@@ -641,8 +623,11 @@ function startPlayerTurn() {
   startTimer();
 }
 
+let submitLock = false;
 function submitWord() {
-  if (!state.gameActive || !state.isPlayerTurn || state.isAnimating) return;
+  if (!state.gameActive || !state.isPlayerTurn || state.isAnimating || submitLock) return;
+  submitLock = true;
+  setTimeout(() => { submitLock = false; }, 500);
 
   const input = document.getElementById('word-input');
   const word = input.value.trim();
