@@ -142,12 +142,12 @@ body {
 
 .level-icon-num.small-text {
   font-size: 0.45rem;
-  transform: translate(-50%, -60%);
+  transform: translate(-50%, -70%);
 }
 
 .level-icon-large .level-icon-num.small-text {
   font-size: 0.94rem;
-  transform: translate(-50%, -60%);
+  transform: translate(-50%, -70%);
 }
 
 .home-profile-uid {
