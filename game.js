@@ -100,13 +100,13 @@ function updateProfileUI() {
   const testBtn = document.getElementById('btn-test-server');
   if (testBtn) testBtn.style.display = profile.userId === 'DEV' ? '' : 'none';
 
-  // 홈 화면
+  // 홈 화면 (테스트 서버면 테스트 프로필 표시)
   const homeNick = document.getElementById('home-nickname');
   const homeUid = document.getElementById('home-userid');
   const homeExpBar = document.getElementById('home-exp-bar');
   const homeExpText = document.getElementById('home-exp-text');
-  if (homeNick) homeNick.textContent = profile.nickname;
-  if (homeUid) homeUid.textContent = '#' + profile.userId;
+  if (homeNick) homeNick.textContent = p.nickname;
+  if (homeUid) homeUid.textContent = '#' + p.userId;
   if (homeExpBar) homeExpBar.style.width = pct + '%';
   if (homeExpText) homeExpText.textContent = `${profile.exp} / ${needed}`;
   renderLevelBadge('home-level-badge');
@@ -136,42 +136,42 @@ function updateProfileUI() {
 
 // 서버 모드: 'normal' or 'test'
 let serverMode = 'normal';
-let testProfile = null; // 테스트 서버용 임시 프로필
+let testProfile = null;
 
-function enterServer(mode) {
-  serverMode = mode;
+function enterTestServer() {
+  serverMode = 'test';
+  testProfile = {
+    nickname: '테스트유저',
+    userId: 'T-' + generateUserId(),
+    level: 1,
+    exp: 0,
+    totalExp: 0,
+    wins: 0,
+    losses: 0
+  };
 
-  if (mode === 'test') {
-    // 테스트 서버: 임시 프로필 생성
-    testProfile = {
-      nickname: '테스트유저',
-      userId: 'T-' + generateUserId(),
-      level: 1,
-      exp: 0,
-      totalExp: 0,
-      wins: 0,
-      losses: 0
-    };
-    document.getElementById('test-panel').style.display = 'block';
-    document.getElementById('test-uid').value = testProfile.userId;
-    document.getElementById('test-level').value = testProfile.level;
-    document.getElementById('server-badge').textContent = '서버: 테스트';
-    document.getElementById('server-badge').className = 'server-badge test';
-  } else {
-    testProfile = null;
-    document.getElementById('test-panel').style.display = 'none';
-    document.getElementById('server-badge').textContent = '서버: 일반';
-    document.getElementById('server-badge').className = 'server-badge';
-  }
+  // UI 업데이트
+  document.getElementById('home-server-badge').textContent = '서버: 테스트';
+  document.getElementById('home-server-badge').className = 'server-badge test';
+  document.getElementById('test-back-btn').style.display = '';
+  document.getElementById('test-panel').style.display = 'block';
+  document.getElementById('test-uid').value = testProfile.userId;
+  document.getElementById('test-level').value = testProfile.level;
+  document.getElementById('btn-test-server').style.display = 'none';
 
-  showScreen('screen-select');
+  updateProfileUI();
 }
 
-function exitToHome() {
-  // 테스트 서버 나가면 테스트 프로필 삭제
+function exitTestServer() {
   serverMode = 'normal';
   testProfile = null;
-  showScreen('screen-home');
+
+  document.getElementById('home-server-badge').textContent = '서버: 일반';
+  document.getElementById('home-server-badge').className = 'server-badge';
+  document.getElementById('test-back-btn').style.display = 'none';
+  document.getElementById('test-panel').style.display = 'none';
+
+  updateProfileUI();
 }
 
 function applyTestLevel() {
@@ -182,9 +182,9 @@ function applyTestLevel() {
   testProfile.level = lv;
   testProfile.exp = 0;
   input.value = lv;
+  updateProfileUI();
 }
 
-// 현재 활성 프로필 (일반 or 테스트)
 function getActiveProfile() {
   return serverMode === 'test' && testProfile ? testProfile : profile;
 }

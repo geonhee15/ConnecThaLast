@@ -12,10 +12,14 @@
   <!-- ===== 홈 화면 ===== -->
   <div id="screen-home" class="screen active">
     <div class="home-container">
+      <div class="server-badge" id="home-server-badge">서버: 일반</div>
+      <button class="btn-back" id="test-back-btn" style="display:none" onclick="exitTestServer()">&larr; 뒤로</button>
+
       <div class="logo-area">
         <h1 class="game-title">ConnecThaLast</h1>
         <p class="game-subtitle">한글 끝말잇기</p>
       </div>
+
       <!-- 프로필 카드 -->
       <div class="home-profile-card" onclick="showScreen('screen-profile')">
         <div class="home-profile-left">
@@ -30,16 +34,29 @@
           <div class="home-profile-bar-bg">
             <div class="home-profile-bar-fill" id="home-exp-bar" style="width:0%"></div>
           </div>
-          <div class="home-profile-exp" id="home-exp-text">0 / 1000</div>
+          <div class="home-profile-exp" id="home-exp-text">0 / 100</div>
+        </div>
+      </div>
+
+      <!-- 테스트 서버 커스텀 패널 -->
+      <div class="test-panel" id="test-panel" style="display:none">
+        <div class="test-panel-title">테스트 유저 설정</div>
+        <div class="test-row">
+          <label>유저 ID</label>
+          <input type="text" id="test-uid" class="test-input" readonly>
+        </div>
+        <div class="test-row">
+          <label>레벨</label>
+          <input type="number" id="test-level" class="test-input" min="1" max="999" value="1" onchange="applyTestLevel()">
         </div>
       </div>
 
       <div class="menu-buttons">
-        <button class="btn btn-primary btn-large" onclick="enterServer('normal')">
+        <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
           <span class="btn-icon">&#9876;</span>
           봇 대전
         </button>
-        <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterServer('test')">
+        <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterTestServer()">
           <span class="btn-icon">&#9881;</span>
           테스트 서버
         </button>
@@ -93,21 +110,7 @@
   <!-- ===== 봇 선택 화면 ===== -->
   <div id="screen-select" class="screen">
     <div class="select-container">
-      <button class="btn-back" onclick="exitToHome()">&larr; 뒤로</button>
-      <div class="server-badge" id="server-badge">서버: 일반</div>
-
-      <!-- 테스트 서버 커스텀 패널 -->
-      <div class="test-panel" id="test-panel" style="display:none">
-        <div class="test-panel-title">테스트 유저 설정</div>
-        <div class="test-row">
-          <label>유저 ID</label>
-          <input type="text" id="test-uid" class="test-input" readonly>
-        </div>
-        <div class="test-row">
-          <label>레벨</label>
-          <input type="number" id="test-level" class="test-input" min="1" max="999" value="1" onchange="applyTestLevel()">
-        </div>
-      </div>
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
 
       <!-- 모드 선택 -->
       <div class="mode-section">
