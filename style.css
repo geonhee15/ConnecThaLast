@@ -39,7 +39,7 @@ body {
 }
 
 .game-title {
-  font-size: 3.5rem;
+  font-size: clamp(2rem, 8vw, 3.5rem);
   font-weight: 900;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -47,6 +47,7 @@ body {
   background-clip: text;
   letter-spacing: -1px;
   margin-bottom: 8px;
+  word-break: keep-all;
 }
 
 .game-subtitle {
