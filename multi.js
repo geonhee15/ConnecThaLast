@@ -422,13 +422,24 @@ function handleGameUpdate(room) {
   if (room.lastAction && room.lastAction.timestamp > lastActionTimestamp) {
     lastActionTimestamp = room.lastAction.timestamp || Date.now();
 
+    // 애니메이션 중 타이머 정지
+    stopMultiTimer();
+
     if (room.lastAction.type === 'word' || room.lastAction.type === 'start') {
       if (room.nextChar) showMultiNextCharHint(room.nextChar);
-      playMultiWordAnimation(room.lastAction.word);
       updateMultiUsedWords(room.usedWords);
-    }
 
-    startMultiTimer();
+      // 애니메이션 끝난 후 타이머 시작
+      const origTimerMax = state.timerMax;
+      state.timerMax = multi.timerMax || 10;
+      playWordAnimation(room.lastAction.word, () => {
+        state.isAnimating = false;
+        state.timerMax = origTimerMax;
+        startMultiTimer();
+      }, 'multi-current-word');
+    } else {
+      startMultiTimer();
+    }
   }
 }
 
@@ -452,16 +463,6 @@ function showMultiNextCharHint(char) {
   document.getElementById('multi-next-char').innerHTML = hint;
 }
 
-function playMultiWordAnimation(word) {
-  // game.js의 playWordAnimation 재사용 (WAV 리듬 + 피날레 동일)
-  // timerMax를 state에 임시 반영해서 배속도 적용
-  const origTimerMax = state.timerMax;
-  state.timerMax = multi.timerMax || 10;
-  playWordAnimation(word, () => {
-    state.isAnimating = false;
-    state.timerMax = origTimerMax;
-  }, 'multi-current-word');
-}
 
 function updateMultiUsedWords(wordsStr) {
   const container = document.getElementById('multi-used-words');
