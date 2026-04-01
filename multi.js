@@ -362,7 +362,7 @@ function startMultiGame() {
   const startWord = getRandomStartWord();
   const lastChar = startWord[startWord.length - 1];
 
-  await multi.roomRef.update({
+  multi.roomRef.update({
     status: 'playing',
     turn: Math.random() > 0.5 ? 'p1' : 'p2',
     turnCount: 1,
@@ -648,16 +648,18 @@ function handleMultiGameOver(room) {
 
 // ==================== SCREEN HOOKS ====================
 
-// 로비 화면 진입 시 방 목록 리스닝 시작
-const _origShowScreen = showScreen;
-showScreen = function(id) {
-  _origShowScreen(id);
-  if (id === 'screen-multi-lobby') {
-    startRoomListListener();
-  } else {
-    stopRoomListListener();
-  }
-};
+// showScreen 확장: 로비 진입 시 방 목록 리스닝
+(function() {
+  const _base = showScreen;
+  showScreen = function(id) {
+    _base(id);
+    if (id === 'screen-multi-lobby') {
+      startRoomListListener();
+    } else {
+      stopRoomListListener();
+    }
+  };
+})();
 
 // ==================== MULTI INPUT HANDLING ====================
 
