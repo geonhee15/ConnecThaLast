@@ -178,6 +178,15 @@ function copyRoomCode() {
 
 async function toggleReady() {
   if (!multi.roomRef || multi.isHost) return;
+
+  // 사용자 제스처 내에서 오디오 프리로드 + 잠금 해제
+  await preloadAudio();
+  try {
+    const silence = new Audio();
+    silence.volume = 0;
+    await silence.play();
+  } catch(e) {}
+
   const ref = multi.roomRef.child('p2/ready');
   const snap = await ref.get();
   const current = snap.val();
@@ -350,6 +359,15 @@ function updateWaitingUI(room) {
 
 async function startMultiGame() {
   if (!multi.isHost || !multi.roomRef) return;
+
+  // 사용자 제스처 내에서 오디오 프리로드 + 잠금 해제
+  await preloadAudio();
+  // 무음 재생으로 브라우저 오디오 정책 해제
+  try {
+    const silence = new Audio();
+    silence.volume = 0;
+    await silence.play();
+  } catch(e) {}
 
   const startWord = getRandomStartWord();
   const lastChar = startWord[startWord.length - 1];
