@@ -424,13 +424,15 @@ function handleGameUpdate(room) {
   }
 }
 
-function initMultiGameUI(room) {
+async function initMultiGameUI(room) {
   document.getElementById('multi-game-message').textContent = '';
   document.getElementById('multi-used-words').innerHTML = '';
   document.getElementById('multi-word-input').value = '';
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
+  // WAV 파일 프리로드 (봇전과 동일한 사운드)
+  await preloadAudio();
 }
 
 function showMultiNextCharHint(char) {
