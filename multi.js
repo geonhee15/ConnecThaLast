@@ -609,6 +609,9 @@ function validateMultiWord(word) {
 
 // ==================== GAME OVER ====================
 
+// 리게임용 마지막 게임 정보 저장
+let lastMultiGame = null;
+
 function handleMultiGameOver(room) {
   stopMultiTimer();
 
@@ -625,6 +628,17 @@ function handleMultiGameOver(room) {
     saveProfile();
   }
 
+  // 리게임용 정보 저장
+  lastGameWasMulti = true;
+  lastMultiGame = {
+    roomCode: multi.roomId,
+    wasHost: multi.isHost,
+    roomRef: multi.roomRef,
+    modes: room.modes || {},
+    p1: room.p1,
+    p2: room.p2
+  };
+
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
     title.textContent = iWin ? '승리!' : '패배...';
@@ -636,15 +650,65 @@ function handleMultiGameOver(room) {
     document.getElementById('gameover-reason').textContent =
       (room.reason || '') + (multi.turnCount >= 2 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
 
-    if (multi.isHost && multi.roomRef) {
-      setTimeout(() => multi.roomRef.remove(), 10000);
-    }
     multi.listeners.forEach(fn => fn());
     multi.listeners = [];
 
     showScreen('screen-gameover');
     resetMultiState();
   }, 500);
+}
+
+// 멀티 리게임 - 같은 멤버, 같은 세팅으로 새 방 생성
+async function multiRematch() {
+  if (!lastMultiGame || !db) return;
+
+  const p = getActiveProfile();
+  const code = generateRoomCode();
+  const ref = db.ref('rooms/' + code);
+
+  const roomData = {
+    code: code,
+    status: 'waiting',
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    modes: lastMultiGame.modes,
+    rematchFrom: lastMultiGame.roomCode,
+    p1: {
+      nickname: p.nickname,
+      level: p.level,
+      userId: p.userId,
+      score: 0,
+      online: true,
+      ready: true
+    },
+    p2: null,
+    turn: 'p1',
+    turnCount: 0,
+    timerMax: 10,
+    currentWord: null,
+    nextChar: null,
+    usedWords: '',
+    lastAction: null
+  };
+
+  // 이전 방 삭제
+  if (lastMultiGame.roomRef) {
+    try { await lastMultiGame.roomRef.remove(); } catch(e) {}
+  }
+
+  await ref.set(roomData);
+
+  multi.roomId = code;
+  multi.roomRef = ref;
+  multi.playerId = 'p1';
+  multi.isHost = true;
+  ref.child('p1/online').onDisconnect().set(false);
+
+  showScreen('screen-multi-waiting');
+  document.getElementById('room-code-display').textContent = code;
+  displayRoomModes(lastMultiGame.modes);
+  listenRoom();
+
+  lastMultiGame = null;
 }
 
 // ==================== SCREEN HOOKS ====================

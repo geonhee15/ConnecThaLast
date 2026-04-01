@@ -336,14 +336,21 @@ function preloadAudio() {
   });
 }
 
-// WAV 재생 (매번 새 Audio 클론으로 중복 재생 가능, playbackRate 지원)
+// 현재 재생 중인 메인 사운드 (겹침 방지)
+let currentSound = null;
+
 function playSound(key, rate = 1.0) {
   const original = audioPool[key];
   if (!original) return null;
+  // 이전 사운드 정지
+  if (currentSound) {
+    try { currentSound.pause(); currentSound.currentTime = 0; } catch(e) {}
+  }
   const clone = original.cloneNode();
   clone.volume = 1.0;
   clone.playbackRate = rate;
   clone.play().catch(() => {});
+  currentSound = clone;
   return clone;
 }
 
@@ -822,10 +829,28 @@ function addUsedWordTag(word, type) {
   container.scrollTop = container.scrollHeight;
 }
 
+// ==================== GAMEOVER ACTIONS ====================
+// 마지막 게임이 멀티였는지 추적
+let lastGameWasMulti = false;
+
+function gameoverRetry() {
+  if (lastGameWasMulti && typeof multiRematch === 'function') {
+    multiRematch();
+  } else {
+    showScreen('screen-select');
+  }
+}
+
+function gameoverHome() {
+  lastGameWasMulti = false;
+  showScreen('screen-home');
+}
+
 // ==================== GAME END ====================
 function endGame(playerWins, reason) {
   state.gameActive = false;
   gameFinishedProperly = true;
+  lastGameWasMulti = false;
   stopTimer();
   disableInput();
 
