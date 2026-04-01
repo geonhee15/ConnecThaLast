@@ -944,10 +944,17 @@ function endGame(playerWins, reason) {
   const expEntry = EXP_TABLE[state.botLevel] || { win: 0, lose: 0 };
   let earnedExp = 0;
   if (state.turnCount >= 2 || state.totalRounds > 1) {
+    // 기본 승/패 경험치
     earnedExp = finalWin ? expEntry.win : expEntry.lose;
+    // 긴단어 보너스
     earnedExp += state.bonusExp;
-    if (finalWin && state.killerFinish) {
-      earnedExp += 10;
+    // 한방단어 보너스
+    if (finalWin && state.killerFinish) earnedExp += 10;
+    // 점수 비례 보너스: 총점의 5%를 경험치로
+    earnedExp += Math.floor(state.playerScore * 0.05);
+    // 다중 라운드 보너스: 라운드 승리 1회당 +3 EXP
+    if (state.totalRounds > 1) {
+      earnedExp += state.playerRoundWins * 3;
     }
   }
 
