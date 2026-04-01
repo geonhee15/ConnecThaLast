@@ -16,6 +16,23 @@
         <h1 class="game-title">ConnecThaLast</h1>
         <p class="game-subtitle">한글 끝말잇기</p>
       </div>
+      <!-- 프로필 카드 -->
+      <div class="home-profile-card" onclick="showScreen('screen-profile')">
+        <div class="home-profile-left">
+          <div class="home-profile-avatar">&#128100;</div>
+          <div class="home-profile-info">
+            <div class="home-profile-name" id="home-nickname">플레이어</div>
+            <div class="home-profile-level">Lv.<span id="home-level">1</span></div>
+          </div>
+        </div>
+        <div class="home-profile-bar-wrap">
+          <div class="home-profile-bar-bg">
+            <div class="home-profile-bar-fill" id="home-exp-bar" style="width:0%"></div>
+          </div>
+          <div class="home-profile-exp" id="home-exp-text">0 / 1000</div>
+        </div>
+      </div>
+
       <div class="menu-buttons">
         <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
           <span class="btn-icon">&#9876;</span>
@@ -23,6 +40,49 @@
         </button>
       </div>
       <p class="version-text">v1.0</p>
+    </div>
+  </div>
+
+  <!-- ===== 프로필 화면 ===== -->
+  <div id="screen-profile" class="screen">
+    <div class="profile-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <h2 class="profile-title">프로필</h2>
+
+      <div class="profile-card">
+        <div class="profile-avatar-large">&#128100;</div>
+        <div class="profile-nickname-row">
+          <input type="text" id="profile-nickname-input" class="profile-nickname-input" maxlength="12" placeholder="닉네임 입력">
+          <button class="btn btn-small" onclick="saveNickname()">저장</button>
+        </div>
+        <div class="profile-level-display">
+          Lv.<span id="profile-level">1</span>
+        </div>
+        <div class="profile-exp-section">
+          <div class="profile-exp-bar-bg">
+            <div class="profile-exp-bar-fill" id="profile-exp-bar" style="width:0%"></div>
+          </div>
+          <div class="profile-exp-text" id="profile-exp-text">0 / 1000 EXP</div>
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <h3>전적</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="stat-wins">0</div>
+            <div class="stat-label">승리</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-losses">0</div>
+            <div class="stat-label">패배</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-total-exp">0</div>
+            <div class="stat-label">총 경험치</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -1,3 +1,114 @@
+// ==================== PROFILE / LEVEL SYSTEM ====================
+const profile = {
+  nickname: '플레이어',
+  level: 1,
+  exp: 0,
+  totalExp: 0,
+  wins: 0,
+  losses: 0
+};
+
+// 레벨별 필요 경험치: 1→2 = 1000, 이후 레벨당 +50씩 증가
+function expForLevel(level) {
+  return 1000 + (level - 1) * 50;
+}
+
+// 경험치 테이블 (봇 레벨별 승/패)
+const EXP_TABLE = {
+  1: { win: 5,  lose: 0  }, // 초보봇
+  2: { win: 10, lose: 5  }, // 중수봇
+  3: { win: 15, lose: 10 }, // 고수봇
+  4: { win: 20, lose: 10 }, // 초고수봇
+  5: { win: 40, lose: 5  }, // 신봇
+  6: { win: 5,  lose: 0  }  // 롱봇
+};
+
+function loadProfile() {
+  try {
+    const saved = localStorage.getItem('connecthalast_profile');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.assign(profile, data);
+    }
+  } catch (e) {}
+}
+
+function saveProfile() {
+  try {
+    localStorage.setItem('connecthalast_profile', JSON.stringify(profile));
+  } catch (e) {}
+}
+
+function addExp(amount) {
+  if (amount <= 0) return;
+  profile.exp += amount;
+  profile.totalExp += amount;
+
+  // 레벨업 체크
+  while (profile.exp >= expForLevel(profile.level)) {
+    profile.exp -= expForLevel(profile.level);
+    profile.level++;
+  }
+
+  saveProfile();
+  updateProfileUI();
+}
+
+function saveNickname() {
+  const input = document.getElementById('profile-nickname-input');
+  const name = input.value.trim();
+  if (name.length > 0) {
+    profile.nickname = name;
+    saveProfile();
+    updateProfileUI();
+  }
+}
+
+function updateProfileUI() {
+  // 홈 화면
+  const homeNick = document.getElementById('home-nickname');
+  const homeLevel = document.getElementById('home-level');
+  const homeExpBar = document.getElementById('home-exp-bar');
+  const homeExpText = document.getElementById('home-exp-text');
+  if (homeNick) homeNick.textContent = profile.nickname;
+  if (homeLevel) homeLevel.textContent = profile.level;
+  const needed = expForLevel(profile.level);
+  const pct = Math.min(100, (profile.exp / needed) * 100);
+  if (homeExpBar) homeExpBar.style.width = pct + '%';
+  if (homeExpText) homeExpText.textContent = `${profile.exp} / ${needed}`;
+
+  // 프로필 화면
+  const profLevel = document.getElementById('profile-level');
+  const profExpBar = document.getElementById('profile-exp-bar');
+  const profExpText = document.getElementById('profile-exp-text');
+  const profInput = document.getElementById('profile-nickname-input');
+  const statWins = document.getElementById('stat-wins');
+  const statLosses = document.getElementById('stat-losses');
+  const statTotalExp = document.getElementById('stat-total-exp');
+
+  if (profLevel) profLevel.textContent = profile.level;
+  if (profExpBar) profExpBar.style.width = pct + '%';
+  if (profExpText) profExpText.textContent = `${profile.exp} / ${needed} EXP`;
+  if (profInput && !profInput.matches(':focus')) profInput.value = profile.nickname;
+  if (statWins) statWins.textContent = profile.wins;
+  if (statLosses) statLosses.textContent = profile.losses;
+  if (statTotalExp) statTotalExp.textContent = profile.totalExp;
+
+  // 게임 화면 플레이어 이름
+  const playerNames = document.querySelectorAll('.player-me .player-name');
+  playerNames.forEach(el => el.textContent = profile.nickname);
+}
+
+// 새로고침 방지: 게임 중 나가면 경험치 0
+let gameFinishedProperly = false;
+
+window.addEventListener('beforeunload', () => {
+  if (state.gameActive && !gameFinishedProperly) {
+    // 게임 중 새로고침 → 경험치 없음 (아무것도 안 함)
+    // 이미 경험치가 endGame에서만 지급되므로 자연히 0
+  }
+});
+
 // ==================== GAME STATE ====================
 const state = {
   botLevel: 1,
@@ -251,10 +362,14 @@ function pulseAllChars(wordEl, finaleIdx) {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id === 'screen-profile' || id === 'screen-home') {
+    updateProfileUI();
+  }
 }
 
 // ==================== GAME FLOW ====================
 async function startGame(level) {
+  gameFinishedProperly = false;
   state.botLevel = level;
   state.playerScore = 0;
   state.botScore = 0;
@@ -579,8 +694,22 @@ function addUsedWordTag(word, type) {
 // ==================== GAME END ====================
 function endGame(playerWins, reason) {
   state.gameActive = false;
+  gameFinishedProperly = true;
   stopTimer();
   disableInput();
+
+  // 경험치 계산 (최소 1턴은 플레이해야 패배 경험치 지급)
+  const expEntry = EXP_TABLE[state.botLevel] || { win: 0, lose: 0 };
+  let earnedExp = 0;
+  if (state.turnCount >= 2) {
+    // 정상적으로 게임을 진행한 경우만 경험치 지급
+    earnedExp = playerWins ? expEntry.win : expEntry.lose;
+  }
+
+  if (playerWins) profile.wins++;
+  else profile.losses++;
+
+  addExp(earnedExp);
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
@@ -590,7 +719,8 @@ function endGame(playerWins, reason) {
     document.getElementById('final-player-score').textContent = state.playerScore + '점';
     document.getElementById('final-bot-score').textContent = state.botScore + '점';
     document.getElementById('final-bot-name').textContent = BOT_NAMES[state.botLevel];
-    document.getElementById('gameover-reason').textContent = reason;
+    document.getElementById('gameover-reason').textContent =
+      reason + (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
 
     showScreen('screen-gameover');
   }, 800);
@@ -598,6 +728,9 @@ function endGame(playerWins, reason) {
 
 // ==================== INPUT HANDLING ====================
 document.addEventListener('DOMContentLoaded', () => {
+  loadProfile();
+  updateProfileUI();
+
   const input = document.getElementById('word-input');
   let composing = false;
   let submitPending = false;
