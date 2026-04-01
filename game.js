@@ -88,7 +88,9 @@ function getLevelIcon(level) {
 function renderLevelBadge(containerId, level) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = `<img src="${getLevelIcon(level)}" class="level-icon-img"><span class="level-icon-num">${level}</span>`;
+  const noShadow = level >= 25 ? ' no-shadow' : '';
+  const smallText = level >= 100 ? ' small-text' : '';
+  el.innerHTML = `<img src="${getLevelIcon(level)}" class="level-icon-img"><span class="level-icon-num${noShadow}${smallText}">${level}</span>`;
 }
 
 function updateProfileUI() {
