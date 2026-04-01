@@ -343,7 +343,8 @@ function updateWaitingUI(room) {
       startBtn.style.display = 'none';
       readyBtn.style.display = '';
       readyBtn.textContent = isReady ? '준비 취소' : '준비';
-      readyBtn.className = isReady ? 'btn btn-secondary btn-large' : 'btn btn-primary btn-large';
+      readyBtn.setAttribute('class', isReady ? 'btn btn-secondary btn-large' : 'btn btn-primary btn-large');
+      readyBtn.onclick = toggleReady;
       statusEl.textContent = isReady ? '호스트가 시작하기를 기다리는 중...' : '준비 버튼을 눌러주세요';
     }
   } else {
