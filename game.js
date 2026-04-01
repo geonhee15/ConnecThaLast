@@ -39,9 +39,9 @@ function loadProfile() {
       Object.assign(profile, data);
     }
   } catch (e) {}
-  // userId가 없으면 첫 유저 = DEV, 이후는 랜덤 생성
+  // userId가 없으면 랜덤 생성
   if (!profile.userId) {
-    profile.userId = 'DEV';
+    profile.userId = generateUserId();
     saveProfile();
   }
 }
