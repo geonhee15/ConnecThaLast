@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
   <!-- ===== 홈 화면 ===== -->
@@ -55,6 +59,10 @@
         <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
           <span class="btn-icon">&#9876;</span>
           봇 대전
+        </button>
+        <button class="btn btn-multi btn-large" onclick="showScreen('screen-multi-lobby')">
+          <span class="btn-icon">&#127760;</span>
+          멀티플레이
         </button>
         <button class="btn btn-secondary btn-large" onclick="openDictionary()">
           <span class="btn-icon">&#128214;</span>
@@ -282,6 +290,104 @@
     </div>
   </div>
 
+  <!-- ===== 멀티 로비 ===== -->
+  <div id="screen-multi-lobby" class="screen">
+    <div class="multi-lobby-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <h2 class="select-title">멀티플레이</h2>
+
+      <div class="multi-lobby-card">
+        <button class="btn btn-primary btn-large" onclick="createRoom()" style="width:100%">
+          방 만들기
+        </button>
+      </div>
+
+      <div class="multi-lobby-card">
+        <p class="multi-lobby-label">방 코드로 참가</p>
+        <div class="multi-join-row">
+          <input type="text" id="join-room-code" class="multi-code-input" placeholder="방 코드 입력" maxlength="6" style="text-transform:uppercase">
+          <button class="btn btn-primary" onclick="joinRoom()">참가</button>
+        </div>
+      </div>
+
+      <div id="multi-lobby-msg" class="game-message"></div>
+    </div>
+  </div>
+
+  <!-- ===== 멀티 대기실 ===== -->
+  <div id="screen-multi-waiting" class="screen">
+    <div class="multi-waiting-container">
+      <button class="btn-back" onclick="leaveRoom()">&larr; 나가기</button>
+      <h2 class="select-title">대기실</h2>
+
+      <div class="room-code-display">
+        <span class="room-code-label">방 코드</span>
+        <span class="room-code-value" id="room-code-display">------</span>
+        <button class="btn btn-small" onclick="copyRoomCode()">복사</button>
+      </div>
+
+      <div class="waiting-players">
+        <div class="waiting-player" id="waiting-p1">
+          <div class="waiting-avatar">&#128100;</div>
+          <div class="waiting-name">대기중...</div>
+        </div>
+        <div class="waiting-vs">VS</div>
+        <div class="waiting-player" id="waiting-p2">
+          <div class="waiting-avatar">&#128100;</div>
+          <div class="waiting-name">대기중...</div>
+        </div>
+      </div>
+
+      <div id="waiting-status" class="waiting-status">상대를 기다리는 중...</div>
+      <button class="btn btn-primary btn-large" id="btn-multi-start" style="display:none" onclick="startMultiGame()">게임 시작</button>
+    </div>
+  </div>
+
+  <!-- ===== 멀티 게임 화면 ===== -->
+  <div id="screen-multi-game" class="screen">
+    <div class="game-container">
+      <div class="timer-section">
+        <div class="timer-bar-bg">
+          <div id="multi-timer-bar" class="timer-bar-fill"></div>
+        </div>
+        <div id="multi-timer-text" class="timer-text">10.00s</div>
+      </div>
+
+      <div id="multi-turn-indicator" class="turn-indicator">내 턴</div>
+
+      <div class="players-area">
+        <div class="player-panel player-me">
+          <div class="player-avatar">&#128100;</div>
+          <div class="player-name" id="multi-p1-name">플레이어1</div>
+          <div class="player-score" id="multi-p1-score">0점</div>
+        </div>
+        <div class="vs-text">VS</div>
+        <div class="player-panel player-bot">
+          <div class="player-avatar">&#128100;</div>
+          <div class="player-name" id="multi-p2-name">플레이어2</div>
+          <div class="player-score" id="multi-p2-score">0점</div>
+        </div>
+      </div>
+
+      <div class="word-display-area">
+        <div id="multi-current-word" class="current-word"></div>
+        <div id="multi-next-char" class="next-char-hint"></div>
+      </div>
+
+      <div class="input-area">
+        <input type="text" id="multi-word-input" class="word-input" placeholder="단어를 입력하세요..." autocomplete="off">
+        <button id="multi-submit-btn" class="btn btn-submit" onclick="submitMultiWord()" disabled>입력</button>
+      </div>
+
+      <div id="multi-game-message" class="game-message"></div>
+
+      <div class="used-words-section">
+        <h4>사용된 단어</h4>
+        <div id="multi-used-words" class="used-words-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 게임 오버 화면 ===== -->
   <div id="screen-gameover" class="screen">
     <div class="gameover-container">
@@ -307,5 +413,6 @@
 
   <script src="words.js"></script>
   <script src="game.js"></script>
+  <script src="multi.js"></script>
 </body>
 </html>

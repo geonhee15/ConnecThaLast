@@ -307,10 +307,123 @@ body {
   margin-top: 2px;
 }
 
+.btn-multi {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
 .btn-test {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
   margin-top: 10px;
+}
+
+/* ===== Multiplayer Screens ===== */
+.multi-lobby-container,
+.multi-waiting-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 40px 20px;
+  position: relative;
+}
+
+.multi-lobby-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  text-align: center;
+}
+
+.multi-lobby-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.multi-join-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.multi-code-input {
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-family: 'Noto Sans KR', monospace;
+  font-weight: 700;
+  text-align: center;
+  width: 160px;
+  outline: none;
+  letter-spacing: 3px;
+}
+
+.multi-code-input:focus {
+  border-color: #43e97b;
+}
+
+.room-code-display {
+  background: white;
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.room-code-label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.room-code-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #43e97b;
+}
+
+.waiting-players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.waiting-player {
+  text-align: center;
+  min-width: 100px;
+}
+
+.waiting-avatar {
+  font-size: 2.8rem;
+  margin-bottom: 4px;
+}
+
+.waiting-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.waiting-vs {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #ccc;
+}
+
+.waiting-status {
+  text-align: center;
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 16px;
 }
 
 .server-badge {
