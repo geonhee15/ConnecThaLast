@@ -222,7 +222,7 @@ const state = {
 const modes = {
   manner: false,   // 매너: 한방단어 금지
   noda: false,     // ~다 금지
-  injeong: false   // 어인정: 비표준 단어 허용
+  injeong: true    // 어인정: 비표준 단어 허용 (기본 ON)
 };
 
 const MODE_DESCS = {
