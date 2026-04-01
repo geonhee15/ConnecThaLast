@@ -92,8 +92,13 @@ function renderLevelBadge(containerId) {
 }
 
 function updateProfileUI() {
-  const needed = expForLevel(profile.level);
-  const pct = Math.min(100, (profile.exp / needed) * 100);
+  const p = getActiveProfile();
+  const needed = expForLevel(p.level);
+  const pct = Math.min(100, (p.exp / needed) * 100);
+
+  // DEV만 테스트 서버 버튼 표시
+  const testBtn = document.getElementById('btn-test-server');
+  if (testBtn) testBtn.style.display = profile.userId === 'DEV' ? '' : 'none';
 
   // 홈 화면
   const homeNick = document.getElementById('home-nickname');
@@ -126,7 +131,62 @@ function updateProfileUI() {
 
   // 게임 화면 플레이어 이름
   const playerNames = document.querySelectorAll('.player-me .player-name');
-  playerNames.forEach(el => el.textContent = profile.nickname);
+  playerNames.forEach(el => el.textContent = p.nickname);
+}
+
+// 서버 모드: 'normal' or 'test'
+let serverMode = 'normal';
+let testProfile = null; // 테스트 서버용 임시 프로필
+
+function enterServer(mode) {
+  serverMode = mode;
+
+  if (mode === 'test') {
+    // 테스트 서버: 임시 프로필 생성
+    testProfile = {
+      nickname: '테스트유저',
+      userId: 'T-' + generateUserId(),
+      level: 1,
+      exp: 0,
+      totalExp: 0,
+      wins: 0,
+      losses: 0
+    };
+    document.getElementById('test-panel').style.display = 'block';
+    document.getElementById('test-uid').value = testProfile.userId;
+    document.getElementById('test-level').value = testProfile.level;
+    document.getElementById('server-badge').textContent = '서버: 테스트';
+    document.getElementById('server-badge').className = 'server-badge test';
+  } else {
+    testProfile = null;
+    document.getElementById('test-panel').style.display = 'none';
+    document.getElementById('server-badge').textContent = '서버: 일반';
+    document.getElementById('server-badge').className = 'server-badge';
+  }
+
+  showScreen('screen-select');
+}
+
+function exitToHome() {
+  // 테스트 서버 나가면 테스트 프로필 삭제
+  serverMode = 'normal';
+  testProfile = null;
+  showScreen('screen-home');
+}
+
+function applyTestLevel() {
+  if (!testProfile) return;
+  const input = document.getElementById('test-level');
+  let lv = parseInt(input.value) || 1;
+  if (lv < 1) lv = 1;
+  testProfile.level = lv;
+  testProfile.exp = 0;
+  input.value = lv;
+}
+
+// 현재 활성 프로필 (일반 or 테스트)
+function getActiveProfile() {
+  return serverMode === 'test' && testProfile ? testProfile : profile;
 }
 
 // 새로고침 방지: 게임 중 나가면 경험치 0
@@ -732,14 +792,26 @@ function endGame(playerWins, reason) {
   const expEntry = EXP_TABLE[state.botLevel] || { win: 0, lose: 0 };
   let earnedExp = 0;
   if (state.turnCount >= 2) {
-    // 정상적으로 게임을 진행한 경우만 경험치 지급
     earnedExp = playerWins ? expEntry.win : expEntry.lose;
   }
 
-  if (playerWins) profile.wins++;
-  else profile.losses++;
+  const p = getActiveProfile();
+  if (playerWins) p.wins++;
+  else p.losses++;
 
-  addExp(earnedExp);
+  if (serverMode === 'test') {
+    // 테스트 서버: 임시 프로필에만 반영, 저장 안 함
+    if (earnedExp > 0) {
+      p.exp += earnedExp;
+      p.totalExp += earnedExp;
+      while (p.exp >= expForLevel(p.level)) {
+        p.exp -= expForLevel(p.level);
+        p.level++;
+      }
+    }
+  } else {
+    addExp(earnedExp);
+  }
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');

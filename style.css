@@ -289,6 +289,76 @@ body {
   margin-top: 2px;
 }
 
+.btn-test {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  margin-top: 10px;
+}
+
+.server-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.server-badge.test {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.test-panel {
+  background: #fff8e1;
+  border: 2px solid #ffcc02;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.test-panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 10px;
+}
+
+.test-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.test-row:last-child {
+  margin-bottom: 0;
+}
+
+.test-row label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+  min-width: 55px;
+}
+
+.test-input {
+  padding: 6px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  width: 140px;
+  outline: none;
+}
+
+.test-input:focus {
+  border-color: #ff9800;
+}
+
 .version-text {
   margin-top: 40px;
   font-size: 0.8rem;

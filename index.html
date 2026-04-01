@@ -35,9 +35,13 @@
       </div>
 
       <div class="menu-buttons">
-        <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
+        <button class="btn btn-primary btn-large" onclick="enterServer('normal')">
           <span class="btn-icon">&#9876;</span>
           봇 대전
+        </button>
+        <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterServer('test')">
+          <span class="btn-icon">&#9881;</span>
+          테스트 서버
         </button>
       </div>
       <p class="version-text">v1.0</p>
@@ -89,7 +93,21 @@
   <!-- ===== 봇 선택 화면 ===== -->
   <div id="screen-select" class="screen">
     <div class="select-container">
-      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <button class="btn-back" onclick="exitToHome()">&larr; 뒤로</button>
+      <div class="server-badge" id="server-badge">서버: 일반</div>
+
+      <!-- 테스트 서버 커스텀 패널 -->
+      <div class="test-panel" id="test-panel" style="display:none">
+        <div class="test-panel-title">테스트 유저 설정</div>
+        <div class="test-row">
+          <label>유저 ID</label>
+          <input type="text" id="test-uid" class="test-input" readonly>
+        </div>
+        <div class="test-row">
+          <label>레벨</label>
+          <input type="number" id="test-level" class="test-input" min="1" max="999" value="1" onchange="applyTestLevel()">
+        </div>
+      </div>
 
       <!-- 모드 선택 -->
       <div class="mode-section">
