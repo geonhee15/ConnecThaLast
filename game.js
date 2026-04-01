@@ -131,6 +131,11 @@ function updateProfileUI() {
   if (statWins) statWins.textContent = p.wins;
   if (statLosses) statLosses.textContent = p.losses;
   if (statTotalExp) statTotalExp.textContent = p.totalExp;
+  const statWinrate = document.getElementById('stat-winrate');
+  if (statWinrate) {
+    const total = p.wins + p.losses;
+    statWinrate.textContent = total > 0 ? Math.round((p.wins / total) * 100) + '%' : '0%';
+  }
 
   // 게임 화면 플레이어 이름
   const playerNames = document.querySelectorAll('.player-me .player-name');
