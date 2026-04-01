@@ -13,7 +13,8 @@ const multi = {
   usedWords: new Set(),
   myScore: 0,
   opScore: 0,
-  listeners: []
+  listeners: [],
+  roomListListener: null
 };
 
 // ==================== ROOM MANAGEMENT ====================
@@ -34,16 +35,25 @@ async function createRoom() {
   const p = getActiveProfile();
   const code = generateRoomCode();
 
+  // 방 만들기 모드 설정 읽기
+  const roomModes = {
+    manner: document.getElementById('room-mode-manner').classList.contains('active'),
+    noda: document.getElementById('room-mode-noda').classList.contains('active'),
+    injeong: document.getElementById('room-mode-injeong').classList.contains('active')
+  };
+
   const roomData = {
     code: code,
-    status: 'waiting', // waiting → playing → finished
+    status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
+    modes: roomModes,
     p1: {
       nickname: p.nickname,
       level: p.level,
       userId: p.userId,
       score: 0,
-      online: true
+      online: true,
+      ready: true // 호스트는 항상 준비 상태
     },
     p2: null,
     turn: 'p1',
@@ -59,7 +69,6 @@ async function createRoom() {
     const ref = db.ref('rooms/' + code);
     const snapshot = await ref.get();
     if (snapshot.exists()) {
-      // 코드 충돌 시 재시도
       return createRoom();
     }
     await ref.set(roomData);
@@ -69,26 +78,24 @@ async function createRoom() {
     multi.playerId = 'p1';
     multi.isHost = true;
 
-    // 연결 해제 시 방 정리
     ref.child('p1/online').onDisconnect().set(false);
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
-    updateWaitingRoom();
+    displayRoomModes(roomModes);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '방 생성 실패: ' + e.message;
   }
 }
 
-async function joinRoom() {
+async function joinRoomByCode(code) {
   if (!db) {
     document.getElementById('multi-lobby-msg').textContent = 'Firebase가 설정되지 않았습니다.';
     return;
   }
 
-  const code = document.getElementById('join-room-code').value.trim().toUpperCase();
-  if (code.length !== 6) {
+  if (!code || code.length !== 6) {
     document.getElementById('multi-lobby-msg').textContent = '6자리 방 코드를 입력하세요.';
     return;
   }
@@ -119,7 +126,8 @@ async function joinRoom() {
       level: p.level,
       userId: p.userId,
       score: 0,
-      online: true
+      online: true,
+      ready: false
     });
 
     multi.roomId = code;
@@ -131,10 +139,34 @@ async function joinRoom() {
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
+    if (room.modes) displayRoomModes(room.modes);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '참가 실패: ' + e.message;
   }
+}
+
+async function joinRoom() {
+  const code = document.getElementById('join-room-code').value.trim().toUpperCase();
+  await joinRoomByCode(code);
+}
+
+async function joinRoomFromList(code) {
+  await joinRoomByCode(code);
+}
+
+function toggleRoomMode(btn) {
+  btn.classList.toggle('active');
+}
+
+function displayRoomModes(roomModes) {
+  const el = document.getElementById('waiting-modes');
+  if (!el) return;
+  const tags = [];
+  if (roomModes.manner) tags.push('매너');
+  if (roomModes.noda) tags.push('~다 금지');
+  if (roomModes.injeong) tags.push('어인정');
+  el.textContent = tags.length > 0 ? '모드: ' + tags.join(', ') : '모드: 없음';
 }
 
 function copyRoomCode() {
@@ -142,9 +174,78 @@ function copyRoomCode() {
   navigator.clipboard.writeText(code).catch(() => {});
 }
 
+// ==================== READY SYSTEM ====================
+
+async function toggleReady() {
+  if (!multi.roomRef || multi.isHost) return;
+  const ref = multi.roomRef.child('p2/ready');
+  const snap = await ref.get();
+  const current = snap.val();
+  await ref.set(!current);
+}
+
+// ==================== PUBLIC ROOM LIST ====================
+
+function startRoomListListener() {
+  if (!db) return;
+  if (multi.roomListListener) return;
+
+  const roomsRef = db.ref('rooms');
+  multi.roomListListener = roomsRef.orderByChild('status').equalTo('waiting').on('value', (snapshot) => {
+    const list = document.getElementById('public-room-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const rooms = snapshot.val();
+    if (!rooms) {
+      list.innerHTML = '<div class="room-list-empty">대기 중인 방이 없습니다</div>';
+      return;
+    }
+
+    let count = 0;
+    for (const [code, room] of Object.entries(rooms)) {
+      // p2가 없거나 오프라인인 방만 표시
+      if (room.p2 && room.p2.online) continue;
+      if (!room.p1 || !room.p1.online) continue;
+      count++;
+
+      const modeTags = [];
+      if (room.modes) {
+        if (room.modes.manner) modeTags.push('매너');
+        if (room.modes.noda) modeTags.push('~다금지');
+        if (room.modes.injeong) modeTags.push('어인정');
+      }
+
+      const card = document.createElement('div');
+      card.className = 'room-list-card';
+      card.onclick = () => joinRoomFromList(code);
+      card.innerHTML = `
+        <div class="room-list-info">
+          <span class="room-list-host">${room.p1.nickname} <span class="room-list-level">Lv.${room.p1.level}</span></span>
+          <span class="room-list-modes">${modeTags.join(' ')}</span>
+        </div>
+        <span class="room-list-code">${code}</span>
+      `;
+      list.appendChild(card);
+    }
+
+    if (count === 0) {
+      list.innerHTML = '<div class="room-list-empty">대기 중인 방이 없습니다</div>';
+    }
+  });
+}
+
+function stopRoomListListener() {
+  if (multi.roomListListener && db) {
+    db.ref('rooms').off('value', multi.roomListListener);
+    multi.roomListListener = null;
+  }
+}
+
+// ==================== LEAVE ROOM ====================
+
 async function leaveRoom() {
   if (multi.roomRef) {
-    // 리스너 해제
     multi.listeners.forEach(fn => fn());
     multi.listeners = [];
 
@@ -179,7 +280,6 @@ function listenRoom() {
   const unsub = multi.roomRef.on('value', (snapshot) => {
     const room = snapshot.val();
     if (!room) {
-      // 방이 삭제됨
       resetMultiState();
       showScreen('screen-multi-lobby');
       document.getElementById('multi-lobby-msg').textContent = '방이 닫혔습니다.';
@@ -203,21 +303,46 @@ function listenRoom() {
 function updateWaitingUI(room) {
   const wp1 = document.getElementById('waiting-p1');
   const wp2 = document.getElementById('waiting-p2');
+  const statusEl = document.getElementById('waiting-status');
+  const startBtn = document.getElementById('btn-multi-start');
+  const readyBtn = document.getElementById('btn-multi-ready');
 
   if (room.p1) {
-    wp1.innerHTML = `<div class="waiting-avatar">&#128100;</div><div class="waiting-name">${room.p1.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p1.level}</span></div>`;
+    wp1.innerHTML = `<div class="waiting-avatar">&#128100;</div>
+      <div class="waiting-name">${room.p1.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p1.level}</span></div>
+      <div class="ready-badge ready">방장</div>`;
   }
 
   if (room.p2 && room.p2.online) {
-    wp2.innerHTML = `<div class="waiting-avatar">&#128100;</div><div class="waiting-name">${room.p2.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p2.level}</span></div>`;
-    document.getElementById('waiting-status').textContent = '준비 완료!';
+    const isReady = room.p2.ready;
+    wp2.innerHTML = `<div class="waiting-avatar">&#128100;</div>
+      <div class="waiting-name">${room.p2.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p2.level}</span></div>
+      <div class="ready-badge ${isReady ? 'ready' : 'not-ready'}">${isReady ? '준비 완료' : '대기중'}</div>`;
+
     if (multi.isHost) {
-      document.getElementById('btn-multi-start').style.display = '';
+      // 호스트: p2가 준비되면 시작 가능
+      if (isReady) {
+        statusEl.textContent = '모두 준비 완료!';
+        startBtn.style.display = '';
+      } else {
+        statusEl.textContent = '상대가 준비하지 않았습니다...';
+        startBtn.style.display = 'none';
+      }
+      readyBtn.style.display = 'none';
+    } else {
+      // 게스트: 준비 버튼 표시
+      startBtn.style.display = 'none';
+      readyBtn.style.display = '';
+      readyBtn.textContent = isReady ? '준비 취소' : '준비';
+      readyBtn.className = isReady ? 'btn btn-secondary btn-large' : 'btn btn-primary btn-large';
+      statusEl.textContent = isReady ? '호스트가 시작하기를 기다리는 중...' : '준비 버튼을 눌러주세요';
     }
   } else {
-    wp2.innerHTML = `<div class="waiting-avatar" style="opacity:0.3">&#128100;</div><div class="waiting-name" style="color:#ccc">대기중...</div>`;
-    document.getElementById('waiting-status').textContent = '상대를 기다리는 중...';
-    document.getElementById('btn-multi-start').style.display = 'none';
+    wp2.innerHTML = `<div class="waiting-avatar" style="opacity:0.3">&#128100;</div>
+      <div class="waiting-name" style="color:#ccc">대기중...</div>`;
+    statusEl.textContent = '상대를 기다리는 중...';
+    startBtn.style.display = 'none';
+    if (readyBtn) readyBtn.style.display = 'none';
   }
 }
 
@@ -253,23 +378,19 @@ let lastActionTimestamp = 0;
 function handleGameUpdate(room) {
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen && currentScreen.id === 'screen-multi-waiting') {
-    // 게임 시작 전환
     showScreen('screen-multi-game');
     initMultiGameUI(room);
   }
 
-  // 플레이어 정보
   document.getElementById('multi-p1-name').textContent = room.p1.nickname;
   document.getElementById('multi-p2-name').textContent = room.p2.nickname;
   document.getElementById('multi-p1-score').textContent = (room.p1.score || 0) + '점';
   document.getElementById('multi-p2-score').textContent = (room.p2.score || 0) + '점';
 
-  // 사용된 단어 동기화
   if (room.usedWords) {
     multi.usedWords = new Set(room.usedWords.split(','));
   }
 
-  // 턴 상태
   multi.isMyTurn = (room.turn === multi.playerId);
   multi.timerMax = room.timerMax || 10;
   multi.turnCount = room.turnCount || 1;
@@ -290,27 +411,15 @@ function handleGameUpdate(room) {
     btn.disabled = true;
   }
 
-  // 마지막 액션 처리 (새 단어가 들어왔을 때)
   if (room.lastAction && room.lastAction.timestamp > lastActionTimestamp) {
     lastActionTimestamp = room.lastAction.timestamp || Date.now();
 
     if (room.lastAction.type === 'word' || room.lastAction.type === 'start') {
-      const word = room.lastAction.word;
-      const wordEl = document.getElementById('multi-current-word');
-
-      // 다음 글자 힌트
-      if (room.nextChar) {
-        showMultiNextCharHint(room.nextChar);
-      }
-
-      // 단어 애니메이션
-      playMultiWordAnimation(word);
-
-      // 사용된 단어 태그
+      if (room.nextChar) showMultiNextCharHint(room.nextChar);
+      playMultiWordAnimation(room.lastAction.word);
       updateMultiUsedWords(room.usedWords);
     }
 
-    // 타이머 리셋
     startMultiTimer();
   }
 }
@@ -340,7 +449,6 @@ function playMultiWordAnimation(word) {
   wordEl.classList.add('finale-pulse');
   setTimeout(() => wordEl.classList.remove('finale-pulse'), 400);
 
-  // 사운드
   const n = chars.length;
   if (n >= 2 && n <= 7) {
     const speed = 1.0 + (10 - (multi.timerMax || 10)) * 0.05;
@@ -375,7 +483,6 @@ function startMultiTimer() {
       multi.timerLeft = 0;
       stopMultiTimer();
       if (multi.isMyTurn) {
-        // 내 턴에 시간 초과 → 패배
         handleMultiTimeout();
       }
     }
@@ -412,7 +519,6 @@ function updateMultiTimerDisplay() {
 
 async function handleMultiTimeout() {
   if (!multi.roomRef) return;
-
   const winner = multi.playerId === 'p1' ? 'p2' : 'p1';
   await multi.roomRef.update({
     status: 'finished',
@@ -432,7 +538,6 @@ async function submitMultiWord() {
 
   if (!word) return;
 
-  // 유효성 검사
   const msg = validateMultiWord(word);
   if (msg) {
     document.getElementById('multi-game-message').textContent = msg;
@@ -444,45 +549,39 @@ async function submitMultiWord() {
   document.getElementById('multi-submit-btn').disabled = true;
   document.getElementById('multi-game-message').textContent = '';
 
-  // 점수
   const score = 10 + Math.max(0, (word.length - 2)) * 5;
   const lastChar = word[word.length - 1];
   const nextTurn = multi.playerId === 'p1' ? 'p2' : 'p1';
   const newTurnCount = multi.turnCount + 1;
   const newTimerMax = Math.max(2, 10 - (newTurnCount - 1) * 0.25);
 
-  // 사용된 단어 목록 업데이트
   const newUsedWords = multi.usedWords.size > 0
     ? Array.from(multi.usedWords).join(',') + ',' + word
     : word;
 
-  const updates = {
+  const currentScore = (await multi.roomRef.child(`${multi.playerId}/score`).get()).val() || 0;
+
+  await multi.roomRef.update({
     turn: nextTurn,
     turnCount: newTurnCount,
     timerMax: newTimerMax,
     currentWord: word,
     nextChar: lastChar,
     usedWords: newUsedWords,
+    [`${multi.playerId}/score`]: currentScore + score,
     lastAction: {
       type: 'word',
       word: word,
       by: multi.playerId,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     }
-  };
-  updates[`${multi.playerId}/score`] = (multi.playerId === 'p1' ? (await multi.roomRef.child('p1/score').get()).val() : (await multi.roomRef.child('p2/score').get()).val()) + score;
-
-  await multi.roomRef.update(updates);
+  });
 }
 
 function validateMultiWord(word) {
   if (word.length < 2) return '2글자 이상 입력하세요.';
 
-  // 현재 방의 nextChar 확인
-  const roomNextChar = document.getElementById('multi-next-char').textContent;
-
   if (multi.usedWords.size > 0) {
-    // nextChar 기반 체인 체크
     const nextCharEl = document.getElementById('multi-next-char');
     const match = nextCharEl.innerHTML.match(/<strong>(.)<\/strong>/);
     if (match) {
@@ -496,6 +595,9 @@ function validateMultiWord(word) {
 
   if (multi.usedWords.has(word)) return '이미 사용한 단어입니다.';
   if (!isValidWord(word)) return '사전에 없는 단어입니다.';
+
+  // 방 모드 적용 (Firebase에서 가져온 모드)
+  // TODO: room.modes 체크 - 현재는 어인정 기본 ON
   return null;
 }
 
@@ -509,7 +611,6 @@ function handleMultiGameOver(room) {
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
   const opData = room[opId];
 
-  // 경험치 (멀티는 고정 15/5)
   const earnedExp = iWin ? 15 : 5;
   if (multi.turnCount >= 2) {
     addExp(earnedExp);
@@ -529,9 +630,8 @@ function handleMultiGameOver(room) {
     document.getElementById('gameover-reason').textContent =
       (room.reason || '') + (multi.turnCount >= 2 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
 
-    // 방 정리
     if (multi.isHost && multi.roomRef) {
-      setTimeout(() => multi.roomRef.remove(), 10000); // 10초 후 삭제
+      setTimeout(() => multi.roomRef.remove(), 10000);
     }
     multi.listeners.forEach(fn => fn());
     multi.listeners = [];
@@ -540,6 +640,19 @@ function handleMultiGameOver(room) {
     resetMultiState();
   }, 500);
 }
+
+// ==================== SCREEN HOOKS ====================
+
+// 로비 화면 진입 시 방 목록 리스닝 시작
+const _origShowScreen = showScreen;
+showScreen = function(id) {
+  _origShowScreen(id);
+  if (id === 'screen-multi-lobby') {
+    startRoomListListener();
+  } else {
+    stopRoomListListener();
+  }
+};
 
 // ==================== MULTI INPUT HANDLING ====================
 

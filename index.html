@@ -297,6 +297,12 @@
       <h2 class="select-title">멀티플레이</h2>
 
       <div class="multi-lobby-card">
+        <p class="multi-lobby-label">방 만들기</p>
+        <div class="mode-toggles" style="margin-bottom:12px">
+          <button class="mode-btn active" id="room-mode-injeong" onclick="toggleRoomMode(this)">어인정</button>
+          <button class="mode-btn" id="room-mode-manner" onclick="toggleRoomMode(this)">매너</button>
+          <button class="mode-btn" id="room-mode-noda" onclick="toggleRoomMode(this)">~다 금지</button>
+        </div>
         <button class="btn btn-primary btn-large" onclick="createRoom()" style="width:100%">
           방 만들기
         </button>
@@ -307,6 +313,13 @@
         <div class="multi-join-row">
           <input type="text" id="join-room-code" class="multi-code-input" placeholder="방 코드 입력" maxlength="6" style="text-transform:uppercase">
           <button class="btn btn-primary" onclick="joinRoom()">참가</button>
+        </div>
+      </div>
+
+      <div class="multi-lobby-card">
+        <p class="multi-lobby-label">공개 방 목록</p>
+        <div id="public-room-list" class="room-list">
+          <div class="room-list-empty">대기 중인 방이 없습니다</div>
         </div>
       </div>
 
@@ -326,6 +339,8 @@
         <button class="btn btn-small" onclick="copyRoomCode()">복사</button>
       </div>
 
+      <div id="waiting-modes" class="waiting-modes">모드: 없음</div>
+
       <div class="waiting-players">
         <div class="waiting-player" id="waiting-p1">
           <div class="waiting-avatar">&#128100;</div>
@@ -340,6 +355,7 @@
 
       <div id="waiting-status" class="waiting-status">상대를 기다리는 중...</div>
       <button class="btn btn-primary btn-large" id="btn-multi-start" style="display:none" onclick="startMultiGame()">게임 시작</button>
+      <button class="btn btn-primary btn-large" id="btn-multi-ready" style="display:none" onclick="toggleReady()">준비</button>
     </div>
   </div>
 
