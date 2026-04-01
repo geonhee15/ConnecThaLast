@@ -718,8 +718,9 @@ body {
 .bot-lv2 { background: #e3f2fd; }
 .bot-lv3 { background: #f3e5f5; }
 .bot-lv4 { background: #fce4ec; }
-.bot-lv5 { background: #fff8e1; }
-.bot-lv6 { background: #e8f5e9; }
+.bot-lv5 { background: #fce4ec; }
+.bot-lv6 { background: #fff8e1; }
+.bot-lv7 { background: #e8f5e9; }
 
 .bot-card-long {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);

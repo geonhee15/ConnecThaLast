@@ -26,9 +26,10 @@ const EXP_TABLE = {
   1: { win: 5,  lose: 0  }, // 초보봇
   2: { win: 10, lose: 5  }, // 중수봇
   3: { win: 15, lose: 10 }, // 고수봇
-  4: { win: 20, lose: 10 }, // 초고수봇
-  5: { win: 40, lose: 5  }, // 신봇
-  6: { win: 5,  lose: 0  }  // 롱봇
+  4: { win: 18, lose: 10 }, // 좀고수봇
+  5: { win: 20, lose: 10 }, // 초고수봇
+  6: { win: 40, lose: 5  }, // 신봇
+  7: { win: 5,  lose: 0  }  // 롱봇
 };
 
 function loadProfile() {
@@ -267,16 +268,17 @@ function isModeValidWord(word) {
   return true;
 }
 
-const BOT_NAMES = ['', '초보봇', '중수봇', '고수봇', '초고수봇', '신봇', '롱봇'];
-const BOT_AVATARS = ['', '🤖', '🤖', '🤖', '🤖', '👹', '🐉'];
+const BOT_NAMES = ['', '초보봇', '중수봇', '고수봇', '좀고수봇', '초고수봇', '신봇', '롱봇'];
+const BOT_AVATARS = ['', '🤖', '🤖', '🤖', '🤖', '🤖', '👹', '🐉'];
 
 const BOT_CONFIG = {
   1: { maxDiff: 2, thinkMin: 3000, thinkMax: 5000, failChance: 0.15 },
   2: { maxDiff: 3, thinkMin: 2000, thinkMax: 3500, failChance: 0.08 },
   3: { maxDiff: 4, thinkMin: 1200, thinkMax: 2200, failChance: 0.03 },
-  4: { maxDiff: 5, thinkMin: 600,  thinkMax: 1200, failChance: 0.01 },
-  5: { maxDiff: 5, thinkMin: 200,  thinkMax: 500,  failChance: 0,   playerFirst: true },
-  6: { maxDiff: 5, thinkMin: 400,  thinkMax: 800,  failChance: 0.02 }
+  4: { maxDiff: 5, thinkMin: 800,  thinkMax: 1500, failChance: 0.01 },  // 좀고수봇
+  5: { maxDiff: 5, thinkMin: 600,  thinkMax: 1200, failChance: 0.01 },
+  6: { maxDiff: 5, thinkMin: 200,  thinkMax: 500,  failChance: 0,   playerFirst: true },
+  7: { maxDiff: 5, thinkMin: 400,  thinkMax: 800,  failChance: 0.02 }
 };
 
 // ==================== WAV AUDIO ENGINE ====================
@@ -728,14 +730,14 @@ function chooseBotWord() {
   if (filtered.length === 0) filtered = candidates;
   if (filtered.length === 0) return null;
 
-  // === 롱봇 (레벨 6): 항상 가장 긴 단어 사용 ===
-  if (state.botLevel === 6) {
+  // === 롱봇 (레벨 7): 항상 가장 긴 단어 사용 ===
+  if (state.botLevel === 7) {
     filtered.sort((a, b) => b.w.length - a.w.length);
     return filtered[0].w;
   }
 
-  // === 신봇 (레벨 5): 긴단어 60% + 한방단어 40% ===
-  if (state.botLevel === 5) {
+  // === 신봇 (레벨 6): 긴단어 60% + 한방단어 40% ===
+  if (state.botLevel === 6) {
     const roll = Math.random();
 
     if (roll < 0.4) {
@@ -756,8 +758,8 @@ function chooseBotWord() {
     }
   }
 
-  // === 초고수봇 (레벨 4): 한방단어 전략 ===
-  if (state.botLevel === 4) {
+  // === 초고수봇 (레벨 5): 한방단어 전략 ===
+  if (state.botLevel === 5) {
     filtered.sort((a, b) => {
       const aNext = findWordsStartingWith(a.w[a.w.length - 1])
         .filter(e => !state.usedWords.has(e.w)).length;
@@ -766,6 +768,19 @@ function chooseBotWord() {
       return aNext - bNext;
     });
     return filtered[Math.floor(Math.random() * Math.min(3, filtered.length))].w;
+  }
+
+  // === 좀고수봇 (레벨 4): 단어 잘 찾지만 한방단어 회피 ===
+  if (state.botLevel === 4) {
+    // 한방단어를 피하고, 상대가 이을 단어가 많은 안전한 단어 선택
+    filtered.sort((a, b) => {
+      const aNext = findWordsStartingWith(a.w[a.w.length - 1])
+        .filter(e => !state.usedWords.has(e.w)).length;
+      const bNext = findWordsStartingWith(b.w[b.w.length - 1])
+        .filter(e => !state.usedWords.has(e.w)).length;
+      return bNext - aNext; // 많은 순 (한방 반대)
+    });
+    return filtered[Math.floor(Math.random() * Math.min(5, filtered.length))].w;
   }
 
   // === 초보~고수: 랜덤 ===
