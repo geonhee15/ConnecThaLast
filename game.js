@@ -215,7 +215,9 @@ const state = {
   turnCount: 0,
   timerId: null,
   isAnimating: false,
-  gameActive: false
+  gameActive: false,
+  bonusExp: 0,         // 긴단어/한방단어 보너스 경험치
+  killerFinish: false   // 한방단어로 승리했는지
 };
 
 // ==================== MODE SYSTEM ====================
@@ -470,6 +472,8 @@ async function startGame(level) {
   state.timerMax = 10;
   state.gameActive = true;
   state.isAnimating = false;
+  state.bonusExp = 0;
+  state.killerFinish = false;
 
   // UI 초기화
   document.getElementById('bot-name').textContent = BOT_NAMES[level];
@@ -576,6 +580,8 @@ function handleTimeout() {
   if (state.isPlayerTurn) {
     endGame(false, '시간 초과! 제한 시간 안에 단어를 입력하지 못했습니다.');
   } else {
+    // 봇이 못 이으면 한방단어로 끝낸 것
+    state.killerFinish = true;
     endGame(true, '봇이 시간 초과! 단어를 찾지 못했습니다.');
   }
 }
@@ -619,6 +625,11 @@ function submitWord() {
   const score = calculateScore(word);
   state.playerScore += score;
   document.getElementById('score-player').textContent = state.playerScore + '점';
+
+  // 긴단어 보너스 경험치: 5글자+1, 6글자+2, 7글자+3...
+  if (word.length >= 5) {
+    state.bonusExp += (word.length - 4);
+  }
 
   state.usedWords.add(word);
   addUsedWordTag(word, 'player');
@@ -795,6 +806,12 @@ function endGame(playerWins, reason) {
   let earnedExp = 0;
   if (state.turnCount >= 2) {
     earnedExp = playerWins ? expEntry.win : expEntry.lose;
+    // 긴단어 보너스
+    earnedExp += state.bonusExp;
+    // 한방단어로 승리 보너스 (+10)
+    if (playerWins && state.killerFinish) {
+      earnedExp += 10;
+    }
   }
 
   const p = getActiveProfile();
