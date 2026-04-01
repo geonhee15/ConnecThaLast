@@ -1,12 +1,20 @@
 // ==================== PROFILE / LEVEL SYSTEM ====================
 const profile = {
   nickname: '플레이어',
+  userId: '',
   level: 1,
   exp: 0,
   totalExp: 0,
   wins: 0,
   losses: 0
 };
+
+function generateUserId() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id = '';
+  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
 
 // 레벨별 필요 경험치: 1→2 = 100, 이후 레벨당 +5씩 증가
 function expForLevel(level) {
@@ -31,6 +39,11 @@ function loadProfile() {
       Object.assign(profile, data);
     }
   } catch (e) {}
+  // userId가 없으면 첫 유저 = DEV, 이후는 랜덤 생성
+  if (!profile.userId) {
+    profile.userId = 'DEV';
+    saveProfile();
+  }
 }
 
 function saveProfile() {
@@ -84,9 +97,11 @@ function updateProfileUI() {
 
   // 홈 화면
   const homeNick = document.getElementById('home-nickname');
+  const homeUid = document.getElementById('home-userid');
   const homeExpBar = document.getElementById('home-exp-bar');
   const homeExpText = document.getElementById('home-exp-text');
   if (homeNick) homeNick.textContent = profile.nickname;
+  if (homeUid) homeUid.textContent = '#' + profile.userId;
   if (homeExpBar) homeExpBar.style.width = pct + '%';
   if (homeExpText) homeExpText.textContent = `${profile.exp} / ${needed}`;
   renderLevelBadge('home-level-badge');
@@ -103,6 +118,8 @@ function updateProfileUI() {
   if (profExpBar) profExpBar.style.width = pct + '%';
   if (profExpText) profExpText.textContent = `${profile.exp} / ${needed} EXP`;
   if (profInput && !profInput.matches(':focus')) profInput.value = profile.nickname;
+  const profUid = document.getElementById('profile-userid');
+  if (profUid) profUid.textContent = '#' + profile.userId;
   if (statWins) statWins.textContent = profile.wins;
   if (statLosses) statLosses.textContent = profile.losses;
   if (statTotalExp) statTotalExp.textContent = profile.totalExp;
