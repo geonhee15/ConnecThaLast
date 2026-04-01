@@ -78,6 +78,17 @@ function saveNickname() {
   }
 }
 
+function getRoleBadge(nickname) {
+  if (nickname === '김건') return 'Owner.png';
+  if (nickname === '억만장자') return 'Admin.png';
+  return 'User.png';
+}
+
+function roleBadgeHTML(nickname, size) {
+  const s = size || 16;
+  return `<img src="${getRoleBadge(nickname)}" class="role-badge" style="height:${s}px">`;
+}
+
 function getLevelIcon(level) {
   if (level >= 100) return '100-.png';
   if (level >= 50) return '50-99.png';
@@ -108,7 +119,7 @@ function updateProfileUI() {
   const homeUid = document.getElementById('home-userid');
   const homeExpBar = document.getElementById('home-exp-bar');
   const homeExpText = document.getElementById('home-exp-text');
-  if (homeNick) homeNick.textContent = p.nickname;
+  if (homeNick) homeNick.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 14);
   if (homeUid) homeUid.textContent = '#' + p.userId;
   if (homeExpBar) homeExpBar.style.width = pct + '%';
   if (homeExpText) homeExpText.textContent = `${p.exp} / ${needed}`;
@@ -126,7 +137,7 @@ function updateProfileUI() {
   renderLevelBadge('profile-level-badge', p.level);
   if (profExpBar) profExpBar.style.width = pct + '%';
   if (profExpText) profExpText.textContent = `${p.exp} / ${needed} EXP`;
-  if (profNickDisplay) profNickDisplay.textContent = p.nickname;
+  if (profNickDisplay) profNickDisplay.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 20);
   if (profUid) profUid.textContent = '#' + p.userId;
   if (statWins) statWins.textContent = p.wins;
   if (statLosses) statLosses.textContent = p.losses;
@@ -139,7 +150,7 @@ function updateProfileUI() {
 
   // 게임 화면 플레이어 이름
   const playerNames = document.querySelectorAll('.player-me .player-name');
-  playerNames.forEach(el => el.textContent = p.nickname);
+  playerNames.forEach(el => el.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 12));
 }
 
 // 서버 모드: 'normal' or 'test'
@@ -1037,7 +1048,7 @@ async function openRanking() {
       const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
       html += `<div class="ranking-row${isMe ? ' me' : ''}">
         <span class="rank-num ${rankClass}">${rank}</span>
-        <span class="rank-name">${u.nickname}</span>
+        <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 14)}</span>
         <span class="rank-level">Lv.${u.level}</span>
         <span class="rank-exp">${u.totalExp.toLocaleString()}</span>
       </div>`;

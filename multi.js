@@ -405,8 +405,8 @@ function handleGameUpdate(room) {
     initMultiGameUI(room);
   }
 
-  document.getElementById('multi-p1-name').textContent = room.p1.nickname;
-  document.getElementById('multi-p2-name').textContent = room.p2.nickname;
+  document.getElementById('multi-p1-name').innerHTML = room.p1.nickname + ' ' + roleBadgeHTML(room.p1.nickname, 12);
+  document.getElementById('multi-p2-name').innerHTML = room.p2.nickname + ' ' + roleBadgeHTML(room.p2.nickname, 12);
   const p1Wins = room.p1Wins || 0;
   const p2Wins = room.p2Wins || 0;
   const totalRounds = room.totalRounds || 1;

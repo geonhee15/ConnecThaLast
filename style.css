@@ -168,6 +168,13 @@ body {
   font-size: 0.95rem;
 }
 
+/* Role Badge */
+.role-badge {
+  vertical-align: middle;
+  margin-left: 4px;
+  object-fit: contain;
+}
+
 /* Level Icon Badge */
 .level-icon {
   position: relative;
