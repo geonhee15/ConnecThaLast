@@ -14,8 +14,18 @@ const multi = {
   myScore: 0,
   opScore: 0,
   listeners: [],
-  roomListListener: null
+  roomListListener: null,
+  totalRounds: 1,
+  currentRound: 1
 };
+
+let selectedRounds = 1;
+
+function selectRound(n, btn) {
+  selectedRounds = n;
+  document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 // ==================== ROOM MANAGEMENT ====================
 
@@ -47,6 +57,8 @@ async function createRoom() {
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     modes: roomModes,
+    totalRounds: selectedRounds,
+    currentRound: 1,
     p1: {
       nickname: p.nickname,
       level: p.level,
@@ -82,7 +94,7 @@ async function createRoom() {
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
-    displayRoomModes(roomModes);
+    displayRoomModes(roomModes, selectedRounds);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '방 생성 실패: ' + e.message;
@@ -139,7 +151,7 @@ async function joinRoomByCode(code) {
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
-    if (room.modes) displayRoomModes(room.modes);
+    if (room.modes) displayRoomModes(room.modes, room.totalRounds);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '참가 실패: ' + e.message;
@@ -159,14 +171,16 @@ function toggleRoomMode(btn) {
   btn.classList.toggle('active');
 }
 
-function displayRoomModes(roomModes) {
+function displayRoomModes(roomModes, totalRounds) {
   const el = document.getElementById('waiting-modes');
   if (!el) return;
   const tags = [];
   if (roomModes.manner) tags.push('매너');
   if (roomModes.noda) tags.push('~다 금지');
   if (roomModes.injeong) tags.push('어인정');
-  el.textContent = tags.length > 0 ? '모드: ' + tags.join(', ') : '모드: 없음';
+  let text = tags.length > 0 ? '모드: ' + tags.join(', ') : '모드: 없음';
+  if (totalRounds > 1) text += ` | ${totalRounds}라운드`;
+  el.textContent = text;
 }
 
 function copyRoomCode() {
@@ -220,6 +234,7 @@ function startRoomListListener() {
         if (room.modes.noda) modeTags.push('~다금지');
         if (room.modes.injeong) modeTags.push('어인정');
       }
+      if (room.totalRounds > 1) modeTags.push(room.totalRounds + '라운드');
 
       const card = document.createElement('div');
       card.className = 'room-list-card';
@@ -394,6 +409,21 @@ function handleGameUpdate(room) {
   document.getElementById('multi-p2-name').textContent = room.p2.nickname;
   document.getElementById('multi-p1-score').textContent = (room.p1.score || 0) + '점';
   document.getElementById('multi-p2-score').textContent = (room.p2.score || 0) + '점';
+
+  // 라운드 표시
+  const totalRounds = room.totalRounds || 1;
+  const currentRound = room.currentRound || 1;
+  const roundEl = document.getElementById('multi-round-display');
+  if (roundEl) {
+    if (totalRounds > 1) {
+      roundEl.style.display = '';
+      roundEl.textContent = `라운드 ${currentRound} / ${totalRounds}`;
+    } else {
+      roundEl.style.display = 'none';
+    }
+  }
+  multi.totalRounds = totalRounds;
+  multi.currentRound = currentRound;
 
   if (room.usedWords) {
     multi.usedWords = new Set(room.usedWords.split(','));
@@ -615,40 +645,88 @@ let lastMultiGame = null;
 function handleMultiGameOver(room) {
   stopMultiTimer();
 
+  if (room._handled) return;
+  room._handled = true;
+
+  const totalRounds = room.totalRounds || 1;
+  const currentRound = room.currentRound || 1;
   const iWin = room.winner === multi.playerId;
+
+  // 다중 라운드: 아직 라운드가 남아있으면 다음 라운드
+  if (totalRounds > 1 && currentRound < totalRounds) {
+    // 라운드 결과 표시 후 다음 라운드 자동 시작
+    const roundEl = document.getElementById('multi-round-display');
+    if (roundEl) roundEl.textContent = `라운드 ${currentRound} 종료 - ${iWin ? '승리!' : '패배'}`;
+
+    setTimeout(() => {
+      if (!multi.isHost) return; // 호스트만 다음 라운드 시작
+      const startWord = getRandomStartWord();
+      const lastChar = startWord[startWord.length - 1];
+
+      multi.roomRef.update({
+        status: 'playing',
+        currentRound: currentRound + 1,
+        turn: Math.random() > 0.5 ? 'p1' : 'p2',
+        turnCount: 1,
+        timerMax: 10,
+        currentWord: startWord,
+        nextChar: lastChar,
+        usedWords: startWord,
+        lastAction: {
+          type: 'start',
+          word: startWord,
+          by: 'system',
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        }
+      });
+    }, 2000);
+    return;
+  }
+
+  // 최종 게임 종료 (1라운드 or 마지막 라운드)
   const myData = room[multi.playerId];
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
   const opData = room[opId];
 
-  const earnedExp = iWin ? 15 : 5;
-  if (multi.turnCount >= 2) {
+  let finalWin;
+  if (totalRounds === 1) {
+    finalWin = iWin; // 1라운드: 이기고 지고만
+  } else {
+    finalWin = (myData.score || 0) > (opData.score || 0); // 다중 라운드: 점수 비교
+  }
+
+  const earnedExp = finalWin ? 15 : 5;
+  if (multi.turnCount >= 2 || totalRounds > 1) {
     addExp(earnedExp);
     const p = getActiveProfile();
-    if (iWin) p.wins++; else p.losses++;
+    if (finalWin) p.wins++; else p.losses++;
     saveProfile();
   }
 
-  // 리게임용 정보 저장
   lastGameWasMulti = true;
   lastMultiGame = {
     roomCode: multi.roomId,
     wasHost: multi.isHost,
     roomRef: multi.roomRef,
     modes: room.modes || {},
+    totalRounds: totalRounds,
     p1: room.p1,
     p2: room.p2
   };
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
-    title.textContent = iWin ? '승리!' : '패배...';
-    title.className = 'gameover-title ' + (iWin ? 'win' : 'lose');
+    title.textContent = finalWin ? '승리!' : '패배...';
+    title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
     document.getElementById('final-player-score').textContent = (myData.score || 0) + '점';
     document.getElementById('final-bot-score').textContent = (opData.score || 0) + '점';
     document.getElementById('final-bot-name').textContent = opData.nickname;
-    document.getElementById('gameover-reason').textContent =
-      (room.reason || '') + (multi.turnCount >= 2 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
+
+    let reasonText = room.reason || '';
+    if (totalRounds > 1) reasonText = `${totalRounds}라운드 종료! ` + reasonText;
+    reasonText += (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
+    document.getElementById('gameover-reason').textContent = reasonText;
 
     multi.listeners.forEach(fn => fn());
     multi.listeners = [];
@@ -671,6 +749,8 @@ async function multiRematch() {
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     modes: lastMultiGame.modes,
+    totalRounds: lastMultiGame.totalRounds,
+    currentRound: 1,
     rematchFrom: lastMultiGame.roomCode,
     p1: {
       nickname: p.nickname,
@@ -705,7 +785,7 @@ async function multiRematch() {
 
   showScreen('screen-multi-waiting');
   document.getElementById('room-code-display').textContent = code;
-  displayRoomModes(lastMultiGame.modes);
+  displayRoomModes(lastMultiGame.modes, lastMultiGame.totalRounds);
   listenRoom();
 
   lastMultiGame = null;

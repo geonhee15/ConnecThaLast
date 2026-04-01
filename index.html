@@ -300,6 +300,15 @@
           <button class="mode-btn" id="room-mode-manner" onclick="toggleRoomMode(this)">매너</button>
           <button class="mode-btn" id="room-mode-noda" onclick="toggleRoomMode(this)">~다 금지</button>
         </div>
+        <div class="round-select-row">
+          <label>라운드</label>
+          <div class="round-btns">
+            <button class="round-btn active" onclick="selectRound(1, this)">1</button>
+            <button class="round-btn" onclick="selectRound(3, this)">3</button>
+            <button class="round-btn" onclick="selectRound(5, this)">5</button>
+            <button class="round-btn" onclick="selectRound(7, this)">7</button>
+          </div>
+        </div>
         <button class="btn btn-primary btn-large" onclick="createRoom()" style="width:100%">
           방 만들기
         </button>
@@ -366,6 +375,7 @@
         <div id="multi-timer-text" class="timer-text">10.00s</div>
       </div>
 
+      <div id="multi-round-display" class="round-display" style="display:none">라운드 1 / 1</div>
       <div id="multi-turn-indicator" class="turn-indicator">내 턴</div>
 
       <div class="players-area">

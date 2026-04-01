@@ -513,6 +513,58 @@ body {
   letter-spacing: 2px;
 }
 
+.round-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.round-select-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  min-width: 50px;
+}
+
+.round-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.round-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.round-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.round-btn.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.round-display {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
 .server-badge {
   position: fixed;
   top: 16px;
