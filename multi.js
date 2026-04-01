@@ -407,12 +407,20 @@ function handleGameUpdate(room) {
 
   document.getElementById('multi-p1-name').textContent = room.p1.nickname;
   document.getElementById('multi-p2-name').textContent = room.p2.nickname;
-  document.getElementById('multi-p1-score').textContent = (room.p1.score || 0) + '점';
-  document.getElementById('multi-p2-score').textContent = (room.p2.score || 0) + '점';
-
-  // 라운드 표시
+  const p1Wins = room.p1Wins || 0;
+  const p2Wins = room.p2Wins || 0;
   const totalRounds = room.totalRounds || 1;
   const currentRound = room.currentRound || 1;
+
+  if (totalRounds > 1) {
+    document.getElementById('multi-p1-score').textContent = `${room.p1.score || 0}점 (${p1Wins}승)`;
+    document.getElementById('multi-p2-score').textContent = `${room.p2.score || 0}점 (${p2Wins}승)`;
+  } else {
+    document.getElementById('multi-p1-score').textContent = (room.p1.score || 0) + '점';
+    document.getElementById('multi-p2-score').textContent = (room.p2.score || 0) + '점';
+  }
+
+  // 라운드 표시
   const roundEl = document.getElementById('multi-round-display');
   if (roundEl) {
     if (totalRounds > 1) {
@@ -655,20 +663,26 @@ function handleMultiGameOver(room) {
   const currentRound = room.currentRound || 1;
   const iWin = room.winner === multi.playerId;
 
+  // 라운드 승패 기록
+  const winnerKey = room.winner; // 'p1' or 'p2'
+  const p1Wins = (room.p1Wins || 0) + (winnerKey === 'p1' ? 1 : 0);
+  const p2Wins = (room.p2Wins || 0) + (winnerKey === 'p2' ? 1 : 0);
+
   // 다중 라운드: 아직 라운드가 남아있으면 다음 라운드
   if (totalRounds > 1 && currentRound < totalRounds) {
-    // 라운드 결과 표시 후 다음 라운드 자동 시작
     const roundEl = document.getElementById('multi-round-display');
     if (roundEl) roundEl.textContent = `라운드 ${currentRound} 종료 - ${iWin ? '승리!' : '패배'}`;
 
     setTimeout(() => {
-      if (!multi.isHost) return; // 호스트만 다음 라운드 시작
+      if (!multi.isHost) return;
       const startWord = getRandomStartWord();
       const lastChar = startWord[startWord.length - 1];
 
       multi.roomRef.update({
         status: 'playing',
         currentRound: currentRound + 1,
+        p1Wins: p1Wins,
+        p2Wins: p2Wins,
         turn: Math.random() > 0.5 ? 'p1' : 'p2',
         turnCount: 1,
         timerMax: 10,
@@ -691,11 +705,14 @@ function handleMultiGameOver(room) {
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
   const opData = room[opId];
 
+  const myWins = multi.playerId === 'p1' ? p1Wins : p2Wins;
+  const opWins = multi.playerId === 'p1' ? p2Wins : p1Wins;
+
   let finalWin;
   if (totalRounds === 1) {
-    finalWin = iWin; // 1라운드: 이기고 지고만
+    finalWin = iWin;
   } else {
-    finalWin = (myData.score || 0) > (opData.score || 0); // 다중 라운드: 점수 비교
+    finalWin = myWins > opWins; // 다중 라운드: 라운드 승수 비교
   }
 
   const earnedExp = finalWin ? 15 : 5;
@@ -727,7 +744,7 @@ function handleMultiGameOver(room) {
     document.getElementById('final-bot-name').textContent = opData.nickname;
 
     let reasonText = room.reason || '';
-    if (totalRounds > 1) reasonText = `${totalRounds}라운드 종료! ` + reasonText;
+    if (totalRounds > 1) reasonText = `${totalRounds}라운드 종료! (${myWins}승 ${opWins}패) ` + reasonText;
     reasonText += (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
     document.getElementById('gameover-reason').textContent = reasonText;
 
