@@ -371,6 +371,12 @@ function playKickAt(delayMs) {
 
 function playWordAnimation(word, callback, targetElId) {
   state.isAnimating = true;
+  // 애니메이션 중 입력 비활성화
+  const wi = document.getElementById('word-input');
+  const mwi = document.getElementById('multi-word-input');
+  if (wi) wi.disabled = true;
+  if (mwi) mwi.disabled = true;
+
   const wordEl = document.getElementById(targetElId || 'current-word');
   const chars = word.split('');
   const n = chars.length;
@@ -405,6 +411,10 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
+      const _wi = document.getElementById('word-input');
+      const _mwi = document.getElementById('multi-word-input');
+      if (_wi) _wi.disabled = false;
+      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, totalTime);
 
@@ -437,6 +447,10 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
+      const _wi = document.getElementById('word-input');
+      const _mwi = document.getElementById('multi-word-input');
+      if (_wi) _wi.disabled = false;
+      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, totalTime);
 
@@ -445,6 +459,10 @@ function playWordAnimation(word, callback, targetElId) {
     revealChar(wordEl, 0);
     setTimeout(() => {
       state.isAnimating = false;
+      const _wi = document.getElementById('word-input');
+      const _mwi = document.getElementById('multi-word-input');
+      if (_wi) _wi.disabled = false;
+      if (_mwi) _mwi.disabled = false;
       if (callback) callback();
     }, 300);
   }
@@ -979,7 +997,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const input = document.getElementById('word-input');
   let composing = false;
-  let submitPending = false;
 
   input.addEventListener('compositionstart', () => {
     composing = true;
@@ -987,22 +1004,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   input.addEventListener('compositionend', () => {
     composing = false;
-    // 조합 끝난 직후 대기 중인 제출이 있으면 실행
-    if (submitPending) {
-      submitPending = false;
-      submitWord();
-    }
   });
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (composing || e.isComposing) {
-        // 한글 조합 중이면 조합 끝난 후 제출 예약
-        submitPending = true;
-        return;
-      }
-      submitWord();
+      if (composing || e.isComposing) return;
+      // 약간의 딜레이로 compositionend 후 실행 보장
+      setTimeout(() => submitWord(), 10);
     }
   });
 });
