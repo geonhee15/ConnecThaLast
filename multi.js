@@ -176,21 +176,17 @@ function copyRoomCode() {
 
 // ==================== READY SYSTEM ====================
 
-async function toggleReady() {
+function toggleReady() {
   if (!multi.roomRef || multi.isHost) return;
 
-  // 사용자 제스처 내에서 오디오 프리로드 + 잠금 해제
-  await preloadAudio();
-  try {
-    const silence = new Audio();
-    silence.volume = 0;
-    await silence.play();
-  } catch(e) {}
+  // 오디오 프리로드 (비동기, 기다리지 않음)
+  preloadAudio();
 
   const ref = multi.roomRef.child('p2/ready');
-  const snap = await ref.get();
-  const current = snap.val();
-  await ref.set(!current);
+  ref.get().then(snap => {
+    const current = snap.val();
+    ref.set(!current);
+  });
 }
 
 // ==================== PUBLIC ROOM LIST ====================
