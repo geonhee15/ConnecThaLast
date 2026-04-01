@@ -164,6 +164,15 @@
           </div>
         </div>
         <div class="mode-desc" id="mode-desc-text">모드를 선택하세요 (복수 선택 가능)</div>
+        <div class="round-select-row" style="margin-top:10px">
+          <label>라운드</label>
+          <div class="round-btns" id="bot-round-btns">
+            <button class="round-btn active" onclick="selectBotRound(1, this)">1</button>
+            <button class="round-btn" onclick="selectBotRound(3, this)">3</button>
+            <button class="round-btn" onclick="selectBotRound(5, this)">5</button>
+            <button class="round-btn" onclick="selectBotRound(7, this)">7</button>
+          </div>
+        </div>
       </div>
 
       <h2 class="select-title">봇 레벨 선택</h2>
@@ -240,6 +249,7 @@
       </div>
 
       <!-- 턴 표시 -->
+      <div id="bot-round-display" class="round-display" style="display:none">라운드 1 / 1</div>
       <div id="turn-indicator" class="turn-indicator">내 턴</div>
 
       <!-- 플레이어 패널 -->

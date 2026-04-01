@@ -222,9 +222,22 @@ const state = {
   timerId: null,
   isAnimating: false,
   gameActive: false,
-  bonusExp: 0,         // 긴단어/한방단어 보너스 경험치
-  killerFinish: false   // 한방단어로 승리했는지
+  bonusExp: 0,
+  killerFinish: false,
+  // 라운드 시스템
+  totalRounds: 1,
+  currentRound: 1,
+  playerRoundWins: 0,
+  botRoundWins: 0
 };
+
+let selectedBotRounds = 1;
+
+function selectBotRound(n, btn) {
+  selectedBotRounds = n;
+  document.querySelectorAll('#bot-round-btns .round-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 // ==================== MODE SYSTEM ====================
 const modes = {
@@ -499,6 +512,10 @@ async function startGame(level) {
   state.isAnimating = false;
   state.bonusExp = 0;
   state.killerFinish = false;
+  state.totalRounds = selectedBotRounds;
+  state.currentRound = 1;
+  state.playerRoundWins = 0;
+  state.botRoundWins = 0;
 
   // UI 초기화
   document.getElementById('bot-name').textContent = BOT_NAMES[level];
@@ -512,6 +529,7 @@ async function startGame(level) {
   document.getElementById('next-char').innerHTML = '';
 
   showScreen('screen-game');
+  updateBotRoundDisplay();
 
   // WAV 파일 프리로드
   await preloadAudio();
@@ -652,7 +670,7 @@ function submitWord() {
 
   const score = calculateScore(word);
   state.playerScore += score;
-  document.getElementById('score-player').textContent = state.playerScore + '점';
+  updateBotRoundDisplay();
 
   // 긴단어 보너스 경험치: 5글자+1, 6글자+2, 7글자+3...
   if (word.length >= 5) {
@@ -726,7 +744,7 @@ function startBotTurn() {
 
     const score = calculateScore(botWord);
     state.botScore += score;
-    document.getElementById('score-bot').textContent = state.botScore + '점';
+    updateBotRoundDisplay();
 
     state.usedWords.add(botWord);
     addUsedWordTag(botWord, 'bot');
@@ -815,6 +833,26 @@ function chooseBotWord() {
   return filtered[Math.floor(Math.random() * filtered.length)].w;
 }
 
+// ==================== ROUND DISPLAY ====================
+function updateBotRoundDisplay() {
+  const el = document.getElementById('bot-round-display');
+  if (!el) return;
+  if (state.totalRounds > 1) {
+    el.style.display = '';
+    el.textContent = `라운드 ${state.currentRound} / ${state.totalRounds}`;
+  } else {
+    el.style.display = 'none';
+  }
+  // 점수 옆에 라운드 승수
+  if (state.totalRounds > 1) {
+    document.getElementById('score-player').textContent = `${state.playerScore}점 (${state.playerRoundWins}승)`;
+    document.getElementById('score-bot').textContent = `${state.botScore}점 (${state.botRoundWins}승)`;
+  } else {
+    document.getElementById('score-player').textContent = state.playerScore + '점';
+    document.getElementById('score-bot').textContent = state.botScore + '점';
+  }
+}
+
 // ==================== SCORING ====================
 function calculateScore(word) {
   const len = word.length;
@@ -856,31 +894,68 @@ function gameoverHome() {
 
 // ==================== GAME END ====================
 function endGame(playerWins, reason) {
-  state.gameActive = false;
-  gameFinishedProperly = true;
-  lastGameWasMulti = false;
   stopTimer();
   disableInput();
 
-  // 경험치 계산 (최소 1턴은 플레이해야 패배 경험치 지급)
+  // 라운드 승패 기록
+  if (playerWins) state.playerRoundWins++;
+  else state.botRoundWins++;
+
+  // 다중 라운드: 아직 라운드 남았으면 다음 라운드
+  if (state.totalRounds > 1 && state.currentRound < state.totalRounds) {
+    const roundEl = document.getElementById('bot-round-display');
+    if (roundEl) roundEl.textContent = `라운드 ${state.currentRound} 종료 - ${playerWins ? '승리!' : '패배'}`;
+    updateBotRoundDisplay();
+
+    setTimeout(() => {
+      // 다음 라운드 시작
+      state.currentRound++;
+      state.usedWords = new Set();
+      state.turnCount = 0;
+      state.timerMax = 10;
+      state.killerFinish = false;
+      state.isAnimating = false;
+      document.getElementById('used-words').innerHTML = '';
+      document.getElementById('game-message').textContent = '';
+      document.getElementById('word-input').value = '';
+      document.getElementById('current-word').innerHTML = '';
+      document.getElementById('next-char').innerHTML = '';
+
+      const startWord = getRandomStartWord();
+      showStartWord(startWord);
+      updateBotRoundDisplay();
+    }, 2000);
+    return;
+  }
+
+  // 최종 게임 종료
+  state.gameActive = false;
+  gameFinishedProperly = true;
+  lastGameWasMulti = false;
+
+  let finalWin;
+  if (state.totalRounds === 1) {
+    finalWin = playerWins;
+  } else {
+    finalWin = state.playerRoundWins > state.botRoundWins;
+  }
+
+  // 경험치 계산
   const expEntry = EXP_TABLE[state.botLevel] || { win: 0, lose: 0 };
   let earnedExp = 0;
-  if (state.turnCount >= 2) {
-    earnedExp = playerWins ? expEntry.win : expEntry.lose;
-    // 긴단어 보너스
+  if (state.turnCount >= 2 || state.totalRounds > 1) {
+    earnedExp = finalWin ? expEntry.win : expEntry.lose;
     earnedExp += state.bonusExp;
-    // 한방단어로 승리 보너스 (+10)
-    if (playerWins && state.killerFinish) {
+    if (finalWin && state.killerFinish) {
       earnedExp += 10;
     }
   }
 
   const p = getActiveProfile();
-  if (playerWins) p.wins++;
+  if (finalWin) p.wins++;
   else p.losses++;
 
   if (serverMode === 'test') {
-    // 테스트 서버: 임시 프로필에만 반영, 저장 안 함
     if (earnedExp > 0) {
       p.exp += earnedExp;
       p.totalExp += earnedExp;
@@ -895,14 +970,19 @@ function endGame(playerWins, reason) {
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
-    title.textContent = playerWins ? '승리!' : '패배...';
-    title.className = 'gameover-title ' + (playerWins ? 'win' : 'lose');
+    title.textContent = finalWin ? '승리!' : '패배...';
+    title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
     document.getElementById('final-player-score').textContent = state.playerScore + '점';
     document.getElementById('final-bot-score').textContent = state.botScore + '점';
     document.getElementById('final-bot-name').textContent = BOT_NAMES[state.botLevel];
+
+    let reasonText = reason;
+    if (state.totalRounds > 1) {
+      reasonText = `${state.totalRounds}라운드 종료! (${state.playerRoundWins}승 ${state.botRoundWins}패) ` + reasonText;
+    }
     document.getElementById('gameover-reason').textContent =
-      reason + (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
+      reasonText + (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
 
     showScreen('screen-gameover');
   }, 800);
