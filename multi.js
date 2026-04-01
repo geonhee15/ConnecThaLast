@@ -715,8 +715,8 @@ function handleMultiGameOver(room) {
     finalWin = myWins > opWins; // 다중 라운드: 라운드 승수 비교
   }
 
-  let earnedExp = finalWin ? 15 : 5;
   const myScore = myData.score || 0;
+  let earnedExp = finalWin ? 15 : Math.max(2, Math.floor(myScore * 0.03));
   // 점수 비례 보너스: 총점의 5%
   earnedExp += Math.floor(myScore * 0.05);
   // 다중 라운드 보너스: 라운드 승리 1회당 +3
