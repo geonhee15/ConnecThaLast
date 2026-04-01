@@ -332,14 +332,21 @@ async function preloadAudio() {
   console.log('All audio loaded:', Object.keys(audioPool));
 }
 
-// WAV 재생 (매번 새 Audio 클론으로 중복 재생 가능)
-function playSound(key) {
+// WAV 재생 (매번 새 Audio 클론으로 중복 재생 가능, playbackRate 지원)
+function playSound(key, rate = 1.0) {
   const original = audioPool[key];
   if (!original) return null;
   const clone = original.cloneNode();
   clone.volume = 1.0;
+  clone.playbackRate = rate;
   clone.play().catch(() => {});
   return clone;
+}
+
+// 턴 수에 따른 배속 계산 (10초=1.0x, 줄어들수록 빨라짐)
+function getRhythmSpeed() {
+  // timerMax: 10 → 1.0x, 8 → 1.05x, 6 → 1.1x, 4 → 1.2x, 2 → 1.4x
+  return 1.0 + (10 - state.timerMax) * 0.05;
 }
 
 // KICK.wav를 지정 시간(ms) 후에 재생
@@ -362,25 +369,28 @@ function playWordAnimation(word, callback) {
     `<span class="char" data-idx="${i}">${c}</span>`
   ).join('');
 
+  const speed = getRhythmSpeed();
+  const sc = 1 / speed; // 시간 스케일 (빠를수록 짧아짐)
+
   if (n >= 2 && n <= 7) {
     // ===== 2~7글자: 해당 WAV 파일 재생 + 파형 비트에 맞춰 글자 등장 =====
-    playSound(String(n));
+    playSound(String(n), speed);
 
     const charBeats = WAV_CHAR_BEATS[n];
 
     charBeats.forEach((beatTime, i) => {
       setTimeout(() => {
         revealChar(wordEl, i);
-      }, beatTime * 1000);
+      }, beatTime * 1000 * sc);
     });
 
     FINALE_BEATS.forEach((beatTime, i) => {
       setTimeout(() => {
         pulseAllChars(wordEl, i);
-      }, beatTime * 1000);
+      }, beatTime * 1000 * sc);
     });
 
-    const totalTime = FINALE_BEATS[2] * 1000 + 400;
+    const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
@@ -390,17 +400,15 @@ function playWordAnimation(word, callback) {
   } else if (n >= 8) {
     // ===== 8글자 이상: KICK 4박자 + Only-Lastpart 동시 재생 =====
 
-    // Only-Lastpart.wav 동시 재생 (피날레 땅땅땅! 포함)
-    playSound('lastpart');
+    playSound('lastpart', speed);
 
-    // N개 글자를 4박자(0~1.282초)에 분배
-    const totalCharTime = 1282; // ms
+    // N개 글자를 4박자(0~1.282초)에 분배 (배속 적용)
+    const totalCharTime = 1282 * sc;
     const charTimings = [];
     for (let i = 0; i < n; i++) {
       charTimings.push(Math.round((i / (n - 1)) * totalCharTime));
     }
 
-    // 각 글자마다 KICK 재생 + 글자 등장
     charTimings.forEach((tMs, i) => {
       playKickAt(tMs);
       setTimeout(() => {
@@ -408,14 +416,13 @@ function playWordAnimation(word, callback) {
       }, tMs);
     });
 
-    // 피날레 애니메이션 동기화
     FINALE_BEATS.forEach((beatTime, i) => {
       setTimeout(() => {
         pulseAllChars(wordEl, i);
-      }, beatTime * 1000);
+      }, beatTime * 1000 * sc);
     });
 
-    const totalTime = FINALE_BEATS[2] * 1000 + 400;
+    const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
