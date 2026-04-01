@@ -85,10 +85,10 @@ function getLevelIcon(level) {
   return '1-9.png';
 }
 
-function renderLevelBadge(containerId) {
+function renderLevelBadge(containerId, level) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = `<img src="${getLevelIcon(profile.level)}" class="level-icon-img"><span class="level-icon-num">${profile.level}</span>`;
+  el.innerHTML = `<img src="${getLevelIcon(level)}" class="level-icon-img"><span class="level-icon-num">${level}</span>`;
 }
 
 function updateProfileUI() {
@@ -96,11 +96,11 @@ function updateProfileUI() {
   const needed = expForLevel(p.level);
   const pct = Math.min(100, (p.exp / needed) * 100);
 
-  // DEV만 테스트 서버 버튼 표시
+  // DEV만 테스트 서버 버튼 표시 (일반 서버일 때만)
   const testBtn = document.getElementById('btn-test-server');
-  if (testBtn) testBtn.style.display = profile.userId === 'DEV' ? '' : 'none';
+  if (testBtn) testBtn.style.display = (profile.userId === 'DEV' && serverMode === 'normal') ? '' : 'none';
 
-  // 홈 화면 (테스트 서버면 테스트 프로필 표시)
+  // 홈 화면 (활성 프로필 기준)
   const homeNick = document.getElementById('home-nickname');
   const homeUid = document.getElementById('home-userid');
   const homeExpBar = document.getElementById('home-exp-bar');
@@ -108,26 +108,26 @@ function updateProfileUI() {
   if (homeNick) homeNick.textContent = p.nickname;
   if (homeUid) homeUid.textContent = '#' + p.userId;
   if (homeExpBar) homeExpBar.style.width = pct + '%';
-  if (homeExpText) homeExpText.textContent = `${profile.exp} / ${needed}`;
-  renderLevelBadge('home-level-badge');
+  if (homeExpText) homeExpText.textContent = `${p.exp} / ${needed}`;
+  renderLevelBadge('home-level-badge', p.level);
 
-  // 프로필 화면
+  // 프로필 화면 (활성 프로필 기준)
   const profExpBar = document.getElementById('profile-exp-bar');
   const profExpText = document.getElementById('profile-exp-text');
   const profInput = document.getElementById('profile-nickname-input');
+  const profUid = document.getElementById('profile-userid');
   const statWins = document.getElementById('stat-wins');
   const statLosses = document.getElementById('stat-losses');
   const statTotalExp = document.getElementById('stat-total-exp');
 
-  renderLevelBadge('profile-level-badge');
+  renderLevelBadge('profile-level-badge', p.level);
   if (profExpBar) profExpBar.style.width = pct + '%';
-  if (profExpText) profExpText.textContent = `${profile.exp} / ${needed} EXP`;
-  if (profInput && !profInput.matches(':focus')) profInput.value = profile.nickname;
-  const profUid = document.getElementById('profile-userid');
-  if (profUid) profUid.textContent = '#' + profile.userId;
-  if (statWins) statWins.textContent = profile.wins;
-  if (statLosses) statLosses.textContent = profile.losses;
-  if (statTotalExp) statTotalExp.textContent = profile.totalExp;
+  if (profExpText) profExpText.textContent = `${p.exp} / ${needed} EXP`;
+  if (profInput && !profInput.matches(':focus')) profInput.value = p.nickname;
+  if (profUid) profUid.textContent = '#' + p.userId;
+  if (statWins) statWins.textContent = p.wins;
+  if (statLosses) statLosses.textContent = p.losses;
+  if (statTotalExp) statTotalExp.textContent = p.totalExp;
 
   // 게임 화면 플레이어 이름
   const playerNames = document.querySelectorAll('.player-me .player-name');
