@@ -85,6 +85,10 @@
           <span class="btn-icon">&#127760;</span>
           멀티플레이
         </button>
+        <button class="btn btn-rank btn-large" onclick="openRanking()">
+          <span class="btn-icon">&#127942;</span>
+          랭킹
+        </button>
         <button class="btn btn-secondary btn-large" onclick="openDictionary()">
           <span class="btn-icon">&#128214;</span>
           단어 사전
@@ -293,6 +297,17 @@
   </div>
 
   <!-- ===== 단어 사전 화면 ===== -->
+  <!-- ===== 랭킹 화면 ===== -->
+  <div id="screen-ranking" class="screen">
+    <div class="ranking-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <h2 class="select-title">&#127942; 랭킹</h2>
+      <div id="ranking-list" class="ranking-list">
+        <div class="ranking-loading">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
   <div id="screen-dict" class="screen">
     <div class="dict-container">
       <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>

@@ -995,6 +995,60 @@ function endGame(playerWins, reason) {
   }, 800);
 }
 
+// ==================== RANKING ====================
+async function openRanking() {
+  showScreen('screen-ranking');
+  const list = document.getElementById('ranking-list');
+  list.innerHTML = '<div class="ranking-loading">불러오는 중...</div>';
+
+  if (!db) {
+    list.innerHTML = '<div class="ranking-loading">서버에 연결할 수 없습니다.</div>';
+    return;
+  }
+
+  try {
+    const snap = await db.ref('users').get();
+    if (!snap.exists()) {
+      list.innerHTML = '<div class="ranking-loading">등록된 유저가 없습니다.</div>';
+      return;
+    }
+
+    const users = [];
+    snap.forEach(child => {
+      const u = child.val();
+      users.push({
+        nickname: u.nickname || child.key,
+        level: u.level || 1,
+        exp: u.exp || 0,
+        totalExp: u.totalExp || 0,
+        userId: u.userId || ''
+      });
+    });
+
+    // 레벨 내림차순 → 같으면 경험치 내림차순
+    users.sort((a, b) => b.level - a.level || b.totalExp - a.totalExp);
+
+    const p = getActiveProfile();
+    let html = `<div class="ranking-header"><span>순위</span><span>닉네임</span><span>레벨</span><span>경험치</span></div>`;
+
+    users.forEach((u, i) => {
+      const rank = i + 1;
+      const isMe = u.userId === p.userId;
+      const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+      html += `<div class="ranking-row${isMe ? ' me' : ''}">
+        <span class="rank-num ${rankClass}">${rank}</span>
+        <span class="rank-name">${u.nickname}</span>
+        <span class="rank-level">Lv.${u.level}</span>
+        <span class="rank-exp">${u.totalExp.toLocaleString()}</span>
+      </div>`;
+    });
+
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '<div class="ranking-loading">랭킹을 불러올 수 없습니다.</div>';
+  }
+}
+
 // ==================== DICTIONARY ====================
 let dictCache = null; // 정렬된 전체 단어 캐시
 const DICT_PAGE_SIZE = 200;
