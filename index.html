@@ -56,6 +56,10 @@
           <span class="btn-icon">&#9876;</span>
           봇 대전
         </button>
+        <button class="btn btn-secondary btn-large" onclick="openDictionary()">
+          <span class="btn-icon">&#128214;</span>
+          단어 사전
+        </button>
         <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterTestServer()">
           <span class="btn-icon">&#9881;</span>
           테스트 서버
@@ -234,6 +238,38 @@
         <h4>사용된 단어</h4>
         <div id="used-words" class="used-words-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== 단어 사전 화면 ===== -->
+  <div id="screen-dict" class="screen">
+    <div class="dict-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <h2 class="dict-title">단어 사전</h2>
+      <div class="dict-total" id="dict-total">총 0개</div>
+
+      <div class="dict-filters">
+        <input type="text" id="dict-search" class="dict-search" placeholder="단어 검색..." oninput="filterDictionary()">
+        <div class="dict-filter-row">
+          <label>시작 글자</label>
+          <input type="text" id="dict-start-char" class="dict-filter-input" maxlength="1" placeholder="예: 가" oninput="filterDictionary()">
+        </div>
+        <div class="dict-filter-row">
+          <label>글자수</label>
+          <select id="dict-length" class="dict-filter-select" onchange="filterDictionary()">
+            <option value="0">전체</option>
+            <option value="2">2글자</option>
+            <option value="3">3글자</option>
+            <option value="4">4글자</option>
+            <option value="5">5글자</option>
+            <option value="6">6글자</option>
+            <option value="7">7글자 이상</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dict-result-count" id="dict-result-count"></div>
+      <div class="dict-list" id="dict-list"></div>
     </div>
   </div>
 

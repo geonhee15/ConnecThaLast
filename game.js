@@ -830,6 +830,78 @@ function endGame(playerWins, reason) {
   }, 800);
 }
 
+// ==================== DICTIONARY ====================
+let dictCache = null; // 정렬된 전체 단어 캐시
+const DICT_PAGE_SIZE = 200;
+let dictDisplayed = 0;
+let dictFiltered = [];
+
+function openDictionary() {
+  // 첫 호출 시 캐시 생성
+  if (!dictCache) {
+    dictCache = Array.from(ALL_WORDS).sort();
+  }
+  // 필터 초기화
+  document.getElementById('dict-search').value = '';
+  document.getElementById('dict-start-char').value = '';
+  document.getElementById('dict-length').value = '0';
+  document.getElementById('dict-total').textContent = `총 ${dictCache.length.toLocaleString()}개`;
+
+  showScreen('screen-dict');
+  filterDictionary();
+}
+
+function filterDictionary() {
+  const search = document.getElementById('dict-search').value.trim();
+  const startChar = document.getElementById('dict-start-char').value.trim();
+  const lengthVal = parseInt(document.getElementById('dict-length').value) || 0;
+
+  dictFiltered = dictCache.filter(w => {
+    if (search && !w.includes(search)) return false;
+    if (startChar && w[0] !== startChar) return false;
+    if (lengthVal > 0) {
+      if (lengthVal === 7) { if (w.length < 7) return false; }
+      else { if (w.length !== lengthVal) return false; }
+    }
+    return true;
+  });
+
+  document.getElementById('dict-result-count').textContent =
+    `검색 결과: ${dictFiltered.length.toLocaleString()}개`;
+
+  dictDisplayed = 0;
+  document.getElementById('dict-list').innerHTML = '';
+  loadMoreDict();
+}
+
+function loadMoreDict() {
+  const list = document.getElementById('dict-list');
+  const end = Math.min(dictDisplayed + DICT_PAGE_SIZE, dictFiltered.length);
+
+  let html = '';
+  for (let i = dictDisplayed; i < end; i++) {
+    const w = dictFiltered[i];
+    const cls = STD_WORDS.has(w) ? 'std' : 'inj';
+    html += `<span class="dict-word ${cls}">${w}</span>`;
+  }
+  list.insertAdjacentHTML('beforeend', html);
+  dictDisplayed = end;
+}
+
+// 스크롤 시 추가 로드
+document.addEventListener('DOMContentLoaded', () => {
+  const listEl = document.getElementById('dict-list');
+  if (listEl) {
+    listEl.addEventListener('scroll', () => {
+      if (listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 50) {
+        if (dictDisplayed < dictFiltered.length) {
+          loadMoreDict();
+        }
+      }
+    });
+  }
+});
+
 // ==================== INPUT HANDLING ====================
 document.addEventListener('DOMContentLoaded', () => {
   loadProfile();
