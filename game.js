@@ -119,7 +119,7 @@ function updateProfileUI() {
   const homeUid = document.getElementById('home-userid');
   const homeExpBar = document.getElementById('home-exp-bar');
   const homeExpText = document.getElementById('home-exp-text');
-  if (homeNick) homeNick.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 28);
+  if (homeNick) homeNick.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 56);
   if (homeUid) homeUid.textContent = '#' + p.userId;
   if (homeExpBar) homeExpBar.style.width = pct + '%';
   if (homeExpText) homeExpText.textContent = `${p.exp} / ${needed}`;
@@ -137,7 +137,7 @@ function updateProfileUI() {
   renderLevelBadge('profile-level-badge', p.level);
   if (profExpBar) profExpBar.style.width = pct + '%';
   if (profExpText) profExpText.textContent = `${p.exp} / ${needed} EXP`;
-  if (profNickDisplay) profNickDisplay.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 40);
+  if (profNickDisplay) profNickDisplay.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 80);
   if (profUid) profUid.textContent = '#' + p.userId;
   if (statWins) statWins.textContent = p.wins;
   if (statLosses) statLosses.textContent = p.losses;
@@ -150,7 +150,7 @@ function updateProfileUI() {
 
   // 게임 화면 플레이어 이름
   const playerNames = document.querySelectorAll('.player-me .player-name');
-  playerNames.forEach(el => el.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 24));
+  playerNames.forEach(el => el.innerHTML = p.nickname + ' ' + roleBadgeHTML(p.nickname, 48));
 }
 
 // 서버 모드: 'normal' or 'test'
@@ -1048,7 +1048,7 @@ async function openRanking() {
       const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
       html += `<div class="ranking-row${isMe ? ' me' : ''}">
         <span class="rank-num ${rankClass}">${rank}</span>
-        <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 28)}</span>
+        <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 56)}</span>
         <span class="rank-level">Lv.${u.level}</span>
         <span class="rank-exp">${u.totalExp.toLocaleString()}</span>
       </div>`;
