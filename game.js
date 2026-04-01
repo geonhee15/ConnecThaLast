@@ -785,15 +785,11 @@ function chooseBotWord() {
 
   // === 좀고수봇 (레벨 4): 단어 잘 찾지만 한방단어 회피 ===
   if (state.botLevel === 4) {
-    // 한방단어를 피하고, 상대가 이을 단어가 많은 안전한 단어 선택
-    filtered.sort((a, b) => {
-      const aNext = findWordsStartingWith(a.w[a.w.length - 1])
-        .filter(e => !state.usedWords.has(e.w)).length;
-      const bNext = findWordsStartingWith(b.w[b.w.length - 1])
-        .filter(e => !state.usedWords.has(e.w)).length;
-      return bNext - aNext; // 많은 순 (한방 반대)
-    });
-    return filtered[Math.floor(Math.random() * Math.min(5, filtered.length))].w;
+    // 한방단어 제외
+    const safe = filtered.filter(e => !isKillerWord(e.w));
+    const pool = safe.length > 0 ? safe : filtered;
+    // 안전한 단어 중 랜덤 선택 (편향 방지)
+    return pool[Math.floor(Math.random() * pool.length)].w;
   }
 
   // === 초보~고수: 랜덤 ===
