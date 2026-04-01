@@ -64,21 +64,34 @@ function saveNickname() {
   }
 }
 
+function getLevelIcon(level) {
+  if (level >= 100) return '100-.png';
+  if (level >= 50) return '50-99.png';
+  if (level >= 25) return '25-49.png';
+  if (level >= 10) return '10-24.png';
+  return '1-9.png';
+}
+
+function renderLevelBadge(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `<img src="${getLevelIcon(profile.level)}" class="level-icon-img"><span class="level-icon-num">${profile.level}</span>`;
+}
+
 function updateProfileUI() {
+  const needed = expForLevel(profile.level);
+  const pct = Math.min(100, (profile.exp / needed) * 100);
+
   // 홈 화면
   const homeNick = document.getElementById('home-nickname');
-  const homeLevel = document.getElementById('home-level');
   const homeExpBar = document.getElementById('home-exp-bar');
   const homeExpText = document.getElementById('home-exp-text');
   if (homeNick) homeNick.textContent = profile.nickname;
-  if (homeLevel) homeLevel.textContent = profile.level;
-  const needed = expForLevel(profile.level);
-  const pct = Math.min(100, (profile.exp / needed) * 100);
   if (homeExpBar) homeExpBar.style.width = pct + '%';
   if (homeExpText) homeExpText.textContent = `${profile.exp} / ${needed}`;
+  renderLevelBadge('home-level-badge');
 
   // 프로필 화면
-  const profLevel = document.getElementById('profile-level');
   const profExpBar = document.getElementById('profile-exp-bar');
   const profExpText = document.getElementById('profile-exp-text');
   const profInput = document.getElementById('profile-nickname-input');
@@ -86,7 +99,7 @@ function updateProfileUI() {
   const statLosses = document.getElementById('stat-losses');
   const statTotalExp = document.getElementById('stat-total-exp');
 
-  if (profLevel) profLevel.textContent = profile.level;
+  renderLevelBadge('profile-level-badge');
   if (profExpBar) profExpBar.style.width = pct + '%';
   if (profExpText) profExpText.textContent = `${profile.exp} / ${needed} EXP`;
   if (profInput && !profInput.matches(':focus')) profInput.value = profile.nickname;
