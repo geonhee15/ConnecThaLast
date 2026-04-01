@@ -117,7 +117,7 @@ function updateProfileUI() {
   // 프로필 화면 (활성 프로필 기준)
   const profExpBar = document.getElementById('profile-exp-bar');
   const profExpText = document.getElementById('profile-exp-text');
-  const profInput = document.getElementById('profile-nickname-input');
+  const profNickDisplay = document.getElementById('profile-nickname-display');
   const profUid = document.getElementById('profile-userid');
   const statWins = document.getElementById('stat-wins');
   const statLosses = document.getElementById('stat-losses');
@@ -126,7 +126,7 @@ function updateProfileUI() {
   renderLevelBadge('profile-level-badge', p.level);
   if (profExpBar) profExpBar.style.width = pct + '%';
   if (profExpText) profExpText.textContent = `${p.exp} / ${needed} EXP`;
-  if (profInput && !profInput.matches(':focus')) profInput.value = p.nickname;
+  if (profNickDisplay) profNickDisplay.textContent = p.nickname;
   if (profUid) profUid.textContent = '#' + p.userId;
   if (statWins) statWins.textContent = p.wins;
   if (statLosses) statLosses.textContent = p.losses;
