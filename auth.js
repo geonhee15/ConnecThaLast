@@ -140,6 +140,8 @@ function loginSuccess(userData) {
   loadReadNotices();
   checkUnreadNotices();
   setOnline();
+  loadFriendRequests();
+  loadFriends();
   showScreen('screen-home');
 }
 

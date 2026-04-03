@@ -1082,14 +1082,13 @@ function closeUserProfile() {
 let sidebarOpen = false;
 let readNotices = new Set();
 
-function toggleSidebar() {
+function toggleSidebar(tab) {
   sidebarOpen = !sidebarOpen;
   document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
   document.getElementById('sidebar-overlay').classList.toggle('open', sidebarOpen);
 
   if (sidebarOpen) {
-    loadNotices();
-    // 어드민/오너만 작성 가능
+    switchSidebarTab(tab || 'notice');
     const p = getActiveProfile();
     const isStaff = p.nickname === '김건' || p.nickname === '억만장자';
     document.getElementById('notice-write').style.display = isStaff ? '' : 'none';

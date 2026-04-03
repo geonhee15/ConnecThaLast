@@ -100,6 +100,12 @@ function loadFriendRequests() {
     });
     list.innerHTML = html;
     countEl.textContent = count > 0 ? `(${count})` : '';
+    // 소셜 뱃지 업데이트
+    const badge = document.getElementById('social-badge');
+    if (badge) {
+      if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+      else { badge.style.display = 'none'; }
+    }
   });
 }
 

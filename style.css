@@ -1,9 +1,16 @@
 /* ===== Sidebar ===== */
-.sidebar-toggle {
+.sidebar-toggles {
   position: fixed;
   top: 14px;
   right: 14px;
   z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-toggle {
+  position: relative;
   background: white;
   border: 1.5px solid #ddd;
   border-radius: 50%;
