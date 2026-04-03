@@ -1285,9 +1285,9 @@ function loadBugReports() {
         <div class="bug-content">${escapeHTML(item.content)}</div>
         <div class="bug-footer">
           <span class="bug-status ${statusClass}">${statusText}</span>
-          ${isStaff && !resolved ? `<button class="bug-resolve-btn" onclick="resolveBug('${item.id}')">해결</button>` : ''}
+          ${isStaff && !resolved ? `<div class="bug-resolve-area"><input class="bug-resolve-input" id="resolve-msg-${item.id}" placeholder="해결 메시지 (선택)"><button class="bug-resolve-btn" onclick="resolveBug('${item.id}')">해결</button></div>` : ''}
         </div>
-        ${item.resolvedBy ? `<div class="bug-resolver">${item.resolvedBy} 님이 해결 처리</div>` : ''}
+        ${item.resolvedBy ? `<div class="bug-resolver">${item.resolvedBy}: ${item.resolveMsg ? escapeHTML(item.resolveMsg) : '해결 처리'}</div>` : ''}
       </div>`;
     });
 
@@ -1297,9 +1297,12 @@ function loadBugReports() {
 
 async function resolveBug(bugId) {
   if (!db || !currentUser) return;
+  const msgInput = document.getElementById('resolve-msg-' + bugId);
+  const msg = msgInput ? msgInput.value.trim() : '';
   await db.ref('bugs/' + bugId).update({
     resolved: true,
-    resolvedBy: currentUser.nickname
+    resolvedBy: currentUser.nickname,
+    resolveMsg: msg || '해결 완료'
   });
 }
 

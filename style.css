@@ -1418,6 +1418,26 @@ body {
   color: #2e7d32;
 }
 
+.bug-resolve-area {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.bug-resolve-input {
+  padding: 4px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+  width: 140px;
+}
+
+.bug-resolve-input:focus {
+  border-color: #4caf50;
+}
+
 .bug-resolve-btn {
   padding: 4px 12px;
   border: 1.5px solid #4caf50;
