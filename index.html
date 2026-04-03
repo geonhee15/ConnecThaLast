@@ -10,6 +10,23 @@
 
 </head>
 <body>
+  <!-- ===== 점검 화면 ===== -->
+  <div id="screen-maintenance" class="screen active maintenance-screen">
+    <div class="maintenance-container">
+      <div class="maintenance-icon">&#128679;</div>
+      <h1 class="maintenance-title">업데이트 점검 중</h1>
+      <p class="maintenance-desc">더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!</p>
+      <div class="maintenance-info">
+        <p>다음 업데이트: <strong>보스전 v2.0.0</strong></p>
+      </div>
+      <div id="maintenance-admin" class="maintenance-admin" style="display:none">
+        <input type="password" id="maintenance-pw" class="login-input" placeholder="관리자 비밀번호" style="max-width:250px">
+        <button class="btn btn-primary" onclick="maintenanceBypass()">접속</button>
+      </div>
+      <p class="maintenance-footer">&copy; 2026. Geonhee. All rights reserved.</p>
+    </div>
+  </div>
+
   <!-- ===== 사이드바 ===== -->
   <div id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()">
     <span>&#128227;</span>
@@ -30,7 +47,7 @@
   <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <!-- ===== 로그인 화면 ===== -->
-  <div id="screen-login" class="screen active">
+  <div id="screen-login" class="screen">
     <div class="login-container">
       <div class="logo-area">
         <h1 class="game-title">ConnecThaLast</h1>

@@ -209,6 +209,57 @@
   vertical-align: middle;
 }
 
+/* ===== Maintenance Screen ===== */
+.maintenance-screen {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.maintenance-container {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 500px;
+  color: white;
+}
+
+.maintenance-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.maintenance-title {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.maintenance-desc {
+  font-size: 1rem;
+  opacity: 0.9;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.maintenance-info {
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+
+.maintenance-admin {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.maintenance-footer {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin-top: 30px;
+}
+
 /* ===== Reset & Base ===== */
 * {
   margin: 0;

@@ -190,8 +190,50 @@ async function tryAutoLogin() {
   }
 }
 
-// Enter 키로 로그인/회원가입
+// ==================== MAINTENANCE MODE ====================
+const MAINTENANCE = true; // false로 바꾸면 점검 해제
+const ADMIN_PASS = 'admin123';
+
+async function maintenanceBypass() {
+  const pw = document.getElementById('maintenance-pw').value;
+  if (pw === ADMIN_PASS) {
+    document.getElementById('screen-maintenance').classList.remove('active');
+    const ok = await tryAutoLogin();
+    if (!ok) showScreen('screen-login');
+  }
+}
+
+// 점검 화면에서 3번 클릭하면 비밀번호 입력 표시
+let maintenanceClicks = 0;
 document.addEventListener('DOMContentLoaded', () => {
+  const mScreen = document.getElementById('screen-maintenance');
+  if (mScreen) {
+    mScreen.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      maintenanceClicks++;
+      if (maintenanceClicks >= 3) {
+        document.getElementById('maintenance-admin').style.display = 'flex';
+      }
+    });
+    // Enter로 바이패스
+    const pwInput = document.getElementById('maintenance-pw');
+    if (pwInput) {
+      pwInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') maintenanceBypass();
+      });
+    }
+  }
+
+  // 점검 모드가 아니면 바로 로그인
+  if (!MAINTENANCE) {
+    document.getElementById('screen-maintenance').classList.remove('active');
+    setTimeout(async () => {
+      const ok = await tryAutoLogin();
+      if (!ok) showScreen('screen-login');
+    }, 100);
+  }
+
+  // 로그인 Enter 키
   ['auth-nickname', 'auth-password'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -203,12 +245,4 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-
-  // 자동 로그인 시도
-  setTimeout(async () => {
-    const ok = await tryAutoLogin();
-    if (!ok) {
-      showScreen('screen-login');
-    }
-  }, 100);
 });
