@@ -93,6 +93,10 @@
           <span class="btn-icon">&#128214;</span>
           단어 사전
         </button>
+        <button class="btn btn-secondary btn-large" onclick="openBugReport()">
+          <span class="btn-icon">&#128172;</span>
+          문의 / 버그제보
+        </button>
         <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterTestServer()">
           <span class="btn-icon">&#9881;</span>
           테스트 서버
@@ -298,6 +302,24 @@
 
   <!-- ===== 단어 사전 화면 ===== -->
   <!-- ===== 랭킹 화면 ===== -->
+  <!-- ===== 문의/버그 화면 ===== -->
+  <div id="screen-bug" class="screen">
+    <div class="bug-container">
+      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <h2 class="select-title">문의 / 버그제보</h2>
+
+      <div class="bug-input-area">
+        <textarea id="bug-input" class="bug-textarea" placeholder="문의 또는 버그를 입력하세요..." rows="3"></textarea>
+        <button class="btn btn-primary" onclick="submitBugReport()">등록</button>
+      </div>
+      <div id="bug-message" class="auth-message"></div>
+
+      <div id="bug-list" class="bug-list">
+        <div class="ranking-loading">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
   <div id="screen-ranking" class="screen">
     <div class="ranking-container">
       <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>

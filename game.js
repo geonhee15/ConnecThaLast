@@ -1006,6 +1006,107 @@ function endGame(playerWins, reason) {
   }, 800);
 }
 
+// ==================== BUG REPORT ====================
+let bugListener = null;
+
+function openBugReport() {
+  showScreen('screen-bug');
+  document.getElementById('bug-input').value = '';
+  document.getElementById('bug-message').textContent = '';
+  loadBugReports();
+}
+
+async function submitBugReport() {
+  const input = document.getElementById('bug-input');
+  const text = input.value.trim();
+  const msgEl = document.getElementById('bug-message');
+
+  if (!text) {
+    msgEl.textContent = '내용을 입력하세요.';
+    msgEl.className = 'auth-message error';
+    return;
+  }
+  if (!db || !currentUser) {
+    msgEl.textContent = '로그인이 필요합니다.';
+    msgEl.className = 'auth-message error';
+    return;
+  }
+
+  try {
+    await db.ref('bugs').push({
+      author: currentUser.nickname,
+      content: text,
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      resolved: false,
+      resolvedBy: null
+    });
+    input.value = '';
+    msgEl.textContent = '등록 완료!';
+    msgEl.className = 'auth-message success';
+    setTimeout(() => { msgEl.textContent = ''; }, 2000);
+  } catch (e) {
+    msgEl.textContent = '등록 실패: ' + e.message;
+    msgEl.className = 'auth-message error';
+  }
+}
+
+function loadBugReports() {
+  if (!db) return;
+  if (bugListener) db.ref('bugs').off('value', bugListener);
+
+  bugListener = db.ref('bugs').orderByChild('createdAt').on('value', (snap) => {
+    const list = document.getElementById('bug-list');
+    if (!snap.exists()) {
+      list.innerHTML = '<div class="ranking-loading">등록된 문의가 없습니다.</div>';
+      return;
+    }
+
+    const items = [];
+    snap.forEach(child => {
+      items.push({ id: child.key, ...child.val() });
+    });
+    items.reverse(); // 최신순
+
+    const p = getActiveProfile();
+    const isStaff = p.nickname === '김건' || p.nickname === '억만장자';
+
+    let html = '';
+    items.forEach(item => {
+      const date = item.createdAt ? new Date(item.createdAt).toLocaleString('ko-KR') : '';
+      const resolved = item.resolved;
+      const statusClass = resolved ? 'done' : 'open';
+      const statusText = resolved ? '해결됨' : '미해결';
+
+      html += `<div class="bug-card${resolved ? ' resolved' : ''}">
+        <div class="bug-card-header">
+          <span class="bug-author">${item.author} ${roleBadgeHTML(item.author, 20)}</span>
+          <span class="bug-time">${date}</span>
+        </div>
+        <div class="bug-content">${escapeHTML(item.content)}</div>
+        <div class="bug-footer">
+          <span class="bug-status ${statusClass}">${statusText}</span>
+          ${isStaff && !resolved ? `<button class="bug-resolve-btn" onclick="resolveBug('${item.id}')">해결</button>` : ''}
+        </div>
+        ${item.resolvedBy ? `<div class="bug-resolver">${item.resolvedBy} 님이 해결 처리</div>` : ''}
+      </div>`;
+    });
+
+    list.innerHTML = html;
+  });
+}
+
+async function resolveBug(bugId) {
+  if (!db || !currentUser) return;
+  await db.ref('bugs/' + bugId).update({
+    resolved: true,
+    resolvedBy: currentUser.nickname
+  });
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ==================== RANKING ====================
 async function openRanking() {
   showScreen('screen-ranking');
