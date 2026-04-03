@@ -1023,8 +1023,9 @@ body {
 
 .boss-name {
   color: #ffffff;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 900;
+  text-align: center;
   text-shadow: 0 2px 8px rgba(255,0,0,0.6), 0 1px 4px rgba(0,0,0,0.8);
   margin-bottom: 6px;
 }
