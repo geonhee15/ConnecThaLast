@@ -37,15 +37,51 @@
   </div>
   <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
-      <h3>공지사항</h3>
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" id="sb-tab-notice" onclick="switchSidebarTab('notice')">공지사항</button>
+        <button class="sidebar-tab" id="sb-tab-social" onclick="switchSidebarTab('social')">소셜</button>
+      </div>
       <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
     </div>
-    <div id="notice-write" class="notice-write" style="display:none">
-      <input type="text" id="notice-title-input" class="notice-title-input" placeholder="제목" maxlength="50">
-      <textarea id="notice-input" class="notice-textarea" placeholder="내용 작성..." rows="2"></textarea>
-      <button class="btn btn-primary btn-small" onclick="postNotice()">등록</button>
+
+    <!-- 공지사항 탭 -->
+    <div id="sb-notice" class="sidebar-content">
+      <div id="notice-write" class="notice-write" style="display:none">
+        <input type="text" id="notice-title-input" class="notice-title-input" placeholder="제목" maxlength="50">
+        <textarea id="notice-input" class="notice-textarea" placeholder="내용 작성..." rows="2"></textarea>
+        <button class="btn btn-primary btn-small" onclick="postNotice()">등록</button>
+      </div>
+      <div id="notice-list" class="notice-list"></div>
     </div>
-    <div id="notice-list" class="notice-list"></div>
+
+    <!-- 소셜 탭 -->
+    <div id="sb-social" class="sidebar-content" style="display:none">
+      <div class="social-section">
+        <div class="social-section-title">온라인 플레이어</div>
+        <div id="online-players-list" class="social-list"></div>
+      </div>
+      <div class="social-section">
+        <div class="social-section-title">친구 요청 <span id="friend-req-count"></span></div>
+        <div id="friend-requests-list" class="social-list"></div>
+      </div>
+      <div class="social-section">
+        <div class="social-section-title">친구 (<span id="friend-count">0</span>)</div>
+        <div id="friends-list" class="social-list"></div>
+      </div>
+    </div>
+
+    <!-- 채팅 패널 -->
+    <div id="sb-chat" class="sidebar-content" style="display:none">
+      <div class="chat-header">
+        <button class="chat-back" onclick="closeChatPanel()">←</button>
+        <span id="chat-partner-name">친구</span>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" class="chat-input" placeholder="메시지 입력..." autocomplete="off">
+        <button class="btn btn-primary btn-small" onclick="sendChat()">전송</button>
+      </div>
+    </div>
   </div>
   <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
@@ -68,7 +104,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.2.1</p>
+      <p class="version-text">v2.3.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -139,7 +175,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.2.1</p>
+      <p class="version-text">v2.3.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -622,6 +658,7 @@
   <script src="game.js"></script>
   <script src="multi.js"></script>
   <script src="boss.js"></script>
+  <script src="social.js"></script>
   <script src="auth.js"></script>
 </body>
 </html>
