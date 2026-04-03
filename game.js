@@ -1038,6 +1038,41 @@ function updateBossCard() {
 
 // tryBossBattle is in boss.js
 
+// ==================== VIEW USER PROFILE ====================
+async function viewUserProfile(nickname) {
+  if (!db) return;
+  try {
+    const snap = await db.ref('users/' + nickname).get();
+    if (!snap.exists()) return;
+    const u = snap.val();
+
+    const total = (u.wins || 0) + (u.losses || 0);
+    const winrate = total > 0 ? Math.round((u.wins / total) * 100) : 0;
+
+    const popup = document.getElementById('user-profile-popup');
+    popup.innerHTML = `
+      <div class="user-popup-card">
+        <button class="boss-tutorial-close" onclick="closeUserProfile()">&times;</button>
+        <div class="user-popup-avatar">&#128100;</div>
+        <div class="user-popup-name">${u.nickname} ${roleBadgeHTML(u.nickname, 30)}</div>
+        <div class="user-popup-uid">#${u.userId || '???'}</div>
+        <div class="user-popup-level">${getLevelIcon(u.level || 1) ? `<img src="${getLevelIcon(u.level || 1)}" style="height:50px;vertical-align:middle">` : ''} <span style="font-size:1.2rem;font-weight:900;color:#667eea">Lv.${u.level || 1}</span></div>
+        <div class="user-popup-stats">
+          <div class="user-popup-stat"><div class="stat-value">${u.wins || 0}</div><div class="stat-label">승리</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${u.losses || 0}</div><div class="stat-label">패배</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${winrate}%</div><div class="stat-label">승률</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${(u.totalExp || 0).toLocaleString()}</div><div class="stat-label">총 경험치</div></div>
+        </div>
+      </div>
+    `;
+    popup.style.display = 'flex';
+  } catch(e) {}
+}
+
+function closeUserProfile() {
+  document.getElementById('user-profile-popup').style.display = 'none';
+}
+
 // ==================== NOTICE / SIDEBAR ====================
 let sidebarOpen = false;
 let readNotices = new Set();
@@ -1312,7 +1347,7 @@ async function openRanking() {
       const rank = i + 1;
       const isMe = u.userId === p.userId;
       const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-      html += `<div class="ranking-row${isMe ? ' me' : ''}">
+      html += `<div class="ranking-row${isMe ? ' me' : ''}" onclick="viewUserProfile('${u.nickname}')" style="cursor:pointer">
         <span class="rank-num ${rankClass}">${rank}</span>
         <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 40)}</span>
         <span class="rank-level">Lv.${u.level}</span>

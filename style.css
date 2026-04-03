@@ -1528,6 +1528,64 @@ body {
   text-align: right;
 }
 
+/* ===== User Profile Popup ===== */
+.user-popup-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-popup-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 24px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.user-popup-avatar {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.user-popup-name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-bottom: 2px;
+}
+
+.user-popup-uid {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+
+.user-popup-level {
+  margin-bottom: 16px;
+}
+
+.user-popup-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+}
+
+.user-popup-stat {
+  text-align: center;
+}
+
+.user-popup-stat .stat-value {
+  font-size: 1.2rem;
+}
+
 /* ===== Dictionary Screen ===== */
 .dict-container {
   width: 100%;
