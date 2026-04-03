@@ -564,6 +564,11 @@ function showStartWord(word) {
   state.usedWords.add(word);
   addUsedWordTag(word, 'start');
 
+  // 제시어 표시
+  const turnInd = document.getElementById('turn-indicator');
+  turnInd.textContent = '제시어';
+  turnInd.className = 'turn-indicator';
+
   playWordAnimation(word, () => {
     const lastChar = word[word.length - 1];
     state.nextChar = lastChar;
