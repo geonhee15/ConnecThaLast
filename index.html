@@ -21,7 +21,8 @@
       <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
     </div>
     <div id="notice-write" class="notice-write" style="display:none">
-      <textarea id="notice-input" class="notice-textarea" placeholder="공지사항 작성..." rows="2"></textarea>
+      <input type="text" id="notice-title-input" class="notice-title-input" placeholder="제목" maxlength="50">
+      <textarea id="notice-input" class="notice-textarea" placeholder="내용 작성..." rows="2"></textarea>
       <button class="btn btn-primary btn-small" onclick="postNotice()">등록</button>
     </div>
     <div id="notice-list" class="notice-list"></div>

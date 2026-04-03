@@ -1036,13 +1036,11 @@ function saveReadNotices() {
 }
 
 async function postNotice() {
-  const input = document.getElementById('notice-input');
-  const text = input.value.trim();
-  if (!text || !db || !currentUser) return;
-
-  const lines = text.split('\n');
-  const title = lines[0].substring(0, 50);
-  const body = text;
+  const titleInput = document.getElementById('notice-title-input');
+  const bodyInput = document.getElementById('notice-input');
+  const title = titleInput.value.trim();
+  const body = bodyInput.value.trim();
+  if (!title || !body || !db || !currentUser) return;
 
   await db.ref('notices').push({
     title: title,
@@ -1050,7 +1048,8 @@ async function postNotice() {
     author: currentUser.nickname,
     createdAt: firebase.database.ServerValue.TIMESTAMP
   });
-  input.value = '';
+  titleInput.value = '';
+  bodyInput.value = '';
 }
 
 function loadNotices() {

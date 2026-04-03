@@ -103,6 +103,20 @@
   gap: 8px;
 }
 
+.notice-title-input {
+  padding: 8px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+}
+
+.notice-title-input:focus {
+  border-color: #667eea;
+}
+
 .notice-textarea {
   padding: 8px 12px;
   border: 1.5px solid #ddd;
