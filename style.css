@@ -1571,41 +1571,6 @@ body {
   cursor: not-allowed;
 }
 
-.bot-card-boss.locked::before {
-  content: '';
-  position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 18px,
-    rgba(150, 150, 150, 0.25) 18px,
-    rgba(150, 150, 150, 0.25) 22px
-  );
-  z-index: 1;
-  pointer-events: none;
-}
-
-.bot-card-boss.locked::after {
-  content: '';
-  position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 18px,
-    rgba(150, 150, 150, 0.25) 18px,
-    rgba(150, 150, 150, 0.25) 22px
-  );
-  z-index: 1;
-  pointer-events: none;
-}
 
 .bot-card-boss.locked:hover {
   transform: none;
