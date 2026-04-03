@@ -23,13 +23,13 @@ function expForLevel(level) {
 
 // 경험치 테이블 (봇 레벨별 승/패)
 const EXP_TABLE = {
-  1: { win: 5,  lose: 0  }, // 초보봇
-  2: { win: 10, lose: 5  }, // 중수봇
-  3: { win: 15, lose: 10 }, // 고수봇
-  4: { win: 18, lose: 10 }, // 좀고수봇
-  5: { win: 20, lose: 10 }, // 초고수봇
-  6: { win: 40, lose: 5  }, // 신봇
-  7: { win: 5,  lose: 0  }  // 롱봇
+  1: { win: 8,   lose: 0  }, // 초보봇
+  2: { win: 15,  lose: 5  }, // 중수봇
+  3: { win: 23,  lose: 10 }, // 고수봇
+  4: { win: 27,  lose: 12 }, // 좀고수봇
+  5: { win: 35,  lose: 15 }, // 초고수봇
+  6: { win: 60,  lose: 8  }, // 신봇
+  7: { win: 12,  lose: 0  }  // 롱봇
 };
 
 function loadProfile() {
@@ -973,6 +973,10 @@ function endGame(playerWins, reason) {
     // 다중 라운드 보너스: 라운드 승리 1회당 +3 EXP
     if (state.totalRounds > 1) {
       earnedExp += state.playerRoundWins * 3;
+    }
+    // 승리 시 1.5배 보너스
+    if (finalWin) {
+      earnedExp = Math.floor(earnedExp * 1.5);
     }
   }
 
