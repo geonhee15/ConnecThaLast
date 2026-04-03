@@ -137,6 +137,8 @@ function loginSuccess(userData) {
 
   saveProfile();
   updateProfileUI();
+  loadReadNotices();
+  checkUnreadNotices();
   showScreen('screen-home');
 }
 

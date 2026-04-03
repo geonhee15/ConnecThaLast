@@ -1006,6 +1006,140 @@ function endGame(playerWins, reason) {
   }, 800);
 }
 
+// ==================== NOTICE / SIDEBAR ====================
+let sidebarOpen = false;
+let readNotices = new Set();
+
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+  document.getElementById('sidebar-overlay').classList.toggle('open', sidebarOpen);
+
+  if (sidebarOpen) {
+    loadNotices();
+    // 어드민/오너만 작성 가능
+    const p = getActiveProfile();
+    const isStaff = p.nickname === '김건' || p.nickname === '억만장자';
+    document.getElementById('notice-write').style.display = isStaff ? '' : 'none';
+  }
+}
+
+function loadReadNotices() {
+  try {
+    const saved = localStorage.getItem('connecthalast_read_notices');
+    if (saved) readNotices = new Set(JSON.parse(saved));
+  } catch(e) {}
+}
+
+function saveReadNotices() {
+  localStorage.setItem('connecthalast_read_notices', JSON.stringify([...readNotices]));
+}
+
+async function postNotice() {
+  const input = document.getElementById('notice-input');
+  const text = input.value.trim();
+  if (!text || !db || !currentUser) return;
+
+  const lines = text.split('\n');
+  const title = lines[0].substring(0, 50);
+  const body = text;
+
+  await db.ref('notices').push({
+    title: title,
+    body: body,
+    author: currentUser.nickname,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  });
+  input.value = '';
+}
+
+function loadNotices() {
+  if (!db) return;
+  db.ref('notices').orderByChild('createdAt').once('value', (snap) => {
+    const list = document.getElementById('notice-list');
+    if (!snap.exists()) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;font-size:0.85rem">공지사항이 없습니다</div>';
+      updateNotifBadge(0);
+      return;
+    }
+
+    const items = [];
+    snap.forEach(child => {
+      items.push({ id: child.key, ...child.val() });
+    });
+    items.reverse();
+
+    let unread = 0;
+    let html = '';
+    items.forEach(item => {
+      const isRead = readNotices.has(item.id);
+      if (!isRead) unread++;
+      const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR') : '';
+
+      html += `<div class="notice-item">
+        <div class="notice-header" onclick="toggleNotice('${item.id}')">
+          <span class="notice-title">${escapeHTML(item.title)}${!isRead ? '<span class="notice-new">NEW</span>' : ''}</span>
+          <span class="notice-date">${date}</span>
+          <span class="notice-arrow" id="arrow-${item.id}">&#9660;</span>
+        </div>
+        <div class="notice-body" id="body-${item.id}">
+          ${escapeHTML(item.body)}
+          <div class="notice-author">- ${item.author} ${roleBadgeHTML(item.author, 16)}</div>
+        </div>
+      </div>`;
+    });
+
+    list.innerHTML = html;
+    updateNotifBadge(unread);
+  });
+}
+
+function toggleNotice(id) {
+  const body = document.getElementById('body-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  const isOpen = body.classList.contains('open');
+
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+
+  // 읽음 처리
+  if (!readNotices.has(id)) {
+    readNotices.add(id);
+    saveReadNotices();
+    // NEW 배지 제거
+    const header = body.previousElementSibling;
+    const newBadge = header.querySelector('.notice-new');
+    if (newBadge) newBadge.remove();
+    // 카운트 업데이트
+    const badge = document.getElementById('notif-badge');
+    let count = parseInt(badge.textContent) - 1;
+    updateNotifBadge(Math.max(0, count));
+  }
+}
+
+function updateNotifBadge(count) {
+  const badge = document.getElementById('notif-badge');
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// 주기적으로 안 읽은 공지 체크
+function checkUnreadNotices() {
+  if (!db) return;
+  db.ref('notices').once('value', (snap) => {
+    if (!snap.exists()) { updateNotifBadge(0); return; }
+    let unread = 0;
+    snap.forEach(child => {
+      if (!readNotices.has(child.key)) unread++;
+    });
+    updateNotifBadge(unread);
+  });
+}
+
 // ==================== BUG REPORT ====================
 let bugListener = null;
 
