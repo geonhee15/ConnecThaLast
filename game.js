@@ -389,10 +389,14 @@ function getRhythmSpeed() {
   return 1.0 + (10 - state.timerMax) * 0.05;
 }
 
-// KICK.wav를 지정 시간(ms) 후에 재생
+// KICK.wav를 지정 시간(ms) 후에 재생 (메인 사운드를 멈추지 않음)
 function playKickAt(delayMs) {
   setTimeout(() => {
-    playSound('kick');
+    const original = audioPool['kick'];
+    if (!original) return;
+    const clone = original.cloneNode();
+    clone.volume = 1.0;
+    clone.play().catch(() => {});
   }, delayMs);
 }
 
