@@ -150,7 +150,7 @@ function startBossBattle() {
   document.getElementById('boss-words-area').innerHTML = '';
   document.getElementById('boss-game-message').textContent = '';
 
-  // 16초 후 게임 시작
+  // 18초 후 게임 시작 (16초 영상 + 2초 딜레이)
   setTimeout(() => {
     if (!boss.active) return;
     document.getElementById('boss-game-ui').style.display = 'flex';
@@ -161,7 +161,7 @@ function startBossBattle() {
     boss.globalTimer = setTimeout(() => {
       if (boss.active && !boss.ended) endBossBattle(false);
     }, boss.timeLimit * 1000);
-  }, 16000);
+  }, 18000);
 }
 
 // ==================== UI HELPERS ====================
