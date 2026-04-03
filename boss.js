@@ -115,7 +115,23 @@ function tryBossBattle() {
   startBossBattle();
 }
 
+function closeBossTutorial() {
+  const noshow = document.getElementById('boss-tutorial-noshow');
+  if (noshow && noshow.checked) {
+    localStorage.setItem('connecthalast_boss_noshow', '1');
+  }
+  document.getElementById('boss-tutorial').classList.add('hidden');
+}
+
 function startBossBattle() {
+  // 설명 팝업
+  const noshow = localStorage.getItem('connecthalast_boss_noshow');
+  const tutorial = document.getElementById('boss-tutorial');
+  if (noshow === '1') {
+    tutorial.classList.add('hidden');
+  } else {
+    tutorial.classList.remove('hidden');
+  }
   boss.active = true;
   boss.ended = false;
   boss.hp = 10;
