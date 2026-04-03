@@ -161,9 +161,25 @@ async function startBossBattle() {
   const video = document.getElementById('boss-video');
   boss.video = video;
   video.src = 'Boss_IntroAndGameplay.mp4';
+  video.muted = false;
+  video.volume = 1.0;
   video.currentTime = 0;
   video.style.display = 'block';
-  video.play().catch(() => {});
+  video.style.opacity = '1';
+  video.load();
+  const playPromise = video.play();
+  if (playPromise) {
+    playPromise.catch(() => {
+      // 자동재생 차단 시 muted로 시작 후 클릭으로 unmute
+      video.muted = true;
+      video.play().catch(() => {});
+      const unmute = () => {
+        video.muted = false;
+        document.removeEventListener('click', unmute);
+      };
+      document.addEventListener('click', unmute);
+    });
+  }
 
   boss.gameStartTime = Date.now();
 
@@ -385,41 +401,32 @@ function endBossBattle(playerWins, reason) {
   video.style.opacity = '0';
 
   setTimeout(() => {
-    if (playerWins) {
-      // 굿 엔딩
-      video.src = 'Boss_GoodEnding.mp4';
-      video.style.opacity = '1';
-      video.currentTime = 0;
-      video.play().catch(() => {});
-      document.getElementById('boss-game-ui').style.display = 'none';
+    document.getElementById('boss-game-ui').style.display = 'none';
 
-      video.onended = () => {
-        // +750 EXP
+    const endingSrc = playerWins ? 'Boss_GoodEnding.mp4' : 'Boss_SadEnding.mp4';
+    video.src = endingSrc;
+    video.muted = false;
+    video.style.opacity = '1';
+    video.currentTime = 0;
+    video.load();
+    video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
+
+    video.onended = () => {
+      const p = getActiveProfile();
+      if (playerWins) {
         addExp(750);
-        const p = getActiveProfile();
         p.wins++;
         saveProfile();
         showScreen('screen-select');
         alert('보스에게 승리 하셨습니다! +750 경험치');
-        video.onended = null;
-      };
-    } else {
-      // 새드 엔딩
-      video.src = 'Boss_SadEnding.mp4';
-      video.style.opacity = '1';
-      video.currentTime = 0;
-      video.play().catch(() => {});
-      document.getElementById('boss-game-ui').style.display = 'none';
-
-      video.onended = () => {
-        const p = getActiveProfile();
+      } else {
         p.losses++;
         saveProfile();
         showScreen('screen-home');
         alert('보스에게 패배하셨습니다...');
-        video.onended = null;
-      };
-    }
+      }
+      video.onended = null;
+    };
   }, 1000);
 }
 
