@@ -286,12 +286,17 @@ function activateBossAnswers() {
   }
 }
 
+let bossAnswerLock = false;
+
 function handleBossAnswer(index) {
+  if (bossAnswerLock) return;
   const input = document.getElementById('boss-ans-' + index);
-  if (!input) return;
+  if (!input || input.disabled) return;
   const word = input.value.trim();
 
   if (!word) return;
+  bossAnswerLock = true;
+  setTimeout(() => { bossAnswerLock = false; }, 300);
 
   const bossWord = boss.currentBossWords[index];
   const lastChar = bossWord[bossWord.length - 1];
@@ -328,7 +333,13 @@ function moveToNextAnswer(currentIndex) {
   }
 }
 
+let finishTurnLock = false;
+
 function finishBossTurn() {
+  if (finishTurnLock) return;
+  finishTurnLock = true;
+  setTimeout(() => { finishTurnLock = false; }, 2500);
+
   stopBossTurnTimer();
 
   const successCount = boss.currentAnswers.filter(a => a !== null).length;
