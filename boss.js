@@ -179,13 +179,17 @@ function updateBossHearts() {
 
 // ==================== BOSS TURN ====================
 
+let bossTurnLock = false;
+
 function bossTurn() {
-  if (!boss.active || boss.ended) return;
+  if (!boss.active || boss.ended || bossTurnLock) return;
+  bossTurnLock = true;
 
   // 보스가 3단어 선택 (같은 첫글자)
   const words = chooseBoss3Words();
   if (!words || words.length === 0) {
-    endBossBattle(true); // 보스가 단어 못 찾음
+    bossTurnLock = false;
+    endBossBattle(true);
     return;
   }
 
@@ -193,47 +197,39 @@ function bossTurn() {
   boss.currentAnswers = [null, null, null];
   boss.answerIndex = 0;
 
-  // 페이드 투 블랙
-  const overlay = document.getElementById('boss-fade-overlay');
-  overlay.style.transition = 'opacity 0.3s';
-  overlay.style.opacity = '1';
+  // 3단어 UI 생성 (영상 위에 바로 표시, 페이드 없음)
+  const area = document.getElementById('boss-words-area');
+  area.innerHTML = '';
 
-  setTimeout(() => {
-    // 3단어 UI 생성
-    const area = document.getElementById('boss-words-area');
-    area.innerHTML = '';
+  words.forEach((w, i) => {
+    boss.usedWords.add(w);
+    const row = document.createElement('div');
+    row.className = 'boss-word-row';
+    row.innerHTML = `
+      <div class="boss-word-display" id="boss-wd-${i}"></div>
+      <span class="boss-word-arrow">→</span>
+      <input class="boss-word-answer" id="boss-ans-${i}" placeholder="?" disabled autocomplete="off">
+    `;
+    area.appendChild(row);
+  });
 
-    words.forEach((w, i) => {
-      boss.usedWords.add(w);
-      const row = document.createElement('div');
-      row.className = 'boss-word-row';
-      row.innerHTML = `
-        <div class="boss-word-display" id="boss-wd-${i}"></div>
-        <span class="boss-word-arrow">→</span>
-        <input class="boss-word-answer" id="boss-ans-${i}" placeholder="?" disabled autocomplete="off">
-      `;
-      area.appendChild(row);
-    });
-
-    // 애니메이션 순차 재생
-    let idx = 0;
-    function animNext() {
-      if (idx >= words.length) {
-        // 모든 애니메이션 끝 → 페이드 해제 + 입력 활성화
-        overlay.style.opacity = '0';
-        activateBossAnswers();
-        startBossTurnTimer();
-        return;
-      }
-      const el = document.getElementById('boss-wd-' + idx);
-      const i = idx;
-      idx++;
-      playBossWordAnim(words[i], el, () => {
-        setTimeout(animNext, 100);
-      });
+  // 애니메이션 순차 재생
+  let idx = 0;
+  function animNext() {
+    if (idx >= words.length) {
+      bossTurnLock = false;
+      activateBossAnswers();
+      startBossTurnTimer();
+      return;
     }
-    animNext();
-  }, 300);
+    const el = document.getElementById('boss-wd-' + idx);
+    const i = idx;
+    idx++;
+    playBossWordAnim(words[i], el, () => {
+      setTimeout(animNext, 100);
+    });
+  }
+  animNext();
 }
 
 function chooseBoss3Words() {
@@ -346,15 +342,15 @@ function finishBossTurn() {
     return;
   }
 
-  // 다음 보스 턴 (보스가 플레이어 답변 중 1개를 이어서)
+  // 다음 보스 턴
   setTimeout(() => {
+    if (!boss.active || boss.ended) return;
     const validAnswers = boss.currentAnswers.filter(a => a !== null);
     if (validAnswers.length > 0) {
       const picked = validAnswers[Math.floor(Math.random() * validAnswers.length)];
-      const lastChar = picked[picked.length - 1];
-      // 이 글자로 시작하는 3단어 찾기
-      boss.nextStartChar = lastChar;
+      boss.nextStartChar = picked[picked.length - 1];
     }
+    bossTurnLock = false;
     bossTurn();
   }, 2000);
 }
