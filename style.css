@@ -705,6 +705,22 @@ body {
   border-color: #ff9800;
 }
 
+.btn-bug-small {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  margin-top: 20px;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.btn-bug-small:hover {
+  color: #667eea;
+}
+
 /* ===== Bug Report Screen ===== */
 .bug-container {
   width: 100%;
