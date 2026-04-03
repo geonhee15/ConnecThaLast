@@ -65,7 +65,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v1.0.2</p>
+      <p class="version-text">v2.0.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -135,7 +135,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v1.0.2</p>
+      <p class="version-text">v2.0.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -345,6 +345,29 @@
 
   <!-- ===== 단어 사전 화면 ===== -->
   <!-- ===== 랭킹 화면 ===== -->
+  <!-- ===== 보스전 화면 ===== -->
+  <div id="screen-boss" class="screen" style="padding:0;background:#000">
+    <video id="boss-video" class="boss-video" playsinline></video>
+    <div id="boss-fade-overlay" class="boss-fade-overlay"></div>
+    <div id="boss-game-ui" class="boss-game-ui" style="display:none">
+      <div class="boss-timer-section">
+        <div class="timer-bar-bg">
+          <div id="boss-timer-bar" class="timer-bar-fill"></div>
+        </div>
+        <div id="boss-timer-text" class="timer-text" style="color:#fff">10.00s</div>
+      </div>
+      <div id="boss-current-word" class="current-word" style="color:#fff"></div>
+      <div id="boss-next-char" class="next-char-hint" style="color:#ccc"></div>
+      <div class="boss-input-area">
+        <input type="text" id="boss-word-input" class="boss-input" placeholder="단어를 입력하세요..." autocomplete="off" disabled>
+      </div>
+      <div id="boss-game-message" class="game-message" style="color:#ff6b6b"></div>
+      <div class="boss-used-words-area">
+        <div id="boss-used-words" class="used-words-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 문의/버그 화면 ===== -->
   <div id="screen-bug" class="screen">
     <div class="bug-container">
@@ -557,6 +580,7 @@
   <script src="words.js"></script>
   <script src="game.js"></script>
   <script src="multi.js"></script>
+  <script src="boss.js"></script>
   <script src="auth.js"></script>
 </body>
 </html>

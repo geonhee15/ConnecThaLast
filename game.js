@@ -330,7 +330,7 @@ const WAV_FILES = {
   5: '5-letters.wav',
   6: '6-letters.wav',
   7: '7-letters.wav',
-  kick: 'KICK.wav',
+  kick: 'Intense.wav',
   lastpart: 'Only-Lastpart.wav'
 };
 
@@ -1032,15 +1032,7 @@ function updateBossCard() {
   }
 }
 
-function tryBossBattle() {
-  const p = getActiveProfile();
-  if (p.level < 10) {
-    document.getElementById('boss-desc').textContent = `레벨이 부족합니다! (현재 Lv.${p.level})`;
-    return;
-  }
-  // TODO: 보스전 시작 로직
-  alert('보스전 준비 중...');
-}
+// tryBossBattle is in boss.js
 
 // ==================== NOTICE / SIDEBAR ====================
 let sidebarOpen = false;
