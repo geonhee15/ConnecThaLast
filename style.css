@@ -319,6 +319,12 @@ body {
   margin-bottom: 30px;
 }
 
+.sound-recommend {
+  font-size: 0.7rem;
+  color: #bbb;
+  font-weight: 400;
+}
+
 /* ===== Login Screen ===== */
 .login-container {
   text-align: center;
