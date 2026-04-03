@@ -1004,28 +1004,173 @@ body {
 
 .boss-game-ui {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   width: 100%;
+  height: 100%;
   z-index: 2;
-  padding: 10px 16px 20px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85) 30%);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
 }
 
-.boss-timer-section {
-  max-width: 400px;
-  margin: 0 auto 8px;
+.boss-game-ui > * {
+  pointer-events: auto;
 }
 
+/* 보스 체력바 */
+.boss-hp-section {
+  padding: 12px 20px 0;
+}
+
+.boss-name {
+  color: #ff4444;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  margin-bottom: 4px;
+}
+
+.boss-hp-bar-bg {
+  height: 10px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.boss-hp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0000, #ff4444);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+/* 중앙 */
+.boss-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.boss-timer-only {
+  color: rgba(255,255,255,0.8);
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  margin-bottom: 8px;
+}
+
+.boss-timer-only.warning { color: #ff6b6b; }
+.boss-timer-only.danger { color: #ff0000; font-weight: 900; }
+
+.boss-words-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.boss-word-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.boss-word-display {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  letter-spacing: 2px;
+  display: flex;
+  gap: 2px;
+}
+
+.boss-word-display .char {
+  display: inline-block;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.1s ease;
+}
+
+.boss-word-display .char.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.boss-word-display .char.pulse {
+  animation: charPulse 0.1s ease;
+}
+
+.boss-word-arrow {
+  color: rgba(255,255,255,0.4);
+  font-size: 1.2rem;
+}
+
+.boss-word-answer {
+  min-width: 80px;
+  padding: 4px 12px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  text-align: center;
+  outline: none;
+}
+
+.boss-word-answer:focus {
+  border-color: #ff4444;
+}
+
+.boss-word-answer.correct {
+  border-color: #4caf50;
+  background: rgba(76,175,80,0.2);
+}
+
+.boss-word-answer.wrong {
+  border-color: #e74c3c;
+  background: rgba(231,76,60,0.2);
+}
+
+/* 하트 */
+.boss-hearts {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  display: flex;
+  gap: 4px;
+}
+
+.boss-heart {
+  font-size: 1.4rem;
+  color: #ff4444;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  transition: all 0.3s;
+}
+
+.boss-heart.lost {
+  color: #333;
+  opacity: 0.4;
+}
+
+/* 하단 입력 */
 .boss-input-area {
-  max-width: 400px;
-  margin: 10px auto;
+  padding: 8px 16px 16px;
+  display: none;
 }
 
 .boss-input {
   width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  display: block;
   padding: 10px 16px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   border: 2px solid rgba(255,255,255,0.3);
   border-radius: 20px;
   outline: none;
@@ -1041,13 +1186,6 @@ body {
 
 .boss-input::placeholder {
   color: rgba(255,255,255,0.4);
-}
-
-.boss-used-words-area {
-  max-width: 400px;
-  margin: 6px auto 0;
-  max-height: 60px;
-  overflow-y: auto;
 }
 
 .btn-bug-small {

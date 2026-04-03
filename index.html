@@ -350,21 +350,34 @@
     <video id="boss-video" class="boss-video" playsinline preload="auto"></video>
     <div id="boss-fade-overlay" class="boss-fade-overlay"></div>
     <div id="boss-game-ui" class="boss-game-ui" style="display:none">
-      <div class="boss-timer-section">
-        <div class="timer-bar-bg">
-          <div id="boss-timer-bar" class="timer-bar-fill"></div>
+      <!-- 보스 체력바 -->
+      <div class="boss-hp-section">
+        <div class="boss-name">사전의 재앙</div>
+        <div class="boss-hp-bar-bg">
+          <div id="boss-hp-bar" class="boss-hp-bar-fill" style="width:100%"></div>
         </div>
-        <div id="boss-timer-text" class="timer-text" style="color:#fff">10.00s</div>
       </div>
-      <div id="boss-current-word" class="current-word" style="color:#fff"></div>
-      <div id="boss-next-char" class="next-char-hint" style="color:#ccc"></div>
+
+      <!-- 중앙 영역: 타이머 + 보스 단어 3개 -->
+      <div class="boss-center">
+        <div id="boss-timer-text" class="boss-timer-only">6.00s</div>
+        <div id="boss-words-area" class="boss-words-area"></div>
+      </div>
+
+      <!-- 좌하단 하트 -->
+      <div class="boss-hearts" id="boss-hearts">
+        <span class="boss-heart">&#10084;</span>
+        <span class="boss-heart">&#10084;</span>
+        <span class="boss-heart">&#10084;</span>
+        <span class="boss-heart">&#10084;</span>
+        <span class="boss-heart">&#10084;</span>
+      </div>
+
+      <!-- 하단 입력 -->
       <div class="boss-input-area">
         <input type="text" id="boss-word-input" class="boss-input" placeholder="단어를 입력하세요..." autocomplete="off" disabled>
       </div>
       <div id="boss-game-message" class="game-message" style="color:#ff6b6b"></div>
-      <div class="boss-used-words-area">
-        <div id="boss-used-words" class="used-words-list"></div>
-      </div>
     </div>
   </div>
 

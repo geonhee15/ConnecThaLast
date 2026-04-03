@@ -1,33 +1,28 @@
-// ==================== BOSS BATTLE SYSTEM ====================
+// ==================== BOSS BATTLE - 사전의 재앙 ====================
 
 const boss = {
   active: false,
+  ended: false,
   video: null,
-  timerMax: 10,
-  timerLeft: 10,
-  timerId: null,
-  turnCount: 0,
+  hp: 10,            // 보스 체력 10칸
+  hearts: 5,         // 플레이어 하트
   usedWords: new Set(),
-  nextChar: '',
-  playerScore: 0,
-  bossScore: 0,
-  isPlayerTurn: true,
-  isAnimating: false,
-  gameStartTime: 0,   // 영상 시작 기준
-  timeLimit: 6 * 60 + 55, // 6분 55초
-  ended: false
+  globalTimer: null,
+  turnTimer: null,
+  turnTimeLeft: 6,
+  currentBossWords: [],  // 보스가 낸 3단어
+  currentAnswers: [],    // 플레이어 답변
+  answerIndex: 0,        // 현재 입력 중인 답변 인덱스
+  timeLimit: 6 * 60 + 55
 };
 
-// 보스전 WAV 파일 매핑
+const BOSS_SPEED = 1.75;
+
+// 보스전 WAV
 const BOSS_WAV_FILES = {
-  2: 'Boss_2-Letters.wav',
-  3: 'Boss_3-Letters.wav',
-  4: 'Boss_4-Letters.wav',
-  5: 'Boss_5-Letters.wav',
-  6: 'Boss_6-Letters.wav',
-  7: 'Boss_7-Letters.wav',
-  kick: 'Boss_Intense.wav',
-  lastpart: 'Boss_Lastpart.wav'
+  2: 'Boss_2-Letters.wav', 3: 'Boss_3-Letters.wav', 4: 'Boss_4-Letters.wav',
+  5: 'Boss_5-Letters.wav', 6: 'Boss_6-Letters.wav', 7: 'Boss_7-Letters.wav',
+  kick: 'Boss_Intense.wav', lastpart: 'Boss_Lastpart.wav'
 };
 
 const bossAudioPool = {};
@@ -36,103 +31,80 @@ let bossAudioLoaded = false;
 function preloadBossAudio() {
   if (bossAudioLoaded) return Promise.resolve();
   const promises = [];
-  for (const [key, filename] of Object.entries(BOSS_WAV_FILES)) {
+  for (const [key, fn] of Object.entries(BOSS_WAV_FILES)) {
     if (bossAudioPool[key]) continue;
-    promises.push(new Promise((resolve) => {
-      const audio = new Audio(filename);
-      audio.preload = 'auto';
-      audio.addEventListener('canplaythrough', () => { bossAudioPool[key] = audio; resolve(); }, { once: true });
-      audio.addEventListener('error', () => resolve(), { once: true });
-      setTimeout(resolve, 3000);
-      audio.load();
+    promises.push(new Promise(r => {
+      const a = new Audio(fn);
+      a.preload = 'auto';
+      a.addEventListener('canplaythrough', () => { bossAudioPool[key] = a; r(); }, { once: true });
+      a.addEventListener('error', () => r(), { once: true });
+      setTimeout(r, 3000);
+      a.load();
     }));
   }
   return Promise.all(promises).then(() => { bossAudioLoaded = true; });
 }
 
 let bossCurrentSound = null;
-function playBossSound(key, rate = 1.0) {
-  const original = bossAudioPool[key];
-  if (!original) return null;
-  if (bossCurrentSound) {
-    try { bossCurrentSound.pause(); bossCurrentSound.currentTime = 0; } catch(e) {}
-  }
-  const clone = original.cloneNode();
-  clone.volume = 1.0;
-  clone.playbackRate = rate;
-  clone.play().catch(() => {});
-  bossCurrentSound = clone;
-  return clone;
+function playBossSound(key, rate) {
+  const orig = bossAudioPool[key];
+  if (!orig) return;
+  if (bossCurrentSound) try { bossCurrentSound.pause(); bossCurrentSound.currentTime = 0; } catch(e) {}
+  const c = orig.cloneNode();
+  c.volume = 1.0;
+  c.playbackRate = rate || BOSS_SPEED;
+  c.play().catch(() => {});
+  bossCurrentSound = c;
 }
 
-function playBossKickAt(delayMs) {
+function playBossKickAt(ms) {
   setTimeout(() => {
-    const original = bossAudioPool['kick'];
-    if (!original) return;
-    const clone = original.cloneNode();
-    clone.volume = 1.0;
-    clone.play().catch(() => {});
-  }, delayMs);
+    const orig = bossAudioPool['kick'];
+    if (!orig) return;
+    const c = orig.cloneNode();
+    c.volume = 1.0;
+    c.playbackRate = BOSS_SPEED;
+    c.play().catch(() => {});
+  }, ms);
 }
 
 // ==================== BOSS WORD ANIMATION ====================
 
-function playBossWordAnimation(word, callback) {
-  boss.isAnimating = true;
-  const wordEl = document.getElementById('boss-current-word');
+function playBossWordAnim(word, targetEl, callback) {
   const chars = word.split('');
   const n = chars.length;
+  targetEl.innerHTML = chars.map((c, i) => `<span class="char" data-idx="${i}">${c}</span>`).join('');
 
-  wordEl.innerHTML = chars.map((c, i) =>
-    `<span class="char" data-idx="${i}">${c}</span>`
-  ).join('');
-
-  const speed = 1.0 + (10 - boss.timerMax) * 0.05;
-  const sc = 1 / speed;
+  const sc = 1 / BOSS_SPEED;
 
   if (n >= 2 && n <= 7) {
-    playBossSound(String(n), speed);
-
-    const charBeats = WAV_CHAR_BEATS[n];
-    charBeats.forEach((beatTime, i) => {
-      setTimeout(() => revealChar(wordEl, i), beatTime * 1000 * sc);
+    playBossSound(String(n));
+    WAV_CHAR_BEATS[n].forEach((t, i) => {
+      setTimeout(() => revealChar(targetEl, i), t * 1000 * sc);
     });
-
-    FINALE_BEATS.forEach((beatTime, i) => {
-      setTimeout(() => pulseAllChars(wordEl, i), beatTime * 1000 * sc);
+    FINALE_BEATS.forEach((t, i) => {
+      setTimeout(() => pulseAllChars(targetEl, i), t * 1000 * sc);
     });
-
-    const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
-    setTimeout(() => {
-      wordEl.classList.remove('finale-pulse');
-      boss.isAnimating = false;
-      if (callback) callback();
-    }, totalTime);
-
+    setTimeout(() => { targetEl.classList.remove('finale-pulse'); if (callback) callback(); }, FINALE_BEATS[2] * 1000 * sc + 300);
   } else if (n >= 8) {
-    playBossSound('lastpart', speed);
-    const totalCharTime = 1282 * sc;
-    const charTimings = [];
+    playBossSound('lastpart');
+    const totalT = 1282 * sc;
     for (let i = 0; i < n; i++) {
-      charTimings.push(Math.round((i / (n - 1)) * totalCharTime));
-    }
-    charTimings.forEach((tMs, i) => {
+      const tMs = Math.round((i / (n - 1)) * totalT);
       playBossKickAt(tMs);
-      setTimeout(() => revealChar(wordEl, i), tMs);
+      setTimeout(() => revealChar(targetEl, i), tMs);
+    }
+    FINALE_BEATS.forEach((t, i) => {
+      setTimeout(() => pulseAllChars(targetEl, i), t * 1000 * sc);
     });
-    FINALE_BEATS.forEach((beatTime, i) => {
-      setTimeout(() => pulseAllChars(wordEl, i), beatTime * 1000 * sc);
-    });
-    const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
-    setTimeout(() => {
-      wordEl.classList.remove('finale-pulse');
-      boss.isAnimating = false;
-      if (callback) callback();
-    }, totalTime);
+    setTimeout(() => { targetEl.classList.remove('finale-pulse'); if (callback) callback(); }, FINALE_BEATS[2] * 1000 * sc + 300);
+  } else {
+    targetEl.innerHTML = `<span class="char visible">${word}</span>`;
+    if (callback) setTimeout(callback, 200);
   }
 }
 
-// ==================== START BOSS ====================
+// ==================== START ====================
 
 function tryBossBattle() {
   const p = getActiveProfile();
@@ -143,21 +115,18 @@ function tryBossBattle() {
   startBossBattle();
 }
 
-async function startBossBattle() {
+function startBossBattle() {
   boss.active = true;
   boss.ended = false;
+  boss.hp = 10;
+  boss.hearts = 5;
   boss.usedWords = new Set();
-  boss.turnCount = 0;
-  boss.timerMax = 10;
-  boss.playerScore = 0;
-  boss.bossScore = 0;
-  boss.isAnimating = false;
+  boss.answerIndex = 0;
 
   preloadBossAudio();
-
   showScreen('screen-boss');
 
-  // 풀스크린 비디오 시작
+  // 비디오
   const video = document.getElementById('boss-video');
   boss.video = video;
   video.src = 'Boss_IntroAndGameplay.mp4';
@@ -167,235 +136,284 @@ async function startBossBattle() {
   video.style.display = 'block';
   video.style.opacity = '1';
   video.load();
-  const playPromise = video.play();
-  if (playPromise) {
-    playPromise.catch(() => {
-      // 자동재생 차단 시 muted로 시작 후 클릭으로 unmute
-      video.muted = true;
-      video.play().catch(() => {});
-      const unmute = () => {
-        video.muted = false;
-        document.removeEventListener('click', unmute);
-      };
-      document.addEventListener('click', unmute);
-    });
-  }
+  video.play().catch(() => {
+    video.muted = true;
+    video.play().catch(() => {});
+    const unmute = () => { video.muted = false; document.removeEventListener('click', unmute); };
+    document.addEventListener('click', unmute);
+  });
 
-  boss.gameStartTime = Date.now();
-
-  // 입력 UI 숨김
+  // UI 초기화
   document.getElementById('boss-game-ui').style.display = 'none';
-  document.getElementById('boss-current-word').innerHTML = '';
-  document.getElementById('boss-next-char').innerHTML = '';
-  document.getElementById('boss-word-input').value = '';
-  document.getElementById('boss-used-words').innerHTML = '';
+  document.getElementById('boss-hp-bar').style.width = '100%';
+  updateBossHearts();
+  document.getElementById('boss-words-area').innerHTML = '';
   document.getElementById('boss-game-message').textContent = '';
 
-  // 14초 후 게임 UI 표시 + 시작
+  // 16초 후 게임 시작
   setTimeout(() => {
     if (!boss.active) return;
-    document.getElementById('boss-game-ui').style.display = 'block';
+    document.getElementById('boss-game-ui').style.display = 'flex';
     document.getElementById('boss-game-ui').style.animation = 'fadeIn 0.5s ease';
+    bossTurn();
 
-    const startWord = getRandomStartWord();
-    boss.usedWords.add(startWord);
-    boss.nextChar = startWord[startWord.length - 1];
-
-    // 시작 단어 표시
-    playBossWordAnimation(startWord, () => {
-      showBossNextCharHint(boss.nextChar);
-      boss.turnCount = 1;
-      boss.timerMax = 10;
-      boss.isPlayerTurn = true;
-      startBossTimer();
-      document.getElementById('boss-word-input').disabled = false;
-      document.getElementById('boss-word-input').focus();
-    });
-
-    // 6분 55초 타이머
+    // 6분 55초 글로벌 타이머
     boss.globalTimer = setTimeout(() => {
-      if (boss.active && !boss.ended) {
-        endBossBattle(false, '시간 초과!');
-      }
+      if (boss.active && !boss.ended) endBossBattle(false);
     }, boss.timeLimit * 1000);
-  }, 14000);
+  }, 16000);
 }
 
-// ==================== BOSS TIMER ====================
+// ==================== UI HELPERS ====================
 
-function startBossTimer() {
-  stopBossTimer();
-  boss.timerLeft = boss.timerMax;
-  updateBossTimerDisplay();
-
-  boss.timerId = setInterval(() => {
-    boss.timerLeft -= 0.05;
-    if (boss.timerLeft <= 0) {
-      boss.timerLeft = 0;
-      stopBossTimer();
-      if (boss.isPlayerTurn) {
-        endBossBattle(false, '시간 초과!');
-      } else {
-        // 보스가 못 이음 → 승리
-        endBossBattle(true, '보스가 단어를 찾지 못했습니다!');
-      }
-    }
-    updateBossTimerDisplay();
-  }, 50);
+function updateBossHP() {
+  document.getElementById('boss-hp-bar').style.width = (boss.hp * 10) + '%';
 }
 
-function stopBossTimer() {
-  if (boss.timerId) {
-    clearInterval(boss.timerId);
-    boss.timerId = null;
-  }
-}
-
-function updateBossTimerDisplay() {
-  const bar = document.getElementById('boss-timer-bar');
-  const text = document.getElementById('boss-timer-text');
-  if (!bar || !text) return;
-  const pct = Math.max(0, (boss.timerLeft / boss.timerMax) * 100);
-  bar.style.width = pct + '%';
-  text.textContent = boss.timerLeft.toFixed(2) + 's';
-  bar.classList.remove('warning', 'danger');
-  text.classList.remove('warning', 'danger');
-  if (boss.timerLeft <= 2) { bar.classList.add('danger'); text.classList.add('danger'); }
-  else if (boss.timerLeft <= 4) { bar.classList.add('warning'); text.classList.add('warning'); }
-}
-
-// ==================== BOSS NEXT CHAR HINT ====================
-
-function showBossNextCharHint(char) {
-  const alternatives = getAlternativeChars(char);
-  let hint = `<strong>${char}</strong>`;
-  if (alternatives.length > 1) {
-    hint += ` (${alternatives.slice(1).map(c => `<strong>${c}</strong>`).join(', ')} 가능)`;
-  }
-  document.getElementById('boss-next-char').innerHTML = hint;
-}
-
-// ==================== PLAYER SUBMIT ====================
-
-let bossSubmitLock = false;
-
-function submitBossWord() {
-  if (!boss.active || !boss.isPlayerTurn || boss.isAnimating || bossSubmitLock || boss.ended) return;
-  bossSubmitLock = true;
-  setTimeout(() => { bossSubmitLock = false; }, 500);
-
-  const input = document.getElementById('boss-word-input');
-  const word = input.value.trim();
-  input.value = '';
-
-  if (!word) return;
-
-  // 유효성 검사
-  if (word.length < 2) { document.getElementById('boss-game-message').textContent = '2글자 이상 입력하세요.'; return; }
-  if (!isValidWord(word)) { document.getElementById('boss-game-message').textContent = '사전에 없는 단어입니다.'; return; }
-  if (boss.usedWords.has(word)) { document.getElementById('boss-game-message').textContent = '이미 사용한 단어입니다.'; return; }
-  if (!isValidChain(boss.nextChar, word)) {
-    const alts = getAlternativeChars(boss.nextChar);
-    document.getElementById('boss-game-message').textContent = `"${alts.join('" 또는 "')}"(으)로 시작하는 단어를 입력하세요.`;
-    return;
-  }
-
-  stopBossTimer();
-  document.getElementById('boss-game-message').textContent = '';
-
-  const score = 10 + Math.max(0, (word.length - 2)) * 5;
-  boss.playerScore += score;
-  boss.usedWords.add(word);
-  addBossUsedWord(word, 'player');
-
-  // 페이드 → 애니메이션
-  const overlay = document.getElementById('boss-fade-overlay');
-  overlay.style.opacity = '0';
-
-  playBossWordAnimation(word, () => {
-    boss.nextChar = word[word.length - 1];
-    showBossNextCharHint(boss.nextChar);
-    boss.turnCount++;
-    boss.timerMax = Math.max(2, 10 - (boss.turnCount - 1) * 0.25);
-    // 보스 턴
-    boss.isPlayerTurn = false;
-    startBossTurn();
+function updateBossHearts() {
+  const hearts = document.querySelectorAll('#boss-hearts .boss-heart');
+  hearts.forEach((h, i) => {
+    h.classList.toggle('lost', i >= boss.hearts);
   });
 }
 
 // ==================== BOSS TURN ====================
 
-function startBossTurn() {
-  boss.isPlayerTurn = false;
-  startBossTimer();
+function bossTurn() {
+  if (!boss.active || boss.ended) return;
 
-  // 좀고수봇 AI
-  const candidates = findWordsStartingWith(boss.nextChar)
-    .filter(entry => !boss.usedWords.has(entry.w) && isModeValidWord(entry.w));
-  const safe = candidates.filter(e => !isKillerWord(e.w));
-  const pool = safe.length > 0 ? safe : candidates;
-
-  if (pool.length === 0) {
-    // 보스 패배
-    return; // 타이머가 처리
+  // 보스가 3단어 선택 (같은 첫글자)
+  const words = chooseBoss3Words();
+  if (!words || words.length === 0) {
+    endBossBattle(true); // 보스가 단어 못 찾음
+    return;
   }
 
-  const botWord = pool[Math.floor(Math.random() * pool.length)].w;
+  boss.currentBossWords = words;
+  boss.currentAnswers = [null, null, null];
+  boss.answerIndex = 0;
 
-  // 0.3초 뒤 보스 단어 표시 (빠른 반응)
+  // 페이드 투 블랙
+  const overlay = document.getElementById('boss-fade-overlay');
+  overlay.style.transition = 'opacity 0.3s';
+  overlay.style.opacity = '1';
+
   setTimeout(() => {
-    if (!boss.active || boss.ended) return;
-    stopBossTimer();
+    // 3단어 UI 생성
+    const area = document.getElementById('boss-words-area');
+    area.innerHTML = '';
 
-    const score = 10 + Math.max(0, (botWord.length - 2)) * 5;
-    boss.bossScore += score;
-    boss.usedWords.add(botWord);
-    addBossUsedWord(botWord, 'bot');
+    words.forEach((w, i) => {
+      boss.usedWords.add(w);
+      const row = document.createElement('div');
+      row.className = 'boss-word-row';
+      row.innerHTML = `
+        <div class="boss-word-display" id="boss-wd-${i}"></div>
+        <span class="boss-word-arrow">→</span>
+        <input class="boss-word-answer" id="boss-ans-${i}" placeholder="?" disabled autocomplete="off">
+      `;
+      area.appendChild(row);
+    });
 
-    // 페이드 투 블랙 → 단어 애니메이션
-    const overlay = document.getElementById('boss-fade-overlay');
-    overlay.style.transition = 'opacity 0.3s';
-    overlay.style.opacity = '1';
-
-    setTimeout(() => {
-      playBossWordAnimation(botWord, () => {
-        // 페이드 아웃 해제
-        overlay.style.transition = 'opacity 0.3s';
+    // 애니메이션 순차 재생
+    let idx = 0;
+    function animNext() {
+      if (idx >= words.length) {
+        // 모든 애니메이션 끝 → 페이드 해제 + 입력 활성화
         overlay.style.opacity = '0';
-
-        boss.nextChar = botWord[botWord.length - 1];
-        showBossNextCharHint(boss.nextChar);
-        boss.turnCount++;
-        boss.timerMax = Math.max(2, 10 - (boss.turnCount - 1) * 0.25);
-        boss.isPlayerTurn = true;
-        startBossTimer();
-        document.getElementById('boss-word-input').focus();
+        activateBossAnswers();
+        startBossTurnTimer();
+        return;
+      }
+      const el = document.getElementById('boss-wd-' + idx);
+      const i = idx;
+      idx++;
+      playBossWordAnim(words[i], el, () => {
+        setTimeout(animNext, 100);
       });
-    }, 300);
+    }
+    animNext();
   }, 300);
 }
 
-// ==================== USED WORDS ====================
+function chooseBoss3Words() {
+  // 랜덤 첫글자 → 3단어 선택
+  const allChars = Object.keys(WORD_DB);
+  const shuffled = allChars.sort(() => Math.random() - 0.5);
 
-function addBossUsedWord(word, type) {
-  const container = document.getElementById('boss-used-words');
-  const tag = document.createElement('span');
-  tag.className = `used-word-tag ${type}-word`;
-  tag.textContent = word;
-  container.appendChild(tag);
-  container.scrollTop = container.scrollHeight;
+  for (const startChar of shuffled) {
+    const candidates = findWordsStartingWith(startChar)
+      .filter(e => !boss.usedWords.has(e.w) && e.w.length >= 2);
+    if (candidates.length >= 3) {
+      // 랜덤 3개
+      const picked = [];
+      const pool = [...candidates].sort(() => Math.random() - 0.5);
+      for (const c of pool) {
+        if (picked.length >= 3) break;
+        // 끝글자로 이을 수 있는 단어가 있는지 확인
+        const nextWords = findWordsStartingWith(c.w[c.w.length - 1])
+          .filter(e => !boss.usedWords.has(e.w));
+        if (nextWords.length >= 1) {
+          picked.push(c.w);
+        }
+      }
+      if (picked.length === 3) return picked;
+    }
+  }
+  return null;
 }
 
-// ==================== BOSS END ====================
+// ==================== PLAYER ANSWER ====================
 
-function endBossBattle(playerWins, reason) {
+function activateBossAnswers() {
+  boss.answerIndex = 0;
+  const first = document.getElementById('boss-ans-0');
+  if (first) {
+    first.disabled = false;
+    first.focus();
+  }
+}
+
+function handleBossAnswer(index) {
+  const input = document.getElementById('boss-ans-' + index);
+  if (!input) return;
+  const word = input.value.trim();
+
+  if (!word) return;
+
+  const bossWord = boss.currentBossWords[index];
+  const lastChar = bossWord[bossWord.length - 1];
+
+  // 검증
+  if (word.length < 2 || !isValidWord(word) || boss.usedWords.has(word) || !isValidChain(lastChar, word)) {
+    input.classList.add('wrong');
+    boss.currentAnswers[index] = null;
+    // 다음으로
+    moveToNextAnswer(index);
+    return;
+  }
+
+  // 정답
+  input.classList.add('correct');
+  input.disabled = true;
+  boss.currentAnswers[index] = word;
+  boss.usedWords.add(word);
+  moveToNextAnswer(index);
+}
+
+function moveToNextAnswer(currentIndex) {
+  const next = currentIndex + 1;
+  if (next < 3) {
+    boss.answerIndex = next;
+    const nextInput = document.getElementById('boss-ans-' + next);
+    if (nextInput) {
+      nextInput.disabled = false;
+      nextInput.focus();
+    }
+  } else {
+    // 3개 다 처리됨 → 결과 판정
+    finishBossTurn();
+  }
+}
+
+function finishBossTurn() {
+  stopBossTurnTimer();
+
+  const successCount = boss.currentAnswers.filter(a => a !== null).length;
+
+  if (successCount <= 1) {
+    // 0~1개: 하트 -1
+    boss.hearts--;
+    updateBossHearts();
+    flashMessage(successCount === 0 ? '반격 실패! ♥ -1' : '1개만 성공... ♥ -1');
+  } else if (successCount === 2) {
+    // 2개: 무사 통과
+    flashMessage('2개 성공! 다음 턴...');
+  } else if (successCount === 3) {
+    // 3개: 보스 체력 -1
+    boss.hp--;
+    updateBossHP();
+    flashMessage('완벽 반격! 보스 체력 -1');
+  }
+
+  // 승패 체크
+  if (boss.hearts <= 0) {
+    setTimeout(() => endBossBattle(false), 1500);
+    return;
+  }
+  if (boss.hp <= 0) {
+    setTimeout(() => endBossBattle(true), 1500);
+    return;
+  }
+
+  // 다음 보스 턴 (보스가 플레이어 답변 중 1개를 이어서)
+  setTimeout(() => {
+    const validAnswers = boss.currentAnswers.filter(a => a !== null);
+    if (validAnswers.length > 0) {
+      const picked = validAnswers[Math.floor(Math.random() * validAnswers.length)];
+      const lastChar = picked[picked.length - 1];
+      // 이 글자로 시작하는 3단어 찾기
+      boss.nextStartChar = lastChar;
+    }
+    bossTurn();
+  }, 2000);
+}
+
+function flashMessage(msg) {
+  const el = document.getElementById('boss-game-message');
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 1500);
+}
+
+// ==================== BOSS TURN TIMER ====================
+
+function startBossTurnTimer() {
+  stopBossTurnTimer();
+  boss.turnTimeLeft = 6;
+  updateBossTurnTimerDisplay();
+
+  boss.turnTimer = setInterval(() => {
+    boss.turnTimeLeft -= 0.05;
+    if (boss.turnTimeLeft <= 0) {
+      boss.turnTimeLeft = 0;
+      stopBossTurnTimer();
+      // 시간 초과 → 남은 답변은 null로 처리
+      // 모든 입력 비활성화
+      for (let i = 0; i < 3; i++) {
+        const inp = document.getElementById('boss-ans-' + i);
+        if (inp) inp.disabled = true;
+      }
+      finishBossTurn();
+    }
+    updateBossTurnTimerDisplay();
+  }, 50);
+}
+
+function stopBossTurnTimer() {
+  if (boss.turnTimer) {
+    clearInterval(boss.turnTimer);
+    boss.turnTimer = null;
+  }
+}
+
+function updateBossTurnTimerDisplay() {
+  const text = document.getElementById('boss-timer-text');
+  if (!text) return;
+  text.textContent = boss.turnTimeLeft.toFixed(2) + 's';
+  text.classList.remove('warning', 'danger');
+  if (boss.turnTimeLeft <= 2) text.classList.add('danger');
+  else if (boss.turnTimeLeft <= 3) text.classList.add('warning');
+}
+
+// ==================== END BOSS ====================
+
+function endBossBattle(playerWins) {
   if (boss.ended) return;
   boss.ended = true;
   boss.active = false;
-  stopBossTimer();
+  stopBossTurnTimer();
   if (boss.globalTimer) { clearTimeout(boss.globalTimer); boss.globalTimer = null; }
 
-  // 현재 영상 페이드 아웃
   const video = document.getElementById('boss-video');
   video.style.transition = 'opacity 1s';
   video.style.opacity = '0';
@@ -430,21 +448,18 @@ function endBossBattle(playerWins, reason) {
   }, 1000);
 }
 
-// ==================== BOSS INPUT HANDLING ====================
+// ==================== INPUT HANDLING ====================
 
 document.addEventListener('DOMContentLoaded', () => {
-  const bossInput = document.getElementById('boss-word-input');
-  if (!bossInput) return;
-
-  let composing = false;
-
-  bossInput.addEventListener('compositionstart', () => { composing = true; });
-  bossInput.addEventListener('compositionend', () => { composing = false; });
-  bossInput.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (e) => {
+    if (!boss.active || boss.ended) return;
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (composing || e.isComposing) return;
-      setTimeout(() => submitBossWord(), 10);
+      if (e.isComposing) return;
+      const idx = boss.answerIndex;
+      if (idx < 3) {
+        setTimeout(() => handleBossAnswer(idx), 10);
+      }
     }
   });
 });
