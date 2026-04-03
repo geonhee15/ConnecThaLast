@@ -1089,8 +1089,7 @@ function toggleSidebar(tab) {
 
   if (sidebarOpen) {
     switchSidebarTab(tab || 'notice');
-    const p = getActiveProfile();
-    const isStaff = p.nickname === '김건' || p.nickname === '억만장자';
+    const isStaff = currentUser && (currentUser.nickname === '김건' || currentUser.nickname === '억만장자');
     document.getElementById('notice-write').style.display = isStaff ? '' : 'none';
   }
 }
@@ -1112,6 +1111,7 @@ async function postNotice() {
   const title = titleInput.value.trim();
   const body = bodyInput.value.trim();
   if (!title || !body || !db || !currentUser) return;
+  if (currentUser.nickname !== '김건' && currentUser.nickname !== '억만장자') return;
 
   await db.ref('notices').push({
     title: title,
