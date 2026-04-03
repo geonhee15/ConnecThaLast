@@ -469,9 +469,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       if (e.isComposing) return;
       const idx = boss.answerIndex;
-      if (idx < 3) {
-        setTimeout(() => handleBossAnswer(idx), 10);
-      }
+      if (idx >= 3) return;
+      const input = document.getElementById('boss-ans-' + idx);
+      if (!input || input.disabled) return;
+      setTimeout(() => handleBossAnswer(idx), 10);
     }
   });
 });
