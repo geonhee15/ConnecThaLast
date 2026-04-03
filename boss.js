@@ -283,8 +283,8 @@ function handleBossAnswer(index) {
   // 검증
   if (word.length < 2 || !isValidWord(word) || boss.usedWords.has(word) || !isValidChain(lastChar, word)) {
     input.classList.add('wrong');
+    input.disabled = true;
     boss.currentAnswers[index] = null;
-    // 다음으로
     moveToNextAnswer(index);
     return;
   }
