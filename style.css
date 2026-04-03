@@ -1540,6 +1540,53 @@ body {
 .bot-lv5 { background: #fce4ec; }
 .bot-lv6 { background: #fff8e1; }
 .bot-lv7 { background: #e8f5e9; }
+.bot-boss { background: #2c0000; }
+
+.bot-card-boss {
+  background: linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #2c0000 100%);
+  border: 2px solid #e74c3c;
+  position: relative;
+  overflow: hidden;
+}
+
+.bot-card-boss h3 {
+  color: #ff4444;
+}
+
+.bot-card-boss .bot-desc {
+  color: #cc8888;
+}
+
+.bot-card-boss .bot-info {
+  color: #ffcccc;
+}
+
+.bot-card-boss:hover {
+  border-color: #ff0000;
+  box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+}
+
+.bot-card-boss.locked {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.bot-card-boss.locked:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #e74c3c;
+}
+
+.boss-lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.5rem;
+  z-index: 2;
+  opacity: 0.8;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
 
 .bot-card-long {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);

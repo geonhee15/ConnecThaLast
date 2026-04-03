@@ -512,6 +512,9 @@ function showScreen(id) {
   if (id === 'screen-profile' || id === 'screen-home') {
     updateProfileUI();
   }
+  if (id === 'screen-select') {
+    updateBossCard();
+  }
 }
 
 // ==================== GAME FLOW ====================
@@ -1008,6 +1011,35 @@ function endGame(playerWins, reason) {
 
     showScreen('screen-gameover');
   }, 800);
+}
+
+// ==================== BOSS BATTLE ====================
+function updateBossCard() {
+  const p = getActiveProfile();
+  const card = document.getElementById('boss-card');
+  const lock = document.getElementById('boss-lock');
+  const desc = document.getElementById('boss-desc');
+  if (!card) return;
+
+  if (p.level >= 10) {
+    card.classList.remove('locked');
+    lock.style.display = 'none';
+    desc.textContent = '최강의 보스에 도전하라';
+  } else {
+    card.classList.add('locked');
+    lock.style.display = '';
+    desc.textContent = `Lv.10 이상부터 입장 가능 (현재 Lv.${p.level})`;
+  }
+}
+
+function tryBossBattle() {
+  const p = getActiveProfile();
+  if (p.level < 10) {
+    document.getElementById('boss-desc').textContent = `레벨이 부족합니다! (현재 Lv.${p.level})`;
+    return;
+  }
+  // TODO: 보스전 시작 로직
+  alert('보스전 준비 중...');
 }
 
 // ==================== NOTICE / SIDEBAR ====================
