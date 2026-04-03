@@ -707,18 +707,20 @@ body {
 
 .btn-bug-small {
   background: none;
-  border: none;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
   color: #aaa;
-  font-size: 2.25rem;
+  font-size: 1.1rem;
   cursor: pointer;
   font-family: 'Noto Sans KR', sans-serif;
   margin-top: 20px;
-  padding: 8px 16px;
-  transition: color 0.2s;
+  padding: 8px 20px;
+  transition: all 0.2s;
 }
 
 .btn-bug-small:hover {
   color: #667eea;
+  border-color: #667eea;
 }
 
 /* ===== Bug Report Screen ===== */
