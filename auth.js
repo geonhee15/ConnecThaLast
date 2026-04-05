@@ -232,7 +232,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('screen-maintenance').classList.remove('active');
     setTimeout(async () => {
       const ok = await tryAutoLogin();
-      if (!ok) showScreen('screen-login');
+      if (!ok) {
+        // 자동 로그인 실패 시 저장된 정보로 입력란 채우기
+        try {
+          const session = JSON.parse(localStorage.getItem('connecthalast_session'));
+          if (session) {
+            if (session.nickname) document.getElementById('auth-nickname').value = session.nickname;
+            if (session.password) document.getElementById('auth-password').value = session.password;
+          }
+        } catch(e) {}
+        showScreen('screen-login');
+      }
     }, 100);
   }
 
