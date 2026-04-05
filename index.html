@@ -112,7 +112,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.3.6</p>
+      <p class="version-text">v2.3.7</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -183,7 +183,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.3.6</p>
+      <p class="version-text">v2.3.7</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -520,6 +520,11 @@
 
       <div class="multi-lobby-card">
         <p class="multi-lobby-label">방 만들기</p>
+        <input type="text" id="room-title-input" class="room-title-input" placeholder="방 제목 (선택)" maxlength="30">
+        <div class="mode-row" style="margin:8px 0">
+          <span class="mode-label">게임 종류</span>
+          <span class="mode-fixed">한국어 끝말잇기</span>
+        </div>
         <div class="mode-toggles" style="margin-bottom:12px">
           <button class="mode-btn active" id="room-mode-injeong" onclick="toggleRoomMode(this)">어인정</button>
           <button class="mode-btn" id="room-mode-manner" onclick="toggleRoomMode(this)">매너</button>
@@ -564,6 +569,7 @@
       <button class="btn-back" onclick="leaveRoom()">&larr; 나가기</button>
       <h2 class="select-title">대기실</h2>
 
+      <div id="waiting-room-title" class="waiting-room-title" style="display:none"></div>
       <div class="room-code-display">
         <span class="room-code-label">방 코드</span>
         <span class="room-code-value" id="room-code-display">------</span>

@@ -921,6 +921,21 @@ body {
   justify-content: center;
 }
 
+.room-title-input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+  margin-bottom: 8px;
+}
+
+.room-title-input:focus {
+  border-color: #43e97b;
+}
+
 .multi-code-input {
   padding: 10px 16px;
   border: 2px solid #e0e0e0;
@@ -1078,11 +1093,26 @@ body {
   color: #999;
 }
 
+.room-list-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2px;
+}
+
 .room-list-code {
   font-size: 0.85rem;
   font-weight: 700;
   color: #43e97b;
   letter-spacing: 2px;
+}
+
+.waiting-room-title {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 .round-select-row {

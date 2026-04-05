@@ -52,8 +52,11 @@ async function createRoom() {
     injeong: document.getElementById('room-mode-injeong').classList.contains('active')
   };
 
+  const roomTitle = (document.getElementById('room-title-input').value || '').trim() || null;
+
   const roomData = {
     code: code,
+    title: roomTitle,
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     modes: roomModes,
@@ -94,6 +97,7 @@ async function createRoom() {
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
+    showWaitingRoomTitle(roomTitle);
     displayRoomModes(roomModes, selectedRounds);
     listenRoom();
   } catch (e) {
@@ -151,6 +155,7 @@ async function joinRoomByCode(code) {
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
+    showWaitingRoomTitle(room.title);
     if (room.modes) displayRoomModes(room.modes, room.totalRounds);
     listenRoom();
   } catch (e) {
@@ -169,6 +174,13 @@ async function joinRoomFromList(code) {
 
 function toggleRoomMode(btn) {
   btn.classList.toggle('active');
+}
+
+function showWaitingRoomTitle(title) {
+  const el = document.getElementById('waiting-room-title');
+  if (!el) return;
+  if (title) { el.textContent = title; el.style.display = ''; }
+  else { el.style.display = 'none'; }
 }
 
 function displayRoomModes(roomModes, totalRounds) {
@@ -239,8 +251,10 @@ function startRoomListListener() {
       const card = document.createElement('div');
       card.className = 'room-list-card';
       card.onclick = () => joinRoomFromList(code);
+      const titleText = room.title ? `<div class="room-list-title">${room.title}</div>` : '';
       card.innerHTML = `
         <div class="room-list-info">
+          ${titleText}
           <span class="room-list-host">${room.p1.nickname} <span class="room-list-level">Lv.${room.p1.level}</span></span>
           <span class="room-list-modes">${modeTags.join(' ')}</span>
         </div>

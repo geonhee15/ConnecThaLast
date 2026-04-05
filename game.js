@@ -1357,7 +1357,7 @@ async function openRanking() {
       html += `<div class="ranking-row${isMe ? ' me' : ''}" onclick="viewUserProfile('${u.nickname}')" style="cursor:pointer">
         <span class="rank-num ${rankClass}">${rank}</span>
         <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 40)}</span>
-        <span class="rank-level">Lv.${u.level}</span>
+        <span class="rank-level"><img src="${getLevelIcon(u.level)}" style="height:20px;vertical-align:middle"> Lv.${u.level}</span>
         <span class="rank-exp">${u.totalExp.toLocaleString()}</span>
       </div>`;
     });
