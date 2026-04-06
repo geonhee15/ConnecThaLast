@@ -13,6 +13,12 @@
   <!-- 유저 프로필 팝업 -->
   <div id="user-profile-popup" class="user-popup-overlay" style="display:none" onclick="if(event.target===this)closeUserProfile()"></div>
 
+  <!-- BGM Now Playing -->
+  <div id="now-playing" class="now-playing" style="display:none">
+    <span class="now-playing-icon">&#9835;</span>
+    <span id="now-playing-text">Now Playing:</span>
+  </div>
+
   <!-- ===== 점검 화면 ===== -->
   <div id="screen-maintenance" class="screen active maintenance-screen">
     <div class="maintenance-container">
@@ -112,7 +118,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.3.9</p>
+      <p class="version-text">v2.4.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -183,7 +189,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.3.9</p>
+      <p class="version-text">v2.4.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -675,6 +681,7 @@
   <script src="multi.js"></script>
   <script src="boss.js"></script>
   <script src="social.js"></script>
+  <script src="bgm.js"></script>
   <script src="auth.js"></script>
 </body>
 </html>

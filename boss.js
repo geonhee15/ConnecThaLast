@@ -124,6 +124,7 @@ function closeBossTutorial() {
 }
 
 function startBossBattle() {
+  pauseBGM();
   // 설명 팝업
   const noshow = localStorage.getItem('connecthalast_boss_noshow');
   const tutorial = document.getElementById('boss-tutorial');
@@ -454,6 +455,7 @@ function endBossBattle(playerWins) {
 
     video.onended = () => {
       const p = getActiveProfile();
+      resumeBGM();
       if (playerWins) {
         addExp(750);
         p.wins++;
