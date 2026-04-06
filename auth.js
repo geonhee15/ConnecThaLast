@@ -173,8 +173,12 @@ function logout() {
   showScreen('screen-login');
 }
 
-// 자동 로그인 시도
-async function tryAutoLogin() {
+// 자동 로그인 시도 (db 준비 안 됐으면 대기 후 재시도)
+async function tryAutoLogin(retries = 5) {
+  for (let i = 0; i < retries; i++) {
+    if (db) break;
+    await new Promise(r => setTimeout(r, 300));
+  }
   try {
     const session = JSON.parse(localStorage.getItem('connecthalast_session'));
     if (!session || !session.nickname || !session.password || !db) return false;
