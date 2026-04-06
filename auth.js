@@ -173,28 +173,88 @@ function logout() {
   showScreen('screen-login');
 }
 
-// 자동 로그인 시도 (db 준비 안 됐으면 대기 후 재시도)
-async function tryAutoLogin(retries = 5) {
-  for (let i = 0; i < retries; i++) {
-    if (db) break;
-    await new Promise(r => setTimeout(r, 300));
-  }
+// 자동 로그인 시도
+async function tryAutoLogin() {
   try {
     const session = JSON.parse(localStorage.getItem('connecthalast_session'));
-    if (!session || !session.nickname || !session.password || !db) return false;
+    if (!session || !session.nickname || !session.password) return false;
 
+    // 로컬 프로필이 있으면 우선 로컬로 진입
+    const localProfile = localStorage.getItem('connecthalast_profile');
+    if (localProfile) {
+      const p = JSON.parse(localProfile);
+      currentUser = {
+        nickname: p.nickname || session.nickname,
+        userId: p.userId || '',
+        level: p.level || 1,
+        exp: p.exp || 0,
+        totalExp: p.totalExp || 0,
+        wins: p.wins || 0,
+        losses: p.losses || 0
+      };
+      profile.nickname = currentUser.nickname;
+      profile.userId = currentUser.userId;
+      profile.level = currentUser.level;
+      profile.exp = currentUser.exp;
+      profile.totalExp = currentUser.totalExp;
+      profile.wins = currentUser.wins;
+      profile.losses = currentUser.losses;
+      updateProfileUI();
+      showScreen('screen-home');
+
+      // 백그라운드에서 서버 동기화 (실패해도 무시)
+      syncWithServer(session);
+      return true;
+    }
+
+    // 로컬 프로필 없으면 서버에서 가져오기
+    if (!db) return false;
     const hashedPw = await hashPassword(session.password);
     const snap = await db.ref('users/' + session.nickname).get();
     if (!snap.exists()) return false;
-
     const userData = snap.val();
     if (userData.password !== hashedPw) return false;
-
     loginSuccess(userData);
     return true;
   } catch (e) {
     return false;
   }
+}
+
+// 백그라운드 서버 동기화
+async function syncWithServer(session) {
+  try {
+    // db 준비 대기
+    for (let i = 0; i < 10; i++) {
+      if (db) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    if (!db) return;
+
+    const hashedPw = await hashPassword(session.password);
+    const snap = await db.ref('users/' + session.nickname).get();
+    if (!snap.exists()) return;
+    const userData = snap.val();
+    if (userData.password !== hashedPw) return;
+
+    // 서버 데이터로 업데이트
+    currentUser.userId = userData.userId;
+    profile.userId = userData.userId;
+    if (userData.level > profile.level) {
+      profile.level = userData.level;
+      profile.exp = userData.exp || 0;
+      profile.totalExp = userData.totalExp || 0;
+      profile.wins = userData.wins || 0;
+      profile.losses = userData.losses || 0;
+    }
+    saveProfile();
+    updateProfileUI();
+    setOnline();
+    loadFriendRequests();
+    loadFriends();
+    loadReadNotices();
+    checkUnreadNotices();
+  } catch(e) {}
 }
 
 // ==================== MAINTENANCE MODE ====================
