@@ -496,6 +496,12 @@
   font-family: sans-serif;
 }
 
+.np-vol-text {
+  font-size: 0.65rem;
+  color: #999;
+  min-width: 28px;
+}
+
 .np-volume {
   width: 60px;
   height: 4px;

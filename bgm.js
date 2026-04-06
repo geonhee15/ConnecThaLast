@@ -70,6 +70,8 @@ function toggleBGMPlay() {
 function setBGMVolume(val) {
   bgmUserVolume = val / 100;
   if (bgmAudio) bgmAudio.volume = bgmUserVolume;
+  const t = document.getElementById('bgm-vol-text');
+  if (t) t.textContent = Math.round(val) + '%';
 }
 
 // 보스전 진입 시 BGM 정지
