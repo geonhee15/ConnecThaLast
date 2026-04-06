@@ -1151,10 +1151,12 @@ function loadNotices() {
       if (!isRead) unread++;
       const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('ko-KR') : '';
 
+      const isStaff = currentUser && (currentUser.nickname === '김건' || currentUser.nickname === '억만장자');
       html += `<div class="notice-item">
         <div class="notice-header" onclick="toggleNotice('${item.id}')">
           <span class="notice-title">${escapeHTML(item.title)}${!isRead ? '<span class="notice-new">NEW</span>' : ''}</span>
           <span class="notice-date">${date}</span>
+          ${isStaff ? `<button class="notice-delete-btn" onclick="event.stopPropagation();deleteNotice('${item.id}')">&times;</button>` : ''}
           <span class="notice-arrow" id="arrow-${item.id}">&#9660;</span>
         </div>
         <div class="notice-body" id="body-${item.id}">
@@ -1313,6 +1315,13 @@ async function resolveBug(bugId) {
     resolvedBy: currentUser.nickname,
     resolveMsg: msg || '해결 완료'
   });
+}
+
+function deleteNotice(noticeId) {
+  if (!db || !currentUser) return;
+  if (currentUser.nickname !== '김건' && currentUser.nickname !== '억만장자') return;
+  if (!confirm('이 공지를 삭제하시겠습니까?')) return;
+  db.ref('notices/' + noticeId).remove();
 }
 
 function escapeHTML(str) {

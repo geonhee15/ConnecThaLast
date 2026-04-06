@@ -400,6 +400,20 @@
   margin-right: 8px;
 }
 
+.notice-delete-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.notice-delete-btn:hover {
+  color: #e74c3c;
+}
+
 .notice-arrow {
   font-size: 0.7rem;
   color: #ccc;
