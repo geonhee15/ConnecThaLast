@@ -25,7 +25,7 @@ function playBGMTrack() {
   }
 
   bgmAudio = new Audio(track.file);
-  bgmAudio.volume = 0.3;
+  bgmAudio.volume = bgmUserVolume;
   bgmAudio.play().catch(() => {
     // 자동재생 차단 시 클릭으로 재시도
     const retry = () => {
@@ -48,6 +48,28 @@ function playBGMTrack() {
     bgmIndex = (bgmIndex + 1) % BGM_TRACKS.length;
     playBGMTrack();
   };
+}
+
+let bgmUserVolume = 0.3;
+let bgmPlaying = true;
+
+function toggleBGMPlay() {
+  if (!bgmAudio) return;
+  const btn = document.getElementById('bgm-toggle-btn');
+  if (bgmPlaying) {
+    bgmAudio.pause();
+    bgmPlaying = false;
+    if (btn) btn.innerHTML = '&#9654;';
+  } else {
+    bgmAudio.play().catch(() => {});
+    bgmPlaying = true;
+    if (btn) btn.innerHTML = '&#9646;&#9646;';
+  }
+}
+
+function setBGMVolume(val) {
+  bgmUserVolume = val / 100;
+  if (bgmAudio) bgmAudio.volume = bgmUserVolume;
 }
 
 // 보스전 진입 시 BGM 정지

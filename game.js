@@ -112,7 +112,8 @@ function updateProfileUI() {
 
   // DEV만 테스트 서버 버튼 표시 (일반 서버일 때만)
   const testBtn = document.getElementById('btn-test-server');
-  if (testBtn) testBtn.style.display = (profile.userId === 'DEV' && serverMode === 'normal') ? '' : 'none';
+  const isDevOrAdmin = profile.userId === 'DEV' || profile.nickname === '억만장자';
+  if (testBtn) testBtn.style.display = (isDevOrAdmin && serverMode === 'normal') ? '' : 'none';
 
   // 홈 화면 (활성 프로필 기준)
   const homeNick = document.getElementById('home-nickname');
@@ -440,7 +441,7 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
-      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
       if (callback) callback();
     }, totalTime);
 
@@ -473,7 +474,7 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
-      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
       if (callback) callback();
     }, totalTime);
 
@@ -482,7 +483,7 @@ function playWordAnimation(word, callback, targetElId) {
     revealChar(wordEl, 0);
     setTimeout(() => {
       state.isAnimating = false;
-      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
       if (callback) callback();
     }, 300);
   }

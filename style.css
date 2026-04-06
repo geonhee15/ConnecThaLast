@@ -486,6 +486,23 @@
   50% { transform: translateY(-3px); }
 }
 
+.np-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: sans-serif;
+}
+
+.np-volume {
+  width: 60px;
+  height: 4px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
 @keyframes nowPlayingIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

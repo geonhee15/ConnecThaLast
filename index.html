@@ -17,6 +17,8 @@
   <div id="now-playing" class="now-playing" style="display:none">
     <span class="now-playing-icon">&#9835;</span>
     <span id="now-playing-text">Now Playing:</span>
+    <button class="np-btn" id="bgm-toggle-btn" onclick="toggleBGMPlay()">&#9646;&#9646;</button>
+    <input type="range" class="np-volume" id="bgm-volume" min="0" max="100" value="30" oninput="setBGMVolume(this.value)">
   </div>
 
   <!-- ===== 점검 화면 ===== -->
@@ -118,7 +120,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.4.4</p>
+      <p class="version-text">v2.4.5</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -189,7 +191,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.4.4</p>
+      <p class="version-text">v2.4.5</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
