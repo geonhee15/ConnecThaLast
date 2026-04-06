@@ -229,15 +229,19 @@ function sendChat() {
   input.value = '';
 }
 
-// Chat Enter key
+// Chat Enter key (한글 IME 호환)
 document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chat-input');
-  if (chatInput) {
-    chatInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendChat();
-      }
-    });
-  }
+  if (!chatInput) return;
+  let chatComposing = false;
+
+  chatInput.addEventListener('compositionstart', () => { chatComposing = true; });
+  chatInput.addEventListener('compositionend', () => { chatComposing = false; });
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (chatComposing || e.isComposing) return;
+      sendChat();
+    }
+  });
 });
