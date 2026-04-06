@@ -404,6 +404,8 @@ function playKickAt(delayMs) {
 
 function playWordAnimation(word, callback, targetElId) {
   state.isAnimating = true;
+  // BGM 음량 줄이기
+  if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0;
   const wordEl = document.getElementById(targetElId || 'current-word');
   const chars = word.split('');
   const n = chars.length;
@@ -438,6 +440,7 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
       if (callback) callback();
     }, totalTime);
 
@@ -470,6 +473,7 @@ function playWordAnimation(word, callback, targetElId) {
     setTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
       if (callback) callback();
     }, totalTime);
 
@@ -478,6 +482,7 @@ function playWordAnimation(word, callback, targetElId) {
     revealChar(wordEl, 0);
     setTimeout(() => {
       state.isAnimating = false;
+      if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0.3;
       if (callback) callback();
     }, 300);
   }
