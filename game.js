@@ -787,8 +787,8 @@ function chooseBotWord() {
   let candidates = findWordsStartingWith(state.nextChar)
     .filter(entry => !state.usedWords.has(entry.w) && isModeValidWord(entry.w));
 
-  // 첫 턴에는 모든 봇 한방단어 금지
-  if (state.turnCount <= 1) {
+  // 첫 턴에는 모든 봇 한방단어 금지 (봇이 아직 2턴 이내)
+  if (state.turnCount <= 2) {
     const safe = candidates.filter(e => !isKillerWord(e.w));
     if (safe.length > 0) candidates = safe;
   }
