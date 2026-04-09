@@ -922,6 +922,15 @@ function gameoverHome() {
 }
 
 // ==================== GAME END ====================
+function leaveBotGame() {
+  if (!state.gameActive) return;
+  if (!confirm('나가면 패배로 처리됩니다. 정말 나가시겠습니까?')) return;
+  // 패배 처리: 라운드 승수 보장 위해 최종 종료로 강제
+  state.currentRound = state.totalRounds;
+  state.botRoundWins = Math.max(state.botRoundWins, state.playerRoundWins + 1);
+  endGame(false, '게임에서 나갔습니다.');
+}
+
 function endGame(playerWins, reason) {
   stopTimer();
   disableInput();

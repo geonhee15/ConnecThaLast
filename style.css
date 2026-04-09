@@ -2123,6 +2123,28 @@ body {
   margin-right: 8px;
 }
 
+.btn-leave-game {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: white;
+  border: 1.5px solid #e74c3c;
+  color: #e74c3c;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.btn-leave-game:hover {
+  background: #e74c3c;
+  color: white;
+}
+
 .btn-back {
   background: none;
   border: none;
