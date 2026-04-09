@@ -2124,9 +2124,9 @@ body {
 }
 
 .btn-leave-game {
-  position: absolute;
+  position: fixed;
   top: 14px;
-  right: 14px;
+  left: 14px;
   background: white;
   border: 1.5px solid #e74c3c;
   color: #e74c3c;
@@ -2136,7 +2136,7 @@ body {
   font-weight: 700;
   cursor: pointer;
   font-family: 'Noto Sans KR', sans-serif;
-  z-index: 10;
+  z-index: 100;
   transition: all 0.2s;
 }
 
