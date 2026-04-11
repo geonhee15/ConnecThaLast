@@ -1338,6 +1338,19 @@ function escapeHTML(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function formatLastLogin(ts) {
+  const now = Date.now();
+  const diff = now - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '방금';
+  if (mins < 60) return mins + '분 전';
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + '시간 전';
+  const days = Math.floor(hours / 24);
+  if (days < 30) return days + '일 전';
+  return new Date(ts).toLocaleDateString('ko-KR');
+}
+
 // ==================== RANKING ====================
 async function openRanking() {
   showScreen('screen-ranking');
@@ -1364,7 +1377,8 @@ async function openRanking() {
         level: u.level || 1,
         exp: u.exp || 0,
         totalExp: u.totalExp || 0,
-        userId: u.userId || ''
+        userId: u.userId || '',
+        lastLogin: u.lastLogin || 0
       });
     });
 
@@ -1372,7 +1386,7 @@ async function openRanking() {
     users.sort((a, b) => b.level - a.level || b.totalExp - a.totalExp);
 
     const p = getActiveProfile();
-    let html = `<div class="ranking-header"><span>순위</span><span>닉네임</span><span>레벨</span><span>경험치</span></div>`;
+    let html = `<div class="ranking-header"><span>순위</span><span>닉네임</span><span>레벨</span><span>경험치</span><span>최근 접속</span></div>`;
 
     users.forEach((u, i) => {
       const rank = i + 1;
@@ -1383,6 +1397,7 @@ async function openRanking() {
         <span class="rank-name">${u.nickname} ${roleBadgeHTML(u.nickname, 40)}</span>
         <span class="rank-level"><img src="${getLevelIcon(u.level)}" style="height:20px;vertical-align:middle"> Lv.${u.level}</span>
         <span class="rank-exp">${u.totalExp.toLocaleString()}</span>
+        <span class="rank-lastlogin">${u.lastLogin ? formatLastLogin(u.lastLogin) : '-'}</span>
       </div>`;
     });
 

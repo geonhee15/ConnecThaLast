@@ -142,6 +142,7 @@ function loginSuccess(userData) {
   setOnline();
   loadFriendRequests();
   loadFriends();
+  listenUnreadChats();
   showScreen('screen-home');
 }
 
@@ -157,7 +158,8 @@ saveProfile = function() {
       exp: profile.exp,
       totalExp: profile.totalExp,
       wins: profile.wins,
-      losses: profile.losses
+      losses: profile.losses,
+      lastLogin: firebase.database.ServerValue.TIMESTAMP
     };
     db.ref('users/' + currentUser.nickname).update(updates).catch(() => {});
   }
@@ -252,6 +254,7 @@ async function syncWithServer(session) {
     setOnline();
     loadFriendRequests();
     loadFriends();
+    listenUnreadChats();
     loadReadNotices();
     checkUnreadNotices();
   } catch(e) {}

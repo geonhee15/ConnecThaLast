@@ -103,7 +103,10 @@ function loadFriendRequests() {
     // 소셜 뱃지 업데이트
     const badge = document.getElementById('social-badge');
     if (badge) {
-      if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+      badge.dataset.reqCount = count;
+      const chatCount = parseInt(badge.dataset.chatCount || '0');
+      const total = count + chatCount;
+      if (total > 0) { badge.textContent = total; badge.style.display = ''; }
       else { badge.style.display = 'none'; }
     }
   });
@@ -253,6 +256,46 @@ function sendChat() {
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
   input.value = '';
+}
+
+// ==================== UNREAD CHAT BADGE ====================
+
+function listenUnreadChats() {
+  if (!db || !currentUser) return;
+  // 모든 친구와의 채팅에서 읽지 않은 메시지 수 체크
+  db.ref('friends/' + currentUser.nickname).on('value', (snap) => {
+    if (!snap.exists()) { updateSocialBadgeChat(0); return; }
+    let totalUnread = 0;
+    let pending = 0;
+    const friends = [];
+    snap.forEach(child => { friends.push(child.val().nickname); });
+    if (friends.length === 0) { updateSocialBadgeChat(0); return; }
+
+    friends.forEach(fn => {
+      const chatId = getChatId(currentUser.nickname, fn);
+      db.ref('chats/' + chatId).orderByChild('read').equalTo(false).once('value', (chatSnap) => {
+        chatSnap.forEach(msgSnap => {
+          const msg = msgSnap.val();
+          if (msg.from !== currentUser.nickname) totalUnread++;
+        });
+        pending++;
+        if (pending >= friends.length) {
+          updateSocialBadgeChat(totalUnread);
+        }
+      });
+    });
+  });
+}
+
+function updateSocialBadgeChat(count) {
+  const badge = document.getElementById('social-badge');
+  if (!badge) return;
+  // 친구 요청 수 + 읽지 않은 채팅 수
+  const reqCount = parseInt(badge.dataset.reqCount || '0');
+  const total = reqCount + count;
+  if (total > 0) { badge.textContent = total; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
+  badge.dataset.chatCount = count;
 }
 
 // Chat Enter key (한글 IME 호환)
