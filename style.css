@@ -301,6 +301,21 @@
   border-bottom-left-radius: 4px;
 }
 
+.chat-unread {
+  display: inline-block;
+  background: #ffc107;
+  color: #5a3e00;
+  font-size: 0.55rem;
+  font-weight: 900;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .chat-msg-time {
   font-size: 0.6rem;
   color: #aaa;

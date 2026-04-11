@@ -179,9 +179,9 @@ function openChat(nickname) {
 }
 
 function closeChatPanel() {
-  if (chatListener) {
+  if (currentChatPartner && currentUser) {
     const chatId = getChatId(currentUser.nickname, currentChatPartner);
-    db.ref('chats/' + chatId).off('child_added', chatListener);
+    db.ref('chats/' + chatId).off();
     chatListener = null;
   }
   currentChatPartner = null;
@@ -205,12 +205,37 @@ function loadChatMessages(partner) {
 
   chatListener = ref.orderByChild('timestamp').on('child_added', (snap) => {
     const msg = snap.val();
+    const msgId = snap.key;
     const isMine = msg.from === currentUser.nickname;
     const div = document.createElement('div');
     div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
     div.textContent = msg.text;
+
+    // 읽음 표시 (내 메시지만)
+    if (isMine && !msg.read) {
+      const unread = document.createElement('span');
+      unread.className = 'chat-unread';
+      unread.id = 'unread-' + msgId;
+      unread.textContent = '1';
+      div.appendChild(unread);
+    }
+
+    // 상대 메시지면 읽음 처리
+    if (!isMine && !msg.read) {
+      ref.child(msgId).update({ read: true });
+    }
+
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+  });
+
+  // 상대가 읽으면 1 제거 (실시간 감지)
+  ref.on('child_changed', (snap) => {
+    const msg = snap.val();
+    if (msg.read && msg.from === currentUser.nickname) {
+      const unreadEl = document.getElementById('unread-' + snap.key);
+      if (unreadEl) unreadEl.remove();
+    }
   });
 }
 
@@ -224,6 +249,7 @@ function sendChat() {
   db.ref('chats/' + chatId).push({
     from: currentUser.nickname,
     text: text,
+    read: false,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
   input.value = '';
