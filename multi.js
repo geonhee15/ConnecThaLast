@@ -858,10 +858,14 @@ let multiTypingDebounce = null;
 let multiTypingListener = null;
 
 function updateMultiTyping(text) {
-  if (!db || !multi.roomId || !multi.playerId) return;
+  console.log('[TYPING] updateMultiTyping called:', {text, roomId: multi.roomId, playerId: multi.playerId, hasDb: !!db});
+  if (!db || !multi.roomId || !multi.playerId) {
+    console.log('[TYPING] blocked - missing deps');
+    return;
+  }
   const ref = db.ref('multiTyping/' + multi.roomId + '/' + multi.playerId);
   if (text && text.length > 0) {
-    ref.set(text.substring(0, 50));
+    ref.set(text.substring(0, 50)).then(() => console.log('[TYPING] wrote:', text)).catch(e => console.log('[TYPING] write error:', e));
     ref.onDisconnect().remove();
   } else {
     ref.remove();
@@ -869,17 +873,20 @@ function updateMultiTyping(text) {
 }
 
 function listenMultiTyping() {
+  console.log('[TYPING] listenMultiTyping called:', {roomId: multi.roomId, playerId: multi.playerId, hasDb: !!db});
   if (!db || !multi.roomId) return;
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
   const ref = db.ref('multiTyping/' + multi.roomId + '/' + opId);
+  console.log('[TYPING] listening on path:', 'multiTyping/' + multi.roomId + '/' + opId);
 
   if (multiTypingListener) {
     ref.off('value');
   }
   multiTypingListener = ref.on('value', (snap) => {
+    const text = snap.val();
+    console.log('[TYPING] received from opponent:', text);
     const input = document.getElementById('multi-word-input');
     if (!input) return;
-    const text = snap.val();
     multi.opponentTyping = text || '';
     refreshMultiPlaceholder();
   });
@@ -888,6 +895,7 @@ function listenMultiTyping() {
 function refreshMultiPlaceholder() {
   const input = document.getElementById('multi-word-input');
   if (!input) return;
+  console.log('[TYPING] refreshPlaceholder:', {myTurn: multi.isMyTurn, opTyping: multi.opponentTyping, myValue: input.value});
   // 내가 뭔가 쓰고 있으면 원래 placeholder 유지, 상대 턴이고 내 입력 비어있으면 상대 타이핑 표시
   if (input.value.length > 0) {
     input.placeholder = '단어를 입력하세요...';
