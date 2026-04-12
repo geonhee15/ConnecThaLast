@@ -455,6 +455,8 @@ function handleGameUpdate(room) {
   multi.isMyTurn = (room.turn === multi.playerId);
   multi.timerMax = room.timerMax || 10;
   multi.turnCount = room.turnCount || 1;
+  const opField = multi.playerId === 'p1' ? 'p2Typing' : 'p1Typing';
+  multi.opponentTyping = room[opField] || '';
   refreshMultiPlaceholder();
 
   const turnInd = document.getElementById('multi-turn-indicator');
@@ -858,38 +860,14 @@ let multiTypingDebounce = null;
 let multiTypingListener = null;
 
 function updateMultiTyping(text) {
-  console.log('[TYPING] updateMultiTyping called:', {text, roomId: multi.roomId, playerId: multi.playerId, hasDb: !!db});
-  if (!db || !multi.roomId || !multi.playerId) {
-    console.log('[TYPING] blocked - missing deps');
-    return;
-  }
-  const ref = db.ref('multiTyping/' + multi.roomId + '/' + multi.playerId);
-  if (text && text.length > 0) {
-    ref.set(text.substring(0, 50)).then(() => console.log('[TYPING] wrote:', text)).catch(e => console.log('[TYPING] write error:', e));
-    ref.onDisconnect().remove();
-  } else {
-    ref.remove();
-  }
+  if (!db || !multi.roomId || !multi.playerId) return;
+  const field = multi.playerId + 'Typing';
+  const val = text && text.length > 0 ? text.substring(0, 50) : null;
+  db.ref('rooms/' + multi.roomId).update({ [field]: val });
 }
 
 function listenMultiTyping() {
-  console.log('[TYPING] listenMultiTyping called:', {roomId: multi.roomId, playerId: multi.playerId, hasDb: !!db});
-  if (!db || !multi.roomId) return;
-  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  const ref = db.ref('multiTyping/' + multi.roomId + '/' + opId);
-  console.log('[TYPING] listening on path:', 'multiTyping/' + multi.roomId + '/' + opId);
-
-  if (multiTypingListener) {
-    ref.off('value');
-  }
-  multiTypingListener = ref.on('value', (snap) => {
-    const text = snap.val();
-    console.log('[TYPING] received from opponent:', text);
-    const input = document.getElementById('multi-word-input');
-    if (!input) return;
-    multi.opponentTyping = text || '';
-    refreshMultiPlaceholder();
-  });
+  // 룸 객체를 통해 들어오므로 별도 리스너 불필요
 }
 
 function refreshMultiPlaceholder() {
@@ -910,15 +888,9 @@ function refreshMultiPlaceholder() {
 }
 
 function stopMultiTypingListener() {
-  if (!db || !multi.roomId) return;
-  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  db.ref('multiTyping/' + multi.roomId + '/' + opId).off();
-  if (multi.playerId) {
-    db.ref('multiTyping/' + multi.roomId + '/' + multi.playerId).remove();
-  }
-  multiTypingListener = null;
-  const indicator = document.getElementById('multi-typing-indicator');
-  if (indicator) indicator.textContent = '';
+  if (!db || !multi.roomId || !multi.playerId) return;
+  const field = multi.playerId + 'Typing';
+  db.ref('rooms/' + multi.roomId).update({ [field]: null });
 }
 
 // ==================== MULTI INPUT HANDLING ====================
