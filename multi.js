@@ -294,6 +294,7 @@ async function leaveRoom() {
 }
 
 function resetMultiState() {
+  stopMultiTypingListener();
   multi.roomId = null;
   multi.roomRef = null;
   multi.playerId = null;
@@ -499,9 +500,13 @@ async function initMultiGameUI(room) {
   document.getElementById('multi-game-message').textContent = '';
   document.getElementById('multi-used-words').innerHTML = '';
   document.getElementById('multi-word-input').value = '';
+  const typingInd = document.getElementById('multi-typing-indicator');
+  if (typingInd) typingInd.textContent = '';
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
+  // 타이핑 리스너 시작
+  listenMultiTyping();
   // WAV 파일 프리로드 (백그라운드)
   preloadAudio();
 }
@@ -609,6 +614,7 @@ async function submitMultiWord() {
   stopMultiTimer();
   document.getElementById('multi-submit-btn').disabled = true;
   document.getElementById('multi-game-message').textContent = '';
+  updateMultiTyping(''); // 타이핑 정보 제거
 
   const score = 10 + Math.max(0, (word.length - 2)) * 5;
   const lastChar = word[word.length - 1];
@@ -845,6 +851,48 @@ async function multiRematch() {
   };
 })();
 
+// ==================== MULTI TYPING INDICATOR ====================
+
+let multiTypingDebounce = null;
+let multiTypingListener = null;
+
+function updateMultiTyping(text) {
+  if (!db || !multi.roomRef || !multi.playerId) return;
+  const ref = multi.roomRef.child('typing/' + multi.playerId);
+  if (text && text.length > 0) {
+    ref.set(text.substring(0, 50));
+    ref.onDisconnect().remove();
+  } else {
+    ref.remove();
+  }
+}
+
+function listenMultiTyping() {
+  if (!multi.roomRef) return;
+  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
+  const ref = multi.roomRef.child('typing/' + opId);
+  if (multiTypingListener) ref.off('value', multiTypingListener);
+
+  multiTypingListener = ref.on('value', (snap) => {
+    const indicator = document.getElementById('multi-typing-indicator');
+    if (!indicator) return;
+    const text = snap.val();
+    indicator.textContent = text ? text : '';
+  });
+}
+
+function stopMultiTypingListener() {
+  if (!multi.roomRef) return;
+  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
+  multi.roomRef.child('typing/' + opId).off();
+  if (multi.playerId) {
+    multi.roomRef.child('typing/' + multi.playerId).remove();
+  }
+  multiTypingListener = null;
+  const indicator = document.getElementById('multi-typing-indicator');
+  if (indicator) indicator.textContent = '';
+}
+
 // ==================== MULTI INPUT HANDLING ====================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -857,6 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
   multiInput.addEventListener('compositionstart', () => { composing = true; });
   multiInput.addEventListener('compositionend', () => {
     composing = false;
+    updateMultiTyping(multiInput.value);
     if (submitPending) { submitPending = false; submitMultiWord(); }
   });
   multiInput.addEventListener('keydown', (e) => {
@@ -865,5 +914,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (composing || e.isComposing) { submitPending = true; return; }
       submitMultiWord();
     }
+  });
+  multiInput.addEventListener('input', () => {
+    if (multiTypingDebounce) clearTimeout(multiTypingDebounce);
+    multiTypingDebounce = setTimeout(() => updateMultiTyping(multiInput.value), 50);
   });
 });
