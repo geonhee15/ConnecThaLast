@@ -455,6 +455,7 @@ function handleGameUpdate(room) {
   multi.isMyTurn = (room.turn === multi.playerId);
   multi.timerMax = room.timerMax || 10;
   multi.turnCount = room.turnCount || 1;
+  refreshMultiPlaceholder();
 
   const turnInd = document.getElementById('multi-turn-indicator');
   const input = document.getElementById('multi-word-input');
@@ -876,11 +877,27 @@ function listenMultiTyping() {
     ref.off('value');
   }
   multiTypingListener = ref.on('value', (snap) => {
-    const indicator = document.getElementById('multi-typing-indicator');
-    if (!indicator) return;
+    const input = document.getElementById('multi-word-input');
+    if (!input) return;
     const text = snap.val();
-    indicator.textContent = text ? text : '';
+    multi.opponentTyping = text || '';
+    refreshMultiPlaceholder();
   });
+}
+
+function refreshMultiPlaceholder() {
+  const input = document.getElementById('multi-word-input');
+  if (!input) return;
+  // 내가 뭔가 쓰고 있으면 원래 placeholder 유지, 상대 턴이고 내 입력 비어있으면 상대 타이핑 표시
+  if (input.value.length > 0) {
+    input.placeholder = '단어를 입력하세요...';
+    return;
+  }
+  if (!multi.isMyTurn && multi.opponentTyping) {
+    input.placeholder = multi.opponentTyping;
+  } else {
+    input.placeholder = '단어를 입력하세요...';
+  }
 }
 
 function stopMultiTypingListener() {
@@ -918,6 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   multiInput.addEventListener('input', () => {
+    refreshMultiPlaceholder();
     if (multiTypingDebounce) clearTimeout(multiTypingDebounce);
     multiTypingDebounce = setTimeout(() => updateMultiTyping(multiInput.value), 50);
   });
