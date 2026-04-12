@@ -894,16 +894,17 @@ function listenMultiTyping() {
 
 function refreshMultiPlaceholder() {
   const input = document.getElementById('multi-word-input');
-  if (!input) return;
-  console.log('[TYPING] refreshPlaceholder:', {myTurn: multi.isMyTurn, opTyping: multi.opponentTyping, myValue: input.value});
-  // 내가 뭔가 쓰고 있으면 원래 placeholder 유지, 상대 턴이고 내 입력 비어있으면 상대 타이핑 표시
-  if (input.value.length > 0) {
-    input.placeholder = '단어를 입력하세요...';
-    return;
-  }
-  if (!multi.isMyTurn && multi.opponentTyping) {
-    input.placeholder = multi.opponentTyping;
+  const overlay = document.getElementById('multi-typing-overlay');
+  if (!input || !overlay) return;
+  // 내가 입력중이 아니고, 상대가 타이핑 중이면 오버레이 표시 (placeholder 대신)
+  const showOverlay = input.value.length === 0 && !multi.isMyTurn && multi.opponentTyping;
+  if (showOverlay) {
+    overlay.textContent = multi.opponentTyping;
+    overlay.style.display = '';
+    input.placeholder = '';
   } else {
+    overlay.style.display = 'none';
+    overlay.textContent = '';
     input.placeholder = '단어를 입력하세요...';
   }
 }

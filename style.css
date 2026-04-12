@@ -2652,6 +2652,23 @@ body {
   font-style: italic;
 }
 
+#multi-typing-overlay {
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: #aaa;
+  font-style: italic;
+  font-family: 'Noto Sans KR', sans-serif;
+  pointer-events: none;
+  display: none;
+  max-width: calc(100% - 120px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .btn-submit {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
