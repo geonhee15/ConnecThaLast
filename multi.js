@@ -457,7 +457,6 @@ function handleGameUpdate(room) {
   multi.turnCount = room.turnCount || 1;
   const opField = multi.playerId === 'p1' ? 'p2Typing' : 'p1Typing';
   multi.opponentTyping = room[opField] || '';
-  console.log('[TYPING] handleGameUpdate:', {opField, raw: room[opField], set: multi.opponentTyping, p1T: room.p1Typing, p2T: room.p2Typing});
   refreshMultiPlaceholder();
 
   const turnInd = document.getElementById('multi-turn-indicator');
@@ -864,10 +863,7 @@ function updateMultiTyping(text) {
   if (!db || !multi.roomId || !multi.playerId) return;
   const field = multi.playerId + 'Typing';
   const val = text && text.length > 0 ? text.substring(0, 50) : null;
-  console.log('[TYPING] updateMultiTyping writing:', {field, val, text});
-  db.ref('rooms/' + multi.roomId).update({ [field]: val })
-    .then(() => console.log('[TYPING] write OK:', val))
-    .catch(e => console.log('[TYPING] write ERR:', e));
+  db.ref('rooms/' + multi.roomId).update({ [field]: val });
 }
 
 function listenMultiTyping() {
@@ -882,7 +878,7 @@ function refreshMultiPlaceholder() {
   const showOverlay = input.value.length === 0 && !multi.isMyTurn && multi.opponentTyping;
   if (showOverlay) {
     overlay.textContent = multi.opponentTyping;
-    overlay.style.display = '';
+    overlay.style.display = 'block';
     input.placeholder = '';
   } else {
     overlay.style.display = 'none';
