@@ -413,7 +413,16 @@ function startMultiGame() {
 
 let lastActionTimestamp = 0;
 
+function updateOpponentTypingFromRoom(room) {
+  const indicator = document.getElementById('multi-typing-indicator');
+  if (!indicator) return;
+  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
+  const text = room.typing && room.typing[opId];
+  indicator.textContent = text ? text : '';
+}
+
 function handleGameUpdate(room) {
+  updateOpponentTypingFromRoom(room);
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen && currentScreen.id === 'screen-multi-waiting') {
     showScreen('screen-multi-game');
@@ -505,8 +514,6 @@ async function initMultiGameUI(room) {
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
-  // 타이핑 리스너 시작
-  listenMultiTyping();
   // WAV 파일 프리로드 (백그라운드)
   preloadAudio();
 }
