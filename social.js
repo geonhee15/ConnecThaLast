@@ -177,15 +177,21 @@ function openChat(nickname) {
   document.getElementById('chat-partner-name').textContent = nickname;
   document.getElementById('chat-input').value = '';
   document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-typing-indicator').textContent = '';
 
   loadChatMessages(nickname);
+  listenTypingStatus(nickname);
 }
 
 function closeChatPanel() {
   if (currentChatPartner && currentUser) {
     const chatId = getChatId(currentUser.nickname, currentChatPartner);
     db.ref('chats/' + chatId).off();
+    db.ref('typing/' + chatId).off();
+    // 내 타이핑 정보 제거
+    db.ref('typing/' + chatId + '/' + currentUser.nickname).remove();
     chatListener = null;
+    typingListener = null;
   }
   currentChatPartner = null;
   document.getElementById('sb-chat').style.display = 'none';
@@ -256,6 +262,8 @@ function sendChat() {
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
   input.value = '';
+  // 타이핑 정보 제거
+  updateMyTyping('');
 }
 
 // ==================== UNREAD CHAT BADGE ====================
@@ -298,6 +306,40 @@ function updateSocialBadgeChat(count) {
   badge.dataset.chatCount = count;
 }
 
+// ==================== TYPING INDICATOR ====================
+
+let typingListener = null;
+let typingDebounce = null;
+
+function updateMyTyping(text) {
+  if (!db || !currentUser || !currentChatPartner) return;
+  const chatId = getChatId(currentUser.nickname, currentChatPartner);
+  const ref = db.ref('typing/' + chatId + '/' + currentUser.nickname);
+  if (text && text.length > 0) {
+    ref.set(text.substring(0, 100)); // 최대 100자
+    ref.onDisconnect().remove();
+  } else {
+    ref.remove();
+  }
+}
+
+function listenTypingStatus(partner) {
+  if (!db || !currentUser) return;
+  const chatId = getChatId(currentUser.nickname, partner);
+  const ref = db.ref('typing/' + chatId + '/' + partner);
+
+  typingListener = ref.on('value', (snap) => {
+    const indicator = document.getElementById('chat-typing-indicator');
+    if (!indicator) return;
+    const text = snap.val();
+    if (text) {
+      indicator.textContent = partner + ': ' + text;
+    } else {
+      indicator.textContent = '';
+    }
+  });
+}
+
 // Chat Enter key (한글 IME 호환)
 document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chat-input');
@@ -305,7 +347,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let chatComposing = false;
 
   chatInput.addEventListener('compositionstart', () => { chatComposing = true; });
-  chatInput.addEventListener('compositionend', () => { chatComposing = false; });
+  chatInput.addEventListener('compositionend', () => {
+    chatComposing = false;
+    updateMyTyping(chatInput.value);
+  });
+
+  chatInput.addEventListener('input', () => {
+    // 디바운싱 (50ms) - 너무 자주 쓰지 않게
+    if (typingDebounce) clearTimeout(typingDebounce);
+    typingDebounce = setTimeout(() => updateMyTyping(chatInput.value), 50);
+  });
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();

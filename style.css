@@ -322,6 +322,17 @@
   margin-top: 2px;
 }
 
+.chat-typing-indicator {
+  padding: 2px 14px;
+  font-size: 0.7rem;
+  color: #aaa;
+  min-height: 16px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chat-input-area {
   display: flex;
   gap: 6px;
