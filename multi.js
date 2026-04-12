@@ -413,16 +413,7 @@ function startMultiGame() {
 
 let lastActionTimestamp = 0;
 
-function updateOpponentTypingFromRoom(room) {
-  const indicator = document.getElementById('multi-typing-indicator');
-  if (!indicator) return;
-  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  const text = room.typing && room.typing[opId];
-  indicator.textContent = text ? text : '';
-}
-
 function handleGameUpdate(room) {
-  updateOpponentTypingFromRoom(room);
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen && currentScreen.id === 'screen-multi-waiting') {
     showScreen('screen-multi-game');
@@ -514,6 +505,8 @@ async function initMultiGameUI(room) {
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
+  // 타이핑 리스너 시작
+  listenMultiTyping();
   // WAV 파일 프리로드 (백그라운드)
   preloadAudio();
 }
@@ -864,8 +857,8 @@ let multiTypingDebounce = null;
 let multiTypingListener = null;
 
 function updateMultiTyping(text) {
-  if (!db || !multi.roomRef || !multi.playerId) return;
-  const ref = multi.roomRef.child('typing/' + multi.playerId);
+  if (!db || !multi.roomId || !multi.playerId) return;
+  const ref = db.ref('multiTyping/' + multi.roomId + '/' + multi.playerId);
   if (text && text.length > 0) {
     ref.set(text.substring(0, 50));
     ref.onDisconnect().remove();
@@ -875,11 +868,13 @@ function updateMultiTyping(text) {
 }
 
 function listenMultiTyping() {
-  if (!multi.roomRef) return;
+  if (!db || !multi.roomId) return;
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  const ref = multi.roomRef.child('typing/' + opId);
-  if (multiTypingListener) ref.off('value', multiTypingListener);
+  const ref = db.ref('multiTyping/' + multi.roomId + '/' + opId);
 
+  if (multiTypingListener) {
+    ref.off('value');
+  }
   multiTypingListener = ref.on('value', (snap) => {
     const indicator = document.getElementById('multi-typing-indicator');
     if (!indicator) return;
@@ -889,11 +884,11 @@ function listenMultiTyping() {
 }
 
 function stopMultiTypingListener() {
-  if (!multi.roomRef) return;
+  if (!db || !multi.roomId) return;
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  multi.roomRef.child('typing/' + opId).off();
+  db.ref('multiTyping/' + multi.roomId + '/' + opId).off();
   if (multi.playerId) {
-    multi.roomRef.child('typing/' + multi.playerId).remove();
+    db.ref('multiTyping/' + multi.roomId + '/' + multi.playerId).remove();
   }
   multiTypingListener = null;
   const indicator = document.getElementById('multi-typing-indicator');
