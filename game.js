@@ -1461,6 +1461,31 @@ function filterDictionary() {
   loadMoreDict();
 }
 
+async function openDictDefModal(word) {
+  const modal = document.getElementById('dict-def-modal');
+  const wordEl = document.getElementById('dict-def-word');
+  const bodyEl = document.getElementById('dict-def-body');
+  if (!modal || !wordEl || !bodyEl) return;
+  wordEl.textContent = word;
+  bodyEl.innerHTML = '<div class="dict-def-loading">불러오는 중...</div>';
+  modal.style.display = 'flex';
+  try {
+    const entries = (typeof fetchDef === 'function') ? await fetchDef(word) : [];
+    if (!entries || entries.length === 0) {
+      bodyEl.innerHTML = '<div class="dict-def-none">사전에 등재되지 않은 단어입니다</div>';
+    } else {
+      bodyEl.innerHTML = renderDefHTML(word, entries);
+    }
+  } catch {
+    bodyEl.innerHTML = '<div class="dict-def-none">뜻을 불러오지 못했습니다</div>';
+  }
+}
+
+function closeDictDefModal() {
+  const modal = document.getElementById('dict-def-modal');
+  if (modal) modal.style.display = 'none';
+}
+
 function loadMoreDict() {
   const list = document.getElementById('dict-list');
   const end = Math.min(dictDisplayed + DICT_PAGE_SIZE, dictFiltered.length);
@@ -1469,7 +1494,7 @@ function loadMoreDict() {
   for (let i = dictDisplayed; i < end; i++) {
     const w = dictFiltered[i];
     const cls = STD_WORDS.has(w) ? 'std' : 'inj';
-    html += `<span class="dict-word ${cls}">${w}</span>`;
+    html += `<span class="dict-word ${cls}" onclick="openDictDefModal('${w.replace(/'/g, "\\'")}')">${w}</span>`;
   }
   list.insertAdjacentHTML('beforeend', html);
   dictDisplayed = end;
