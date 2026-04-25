@@ -2562,6 +2562,39 @@ body {
   justify-content: center;
 }
 
+.word-def {
+  display: none;
+  max-width: 720px;
+  margin: 0 auto 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #444;
+  background: rgba(255,255,255,0.85);
+  border-radius: 10px;
+  text-align: center;
+  word-break: keep-all;
+}
+.word-def .def-pos {
+  display: inline-block;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.word-def .def-num {
+  display: inline-block;
+  font-weight: 700;
+  color: #888;
+  margin-right: 4px;
+}
+.word-def .def-word { font-weight: 700; color: #222; }
+.word-def .def-hanja { color: #888; font-size: 0.78rem; margin-left: 2px; }
+.word-def .def-text { color: #555; }
+
 .current-word {
   font-size: 3rem;
   font-weight: 900;

@@ -407,7 +407,10 @@ function playWordAnimation(word, callback, targetElId) {
   state.isAnimating = true;
   // BGM 음량 줄이기
   if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0;
-  const wordEl = document.getElementById(targetElId || 'current-word');
+  const elId = targetElId || 'current-word';
+  const wordEl = document.getElementById(elId);
+  const defEl = document.getElementById(elId + '-def');
+  if (typeof showWordDefinition === 'function') showWordDefinition(defEl, word);
   const chars = word.split('');
   const n = chars.length;
 
@@ -550,6 +553,8 @@ async function startGame(level) {
   document.getElementById('game-message').textContent = '';
   document.getElementById('word-input').value = '';
   document.getElementById('current-word').innerHTML = '';
+  const _cwd = document.getElementById('current-word-def');
+  if (_cwd) { _cwd.innerHTML = ''; _cwd.style.display = 'none'; }
   document.getElementById('next-char').innerHTML = '';
 
   showScreen('screen-game');
@@ -957,6 +962,8 @@ function endGame(playerWins, reason) {
       document.getElementById('game-message').textContent = '';
       document.getElementById('word-input').value = '';
       document.getElementById('current-word').innerHTML = '';
+      const _cwd2 = document.getElementById('current-word-def');
+      if (_cwd2) { _cwd2.innerHTML = ''; _cwd2.style.display = 'none'; }
       document.getElementById('next-char').innerHTML = '';
 
       const startWord = getRandomStartWord();
