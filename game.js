@@ -1421,6 +1421,7 @@ function openDictionary() {
   // 필터 초기화
   document.getElementById('dict-search').value = '';
   document.getElementById('dict-start-char').value = '';
+  document.getElementById('dict-end-char').value = '';
   document.getElementById('dict-length').value = '0';
   document.getElementById('dict-total').textContent = `총 ${dictCache.length.toLocaleString()}개`;
 
@@ -1431,11 +1432,13 @@ function openDictionary() {
 function filterDictionary() {
   const search = document.getElementById('dict-search').value.trim();
   const startChar = document.getElementById('dict-start-char').value.trim();
+  const endChar = document.getElementById('dict-end-char').value.trim();
   const lengthVal = parseInt(document.getElementById('dict-length').value) || 0;
 
   dictFiltered = dictCache.filter(w => {
     if (search && !w.includes(search)) return false;
     if (startChar && w[0] !== startChar) return false;
+    if (endChar && w[w.length - 1] !== endChar) return false;
     if (lengthVal > 0) {
       if (lengthVal === 7) { if (w.length < 7) return false; }
       else { if (w.length !== lengthVal) return false; }
