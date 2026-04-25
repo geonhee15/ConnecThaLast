@@ -404,7 +404,7 @@ function startMultiGame() {
       type: 'start',
       word: startWord,
       by: 'system',
-      timestamp: firebase.database.ServerValue.TIMESTAMP
+      timestamp: Date.now()
     }
   });
 }
@@ -643,7 +643,7 @@ async function submitMultiWord() {
       type: 'word',
       word: word,
       by: multi.playerId,
-      timestamp: firebase.database.ServerValue.TIMESTAMP
+      timestamp: Date.now()
     }
   });
 }
@@ -716,7 +716,7 @@ function handleMultiGameOver(room) {
           type: 'start',
           word: startWord,
           by: 'system',
-          timestamp: firebase.database.ServerValue.TIMESTAMP
+          timestamp: Date.now()
         }
       });
     }, 2000);
