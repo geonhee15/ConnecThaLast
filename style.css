@@ -2099,11 +2099,106 @@ body {
   border-radius: 20px;
   font-size: 0.85rem;
   color: #333;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.dict-word:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 .dict-word.std {
   background: #e8f0fe;
   color: #1a73e8;
+}
+
+.dict-def-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 30, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  opacity: 0.96;
+  animation: dictModalFadeIn 0.18s ease-out;
+}
+
+@keyframes dictModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.96; }
+}
+
+.dict-def-card {
+  position: relative;
+  background: white;
+  border-radius: 18px;
+  padding: 32px 28px 28px;
+  max-width: 90vw;
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.dict-def-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+}
+.dict-def-close:hover { color: #333; }
+
+.dict-def-word {
+  font-size: 1.8rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #1a1a2e;
+  letter-spacing: 2px;
+}
+
+.dict-def-body {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #333;
+  word-break: keep-all;
+}
+
+.dict-def-body .def-pos {
+  display: inline-block;
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.dict-def-body .def-num {
+  display: inline-block;
+  font-weight: 700;
+  color: #888;
+  margin-right: 4px;
+}
+.dict-def-body .def-word { font-weight: 700; color: #1a1a2e; }
+.dict-def-body .def-hanja { color: #888; font-size: 0.85rem; margin-left: 2px; }
+.dict-def-body .def-text { color: #444; }
+
+.dict-def-loading,
+.dict-def-none {
+  text-align: center;
+  color: #888;
+  padding: 20px 0;
+  font-size: 0.9rem;
 }
 
 .dict-word.inj {

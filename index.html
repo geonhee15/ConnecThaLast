@@ -122,7 +122,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.8.1</p>
+      <p class="version-text">v2.8.2</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -193,7 +193,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.8.1</p>
+      <p class="version-text">v2.8.2</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -525,6 +525,15 @@
 
       <div class="dict-result-count" id="dict-result-count"></div>
       <div class="dict-list" id="dict-list"></div>
+    </div>
+
+    <!-- 단어 뜻 모달 -->
+    <div id="dict-def-modal" class="dict-def-modal" style="display:none" onclick="if(event.target===this)closeDictDefModal()">
+      <div class="dict-def-card">
+        <button class="dict-def-close" onclick="closeDictDefModal()">&times;</button>
+        <div id="dict-def-word" class="dict-def-word"></div>
+        <div id="dict-def-body" class="dict-def-body"></div>
+      </div>
     </div>
   </div>
 
