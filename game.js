@@ -1419,6 +1419,25 @@ let dictCache = null; // 정렬된 전체 단어 캐시
 const DICT_PAGE_SIZE = 200;
 let dictDisplayed = 0;
 let dictFiltered = [];
+let killerCharSet = null;
+
+function buildKillerCharSet() {
+  if (killerCharSet) return killerCharSet;
+  const chars = new Set();
+  for (const w of ALL_WORDS) {
+    chars.add(w[w.length - 1]);
+    chars.add(w[0]);
+  }
+  killerCharSet = new Set();
+  for (const c of chars) {
+    if (findWordsStartingWith(c).length === 0) killerCharSet.add(c);
+  }
+  return killerCharSet;
+}
+
+function isKillerWord(word) {
+  return buildKillerCharSet().has(word[word.length - 1]);
+}
 
 function openDictionary() {
   // 첫 호출 시 캐시 생성
@@ -1430,6 +1449,8 @@ function openDictionary() {
   document.getElementById('dict-start-char').value = '';
   document.getElementById('dict-end-char').value = '';
   document.getElementById('dict-length').value = '0';
+  const killerEl = document.getElementById('dict-killer-only');
+  if (killerEl) killerEl.checked = false;
   document.getElementById('dict-total').textContent = `총 ${dictCache.length.toLocaleString()}개`;
 
   showScreen('screen-dict');
@@ -1441,8 +1462,29 @@ function filterDictionary() {
   const startChar = document.getElementById('dict-start-char').value.trim();
   const endChar = document.getElementById('dict-end-char').value.trim();
   const lengthVal = parseInt(document.getElementById('dict-length').value) || 0;
+  const killerOnly = document.getElementById('dict-killer-only')?.checked;
+
+  // 한방 모드: 시작 글자/검색어로 시작하는 모든 한방 단어 (마지막 글자가 후속 단어 없는 글자)
+  // startChar가 단일 글자가 아닌 경우(예: 검색창에 "가나" 입력) search로 시작 매칭
+  const startMatcher = killerOnly
+    ? (w) => {
+        if (startChar && getAlternativeChars(startChar).indexOf(w[0]) === -1) return false;
+        if (search && !w.startsWith(search)) return false;
+        return true;
+      }
+    : null;
 
   dictFiltered = dictCache.filter(w => {
+    if (killerOnly) {
+      if (!startMatcher(w)) return false;
+      if (!isKillerWord(w)) return false;
+      if (endChar && w[w.length - 1] !== endChar) return false;
+      if (lengthVal > 0) {
+        if (lengthVal === 7) { if (w.length < 7) return false; }
+        else { if (w.length !== lengthVal) return false; }
+      }
+      return true;
+    }
     if (search && !w.includes(search)) return false;
     if (startChar && w[0] !== startChar) return false;
     if (endChar && w[w.length - 1] !== endChar) return false;
@@ -1454,7 +1496,7 @@ function filterDictionary() {
   });
 
   document.getElementById('dict-result-count').textContent =
-    `검색 결과: ${dictFiltered.length.toLocaleString()}개`;
+    `검색 결과: ${dictFiltered.length.toLocaleString()}개${killerOnly ? ' (한방 단어)' : ''}`;
 
   dictDisplayed = 0;
   document.getElementById('dict-list').innerHTML = '';
@@ -1494,7 +1536,8 @@ function loadMoreDict() {
   for (let i = dictDisplayed; i < end; i++) {
     const w = dictFiltered[i];
     const cls = STD_WORDS.has(w) ? 'std' : 'inj';
-    html += `<span class="dict-word ${cls}" onclick="openDictDefModal('${w.replace(/'/g, "\\'")}')">${w}</span>`;
+    const killerCls = isKillerWord(w) ? ' killer' : '';
+    html += `<span class="dict-word ${cls}${killerCls}" onclick="openDictDefModal('${w.replace(/'/g, "\\'")}')">${w}</span>`;
   }
   list.insertAdjacentHTML('beforeend', html);
   dictDisplayed = end;

@@ -122,7 +122,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v2.8.6</p>
+      <p class="version-text">v2.9.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -193,7 +193,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v2.8.6</p>
+      <p class="version-text">v2.9.0</p>
       <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -520,6 +520,13 @@
             <option value="6">6글자</option>
             <option value="7">7글자 이상</option>
           </select>
+        </div>
+        <div class="dict-filter-row">
+          <label>한방루트</label>
+          <label class="dict-killer-toggle">
+            <input type="checkbox" id="dict-killer-only" onchange="filterDictionary()">
+            <span>한방 단어만 보기</span>
+          </label>
         </div>
       </div>
 
