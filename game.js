@@ -255,7 +255,7 @@ function selectBotRound(n, btn) {
 const modes = {
   manner: false,   // 매너: 한방단어 금지
   noda: false,     // ~다 금지
-  freedueum: false, // 자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환
+  freedueum: true, // 자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환 (기본 ON)
   injeong: true    // 어인정: 비표준 단어 허용 (기본 ON)
 };
 
