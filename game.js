@@ -1439,6 +1439,176 @@ function isKillerWord(word) {
   return buildKillerCharSet().has(word[word.length - 1]);
 }
 
+// ===== 한방 루트 (게임 이론) =====
+// charWinState[c]: 'W' = 그 글자에서 시작하는 차례인 사람이 이김, 'L' = 짐, undefined = 무승부(사이클)
+let charWinState = null;
+let charMovesCache = null;
+
+function _movesFrom(c) {
+  if (!charMovesCache) charMovesCache = new Map();
+  if (charMovesCache.has(c)) return charMovesCache.get(c);
+  const m = findWordsStartingWith(c);
+  charMovesCache.set(c, m);
+  return m;
+}
+
+function computeCharWinStates() {
+  if (charWinState) return charWinState;
+  charWinState = new Map();
+
+  const allChars = new Set();
+  for (const w of ALL_WORDS) {
+    allChars.add(w[0]);
+    allChars.add(w[w.length - 1]);
+  }
+  for (const c of Array.from(allChars)) {
+    for (const a of getAlternativeChars(c)) allChars.add(a);
+  }
+
+  // movesCount[c] = 아직 'L'로 판명나지 않은 상대 위치로 가는 수의 개수
+  const movesCount = new Map();
+  // reverseGraph[Y] = c에서 Y로 끝나는 단어가 있는 c들의 리스트 (중복 허용; 각 단어마다 하나씩)
+  const reverseGraph = new Map();
+
+  for (const c of allChars) {
+    const moves = _movesFrom(c);
+    movesCount.set(c, moves.length);
+    for (const w of moves) {
+      const endChar = w[w.length - 1];
+      if (!reverseGraph.has(endChar)) reverseGraph.set(endChar, []);
+      reverseGraph.get(endChar).push(c);
+    }
+  }
+
+  const queue = [];
+  for (const c of allChars) {
+    if ((movesCount.get(c) || 0) === 0) {
+      charWinState.set(c, 'L');
+      queue.push(c);
+    }
+  }
+
+  while (queue.length) {
+    const c = queue.shift();
+    const state = charWinState.get(c);
+    const preds = reverseGraph.get(c) || [];
+    for (const p of preds) {
+      if (charWinState.has(p)) continue;
+      if (state === 'L') {
+        charWinState.set(p, 'W');
+        queue.push(p);
+      } else {
+        const cnt = movesCount.get(p) - 1;
+        movesCount.set(p, cnt);
+        if (cnt === 0) {
+          charWinState.set(p, 'L');
+          queue.push(p);
+        }
+      }
+    }
+  }
+
+  return charWinState;
+}
+
+// startChar로 시작하는 한방 루트 트리 빌드 (유저 차례부터)
+// 반환: { word, killer, branches: [{ oppWord, userResponse: <subtree> }, ...] } 의 배열
+function buildKillerRouteTree(startChar, opts = {}) {
+  const states = computeCharWinStates();
+  const MAX_USER_FIRST_MOVES = opts.maxFirst || 8;
+  const MAX_OPP_BRANCHES = opts.maxOpp || 12;
+  const MAX_DEPTH_ROUNDS = opts.maxRounds || 5; // 라운드(유저-상대 한 쌍) 최대 깊이
+
+  function userPlay(char, round) {
+    // 유저 차례. 이기는 수: 끝 글자가 'L' 상태인 단어
+    const moves = _movesFrom(char);
+    const wins = moves.filter(w => states.get(w[w.length - 1]) === 'L');
+    if (wins.length === 0) return null; // 이길 수 없음
+
+    // 한방 단어(끝이 무수 글자)를 우선
+    wins.sort((a, b) => {
+      const am = _movesFrom(a[a.length - 1]).length;
+      const bm = _movesFrom(b[b.length - 1]).length;
+      return am - bm;
+    });
+
+    const limit = (round === 0) ? MAX_USER_FIRST_MOVES : 1;
+    const picked = wins.slice(0, limit);
+    return picked.map(w => buildUserNode(w, round));
+  }
+
+  function buildUserNode(word, round) {
+    const endChar = word[word.length - 1];
+    const oppMoves = _movesFrom(endChar);
+    if (oppMoves.length === 0) {
+      return { word, killer: true, branches: [] };
+    }
+    if (round + 1 >= MAX_DEPTH_ROUNDS) {
+      return { word, killer: false, deep: true, branches: [] };
+    }
+    const branches = oppMoves.slice(0, MAX_OPP_BRANCHES).map(ow => {
+      const userResp = userPlay(ow[ow.length - 1], round + 1);
+      const respNode = userResp && userResp.length > 0 ? userResp[0] : null;
+      return { oppWord: ow, userResponse: respNode };
+    });
+    return {
+      word,
+      killer: false,
+      branches,
+      moreOpp: oppMoves.length - MAX_OPP_BRANCHES > 0 ? (oppMoves.length - MAX_OPP_BRANCHES) : 0
+    };
+  }
+
+  return userPlay(startChar, 0);
+}
+
+function renderKillerRouteHTML(startChar) {
+  const startState = computeCharWinStates().get(startChar);
+  const moves = _movesFrom(startChar);
+  if (moves.length === 0) {
+    return `<div class="route-empty">"${startChar}"(으)로 시작하는 단어가 없습니다.</div>`;
+  }
+  if (startState !== 'W') {
+    return `<div class="route-empty">"${startChar}"(으)로 시작하는 한방 루트가 없습니다 (이기는 수가 존재하지 않음).</div>`;
+  }
+  const tree = buildKillerRouteTree(startChar);
+  if (!tree || tree.length === 0) {
+    return `<div class="route-empty">한방 루트를 찾지 못했습니다.</div>`;
+  }
+  let html = `<div class="route-tree">`;
+  for (const node of tree) html += renderRouteNode(node, 'user');
+  html += `</div>`;
+  return html;
+}
+
+function renderRouteNode(node, role) {
+  if (!node) {
+    return `<div class="route-node opp-loss">상대 대응 불가 (한방)</div>`;
+  }
+  const cls = role === 'user' ? 'user' : 'opp';
+  const killerCls = node.killer ? ' killer' : '';
+  const deepCls = node.deep ? ' deep' : '';
+  let html = `<div class="route-node ${cls}${killerCls}${deepCls}"><span class="route-word" onclick="openDictDefModal('${node.word.replace(/'/g, "\\'")}')">${node.word}${node.killer ? ' ⚔' : ''}${node.deep ? ' …' : ''}</span>`;
+  if (node.branches && node.branches.length > 0) {
+    html += `<div class="route-children">`;
+    for (const b of node.branches) {
+      html += `<div class="route-branch"><div class="route-node opp"><span class="route-word" onclick="openDictDefModal('${b.oppWord.replace(/'/g, "\\'")}')">${b.oppWord}</span></div>`;
+      if (b.userResponse) {
+        html += renderRouteNode(b.userResponse, 'user');
+      } else {
+        html += `<div class="route-node user error">대응 없음</div>`;
+      }
+      html += `</div>`;
+    }
+    if (node.moreOpp && node.moreOpp > 0) {
+      html += `<div class="route-more">상대 옵션 외 ${node.moreOpp}개 (모두 동일하게 처리)</div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
 function openDictionary() {
   // 첫 호출 시 캐시 생성
   if (!dictCache) {
@@ -1499,7 +1669,15 @@ function filterDictionary() {
     `검색 결과: ${dictFiltered.length.toLocaleString()}개${killerOnly ? ' (한방 단어)' : ''}`;
 
   dictDisplayed = 0;
-  document.getElementById('dict-list').innerHTML = '';
+  const listEl = document.getElementById('dict-list');
+  listEl.innerHTML = '';
+
+  // 한방 모드 & 시작 글자 주어졌는데 직접 한방 단어가 없으면 → 한방 루트 트리 표시
+  if (killerOnly && startChar && dictFiltered.length === 0) {
+    listEl.innerHTML = renderKillerRouteHTML(startChar);
+    return;
+  }
+
   loadMoreDict();
 }
 
