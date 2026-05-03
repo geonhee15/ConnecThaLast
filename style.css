@@ -2227,6 +2227,93 @@ body {
   cursor: pointer;
 }
 
+.route-tree {
+  padding: 12px 8px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.route-empty {
+  padding: 24px;
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.route-node {
+  display: inline-block;
+  margin: 2px 0;
+}
+
+.route-node .route-word {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.route-node.user .route-word {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1.5px solid #1976d2;
+}
+
+.route-node.opp .route-word {
+  background: #ffebee;
+  color: #c62828;
+  border: 1.5px solid #e53935;
+}
+
+.route-node.killer .route-word {
+  background: #fff8e1;
+  color: #b71c1c;
+  border: 2px solid #b71c1c;
+  font-weight: 700;
+}
+
+.route-node.deep .route-word {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.route-node.error,
+.route-node.opp-loss {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  color: #b71c1c;
+  font-style: italic;
+}
+
+.route-children {
+  margin-left: 24px;
+  padding-left: 12px;
+  border-left: 2px dashed #bbb;
+  margin-top: 4px;
+}
+
+.route-branch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 3px 0;
+}
+
+.route-branch::before {
+  content: "→";
+  color: #888;
+  font-weight: 700;
+}
+
+.route-more {
+  margin: 6px 0 6px 0;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  color: #666;
+  font-style: italic;
+}
+
 .version-text {
   margin-top: 40px;
   margin-bottom: 4px;
