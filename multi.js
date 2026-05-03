@@ -488,6 +488,15 @@ function handleGameUpdate(room) {
     // 애니메이션 중 타이머 정지
     stopMultiTimer();
 
+    // 새 라운드 시작 시 입력칸 정리 (이전 라운드의 누적 타이핑 제거)
+    if (room.lastAction.type === 'start') {
+      const input = document.getElementById('multi-word-input');
+      if (input) input.value = '';
+      updateMultiTyping('');
+      const overlay = document.getElementById('multi-typing-overlay');
+      if (overlay) { overlay.style.display = 'none'; overlay.textContent = ''; }
+    }
+
     if (room.lastAction.type === 'word' || room.lastAction.type === 'start') {
       if (room.nextChar) showMultiNextCharHint(room.nextChar);
       updateMultiUsedWords(room.usedWords);
@@ -593,6 +602,10 @@ function updateMultiTimerDisplay() {
 async function handleMultiTimeout() {
   if (!multi.roomRef) return;
   const winner = multi.playerId === 'p1' ? 'p2' : 'p1';
+  // 입력칸/타이핑 필드 즉시 비우기 (다음 라운드로 누적되지 않도록)
+  const input = document.getElementById('multi-word-input');
+  if (input) input.value = '';
+  updateMultiTyping('');
   await multi.roomRef.update({
     status: 'finished',
     winner: winner,

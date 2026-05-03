@@ -399,20 +399,47 @@ function getRhythmSpeed() {
   return 1.0 + (10 - state.timerMax) * 0.05;
 }
 
+// 진행 중인 애니메이션 타이머 + 사운드 추적 (중복 재생 방지)
+let animTimeoutIds = [];
+let activeKickClones = [];
+
+function _animTimeout(fn, delay) {
+  const id = setTimeout(() => { fn(); }, delay);
+  animTimeoutIds.push(id);
+  return id;
+}
+
+function cancelOngoingAnimation() {
+  for (const id of animTimeoutIds) clearTimeout(id);
+  animTimeoutIds = [];
+  for (const k of activeKickClones) {
+    try { k.pause(); k.currentTime = 0; } catch(e) {}
+  }
+  activeKickClones = [];
+  if (currentSound) {
+    try { currentSound.pause(); currentSound.currentTime = 0; } catch(e) {}
+    currentSound = null;
+  }
+}
+
 // KICK.wav를 지정 시간(ms) 후에 재생 (메인 사운드를 멈추지 않음)
 function playKickAt(delayMs) {
-  setTimeout(() => {
+  _animTimeout(() => {
     const original = audioPool['kick'];
     if (!original) return;
     const clone = original.cloneNode();
     clone.volume = 1.0;
     clone.play().catch(() => {});
+    activeKickClones.push(clone);
   }, delayMs);
 }
 
 // ==================== RHYTHM SYSTEM ====================
 
 function playWordAnimation(word, callback, targetElId) {
+  // 진행 중인 애니메이션이 있으면 모두 취소 (사운드/타이머 겹침 방지)
+  cancelOngoingAnimation();
+
   state.isAnimating = true;
   // BGM 음량 줄이기
   if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = 0;
@@ -438,19 +465,19 @@ function playWordAnimation(word, callback, targetElId) {
     const charBeats = WAV_CHAR_BEATS[n];
 
     charBeats.forEach((beatTime, i) => {
-      setTimeout(() => {
+      _animTimeout(() => {
         revealChar(wordEl, i);
       }, beatTime * 1000 * sc);
     });
 
     FINALE_BEATS.forEach((beatTime, i) => {
-      setTimeout(() => {
+      _animTimeout(() => {
         pulseAllChars(wordEl, i);
       }, beatTime * 1000 * sc);
     });
 
     const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
-    setTimeout(() => {
+    _animTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
       if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
@@ -471,19 +498,19 @@ function playWordAnimation(word, callback, targetElId) {
 
     charTimings.forEach((tMs, i) => {
       playKickAt(tMs);
-      setTimeout(() => {
+      _animTimeout(() => {
         revealChar(wordEl, i);
       }, tMs);
     });
 
     FINALE_BEATS.forEach((beatTime, i) => {
-      setTimeout(() => {
+      _animTimeout(() => {
         pulseAllChars(wordEl, i);
       }, beatTime * 1000 * sc);
     });
 
     const totalTime = FINALE_BEATS[2] * 1000 * sc + 400;
-    setTimeout(() => {
+    _animTimeout(() => {
       wordEl.classList.remove('finale-pulse');
       state.isAnimating = false;
       if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
@@ -493,7 +520,7 @@ function playWordAnimation(word, callback, targetElId) {
   } else {
     // 1글자 (이론상 없지만 안전장치)
     revealChar(wordEl, 0);
-    setTimeout(() => {
+    _animTimeout(() => {
       state.isAnimating = false;
       if (typeof bgmAudio !== 'undefined' && bgmAudio) bgmAudio.volume = typeof bgmUserVolume !== 'undefined' ? bgmUserVolume : 0.3;
       if (callback) callback();
