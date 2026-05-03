@@ -3418,6 +3418,20 @@ function getAlternativeChars(char) {
   const jung = Math.floor((code % (21 * 28)) / 28);
   const jong = code % 28;
   const results = [char];
+  // 자유두음 모드: ㄴ(2)/ㄹ(5)/ㅇ(11) 초성 모두 자유 호환
+  const freeMode = (typeof modes !== 'undefined') && modes && modes.freedueum;
+  const freeRoom = (typeof state !== 'undefined') && state && state.roomFreeDueum;
+  if (freeMode || freeRoom) {
+    if (cho === 2 || cho === 5 || cho === 11) {
+      const baseCho = [2, 5, 11];
+      for (const c of baseCho) {
+        if (c !== cho) {
+          results.push(String.fromCharCode((c * 21 + jung) * 28 + jong + 0xAC00));
+        }
+      }
+    }
+    return results;
+  }
   if (cho === 5) {
     if ([0,1,8,13,18].includes(jung)) results.push(String.fromCharCode((2 * 21 + jung) * 28 + jong + 0xAC00));
     if ([2,6,12,17,20].includes(jung)) results.push(String.fromCharCode((11 * 21 + jung) * 28 + jong + 0xAC00));

@@ -49,6 +49,7 @@ async function createRoom() {
   const roomModes = {
     manner: document.getElementById('room-mode-manner').classList.contains('active'),
     noda: document.getElementById('room-mode-noda').classList.contains('active'),
+    freedueum: document.getElementById('room-mode-freedueum').classList.contains('active'),
     injeong: document.getElementById('room-mode-injeong').classList.contains('active')
   };
 
@@ -189,6 +190,7 @@ function displayRoomModes(roomModes, totalRounds) {
   const tags = [];
   if (roomModes.manner) tags.push('매너');
   if (roomModes.noda) tags.push('~다 금지');
+  if (roomModes.freedueum) tags.push('자유두음');
   if (roomModes.injeong) tags.push('어인정');
   let text = tags.length > 0 ? '모드: ' + tags.join(', ') : '모드: 없음';
   if (totalRounds > 1) text += ` | ${totalRounds}라운드`;
@@ -244,6 +246,7 @@ function startRoomListListener() {
       if (room.modes) {
         if (room.modes.manner) modeTags.push('매너');
         if (room.modes.noda) modeTags.push('~다금지');
+        if (room.modes.freedueum) modeTags.push('자유두음');
         if (room.modes.injeong) modeTags.push('어인정');
       }
       if (room.totalRounds > 1) modeTags.push(room.totalRounds + '라운드');
@@ -295,6 +298,7 @@ async function leaveRoom() {
 
 function resetMultiState() {
   stopMultiTypingListener();
+  state.roomFreeDueum = false;
   multi.roomId = null;
   multi.roomRef = null;
   multi.playerId = null;
@@ -414,6 +418,9 @@ function startMultiGame() {
 let lastActionTimestamp = 0;
 
 function handleGameUpdate(room) {
+  // 룸 모드 적용 (자유두음 등)
+  state.roomFreeDueum = !!(room.modes && room.modes.freedueum);
+
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen && currentScreen.id === 'screen-multi-waiting') {
     showScreen('screen-multi-game');

@@ -255,12 +255,14 @@ function selectBotRound(n, btn) {
 const modes = {
   manner: false,   // 매너: 한방단어 금지
   noda: false,     // ~다 금지
+  freedueum: false, // 자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환
   injeong: true    // 어인정: 비표준 단어 허용 (기본 ON)
 };
 
 const MODE_DESCS = {
   manner: '매너: 한방단어 금지 (이을 수 없는 글자로 끝나는 단어 사용 불가)',
   noda: '~다 금지: "다"로 끝나는 단어 사용 불가',
+  freedueum: '자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환 (예: 륨 → 륨/늄/윰 다 가능)',
   injeong: '어인정: 게임/애니/노래 제목 등 비표준 단어 허용'
 };
 
@@ -268,6 +270,13 @@ function toggleMode(mode) {
   modes[mode] = !modes[mode];
   const btn = document.getElementById('mode-' + mode);
   btn.classList.toggle('active', modes[mode]);
+
+  // 두음 관련 캐시 무효화 (자유두음 토글로 인한 chain 영향)
+  if (mode === 'freedueum') {
+    killerCharSet = null;
+    charWinState = null;
+    charMovesCache = null;
+  }
 
   // 설명 업데이트
   const active = Object.entries(modes).filter(([k, v]) => v).map(([k]) => MODE_DESCS[k]);
@@ -1435,7 +1444,7 @@ function buildKillerCharSet() {
   return killerCharSet;
 }
 
-function isKillerWord(word) {
+function isDeadEndWord(word) {
   return buildKillerCharSet().has(word[word.length - 1]);
 }
 
@@ -1647,7 +1656,7 @@ function filterDictionary() {
   dictFiltered = dictCache.filter(w => {
     if (killerOnly) {
       if (!startMatcher(w)) return false;
-      if (!isKillerWord(w)) return false;
+      if (!isDeadEndWord(w)) return false;
       if (endChar && w[w.length - 1] !== endChar) return false;
       if (lengthVal > 0) {
         if (lengthVal === 7) { if (w.length < 7) return false; }
@@ -1714,7 +1723,7 @@ function loadMoreDict() {
   for (let i = dictDisplayed; i < end; i++) {
     const w = dictFiltered[i];
     const cls = STD_WORDS.has(w) ? 'std' : 'inj';
-    const killerCls = isKillerWord(w) ? ' killer' : '';
+    const killerCls = isDeadEndWord(w) ? ' killer' : '';
     html += `<span class="dict-word ${cls}${killerCls}" onclick="openDictDefModal('${w.replace(/'/g, "\\'")}')">${w}</span>`;
   }
   list.insertAdjacentHTML('beforeend', html);
