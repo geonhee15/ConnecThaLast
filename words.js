@@ -3441,16 +3441,31 @@ function getAlternativeChars(char) {
   }
   return results;
 }
+function _isEngMode() {
+  return typeof state !== 'undefined' && state && state.gameLang === 'en'
+    && typeof engFindWordsStartingWith === 'function';
+}
 function findWordsStartingWith(char) {
+  if (_isEngMode()) return engFindWordsStartingWith(char);
   const chars = getAlternativeChars(char);
   let words = [];
   for (const c of chars) { if (WORD_DB[c]) words = words.concat(WORD_DB[c]); }
   return words;
 }
-function isValidWord(word) { return ALL_WORDS.has(word); }
-function isStandardWord(word) { return STD_WORDS.has(word); }
-function isValidChain(lastChar, word) { return getAlternativeChars(lastChar).includes(word[0]); }
+function isValidWord(word) {
+  if (_isEngMode()) return engIsValidWord(word);
+  return ALL_WORDS.has(word);
+}
+function isStandardWord(word) {
+  if (_isEngMode()) return engIsStandardWord(word);
+  return STD_WORDS.has(word);
+}
+function isValidChain(lastChar, word) {
+  if (_isEngMode()) return engIsValidChain(lastChar, word);
+  return getAlternativeChars(lastChar).includes(word[0]);
+}
 function getRandomStartWord() {
+  if (_isEngMode()) return engGetRandomStartWord();
   const easy = [];
   for (const char in WORD_DB) {
     for (const entry of WORD_DB[char]) {
