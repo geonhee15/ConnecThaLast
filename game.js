@@ -386,7 +386,7 @@ function playSound(key, rate = 1.0) {
     try { currentSound.pause(); currentSound.currentTime = 0; } catch(e) {}
   }
   const clone = original.cloneNode();
-  clone.volume = 1.0;
+  clone.volume = (typeof sfxUserVolume !== 'undefined') ? sfxUserVolume : 1.0;
   clone.playbackRate = rate;
   clone.play().catch(() => {});
   currentSound = clone;
@@ -428,7 +428,7 @@ function playKickAt(delayMs) {
     const original = audioPool['kick'];
     if (!original) return;
     const clone = original.cloneNode();
-    clone.volume = 1.0;
+    clone.volume = (typeof sfxUserVolume !== 'undefined') ? sfxUserVolume : 1.0;
     clone.play().catch(() => {});
     activeKickClones.push(clone);
   }, delayMs);

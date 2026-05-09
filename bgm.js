@@ -50,7 +50,9 @@ function playBGMTrack() {
   };
 }
 
-let bgmUserVolume = 0.3;
+let bgmUserVolume = (typeof userSettings !== 'undefined' && userSettings.bgmVolume != null)
+  ? userSettings.bgmVolume / 100
+  : 0.3;
 let bgmPlaying = true;
 
 function toggleBGMPlay() {
@@ -72,6 +74,14 @@ function setBGMVolume(val) {
   if (bgmAudio) bgmAudio.volume = bgmUserVolume;
   const t = document.getElementById('bgm-vol-text');
   if (t) t.textContent = Math.round(val) + '%';
+  // 영구 저장
+  if (typeof userSettings !== 'undefined') {
+    userSettings.bgmVolume = +val;
+    if (typeof saveSettings === 'function') saveSettings();
+  }
+  // 상단 BGM 슬라이더도 동기화
+  const top = document.getElementById('bgm-volume');
+  if (top && top.value != val) top.value = val;
 }
 
 // 보스전 진입 시 BGM 정지
