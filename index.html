@@ -258,9 +258,12 @@
       <div class="mode-section">
         <div class="mode-row">
           <span class="mode-label">게임 종류</span>
-          <span class="mode-fixed">한국어 끝말잇기</span>
+          <div class="mode-toggles">
+            <button class="mode-btn active" id="lang-ko" onclick="setBotGameLang('ko')">한국어 끝말잇기</button>
+            <button class="mode-btn" id="lang-en" onclick="setBotGameLang('en')">English Word Chain</button>
+          </div>
         </div>
-        <div class="mode-row">
+        <div class="mode-row" id="ko-modes-row">
           <span class="mode-label">모드</span>
           <div class="mode-toggles">
             <button class="mode-btn" id="mode-manner" onclick="toggleMode('manner')">매너</button>
@@ -753,6 +756,8 @@
   <script src="firebase-config.js"></script>
   <script src="settings.js"></script>
   <script src="words.js"></script>
+  <script src="eng_words.js"></script>
+  <script src="eng.js"></script>
   <script src="customDefs.js"></script>
   <script src="dict.js"></script>
   <script src="game.js"></script>

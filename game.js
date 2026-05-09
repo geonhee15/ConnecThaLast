@@ -240,15 +240,27 @@ const state = {
   totalRounds: 1,
   currentRound: 1,
   playerRoundWins: 0,
-  botRoundWins: 0
+  botRoundWins: 0,
+  // 게임 언어 (ko / en)
+  gameLang: 'ko'
 };
 
 let selectedBotRounds = 1;
+let selectedBotLang = 'ko';
 
 function selectBotRound(n, btn) {
   selectedBotRounds = n;
   document.querySelectorAll('#bot-round-btns .round-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+function setBotGameLang(lang) {
+  selectedBotLang = lang;
+  document.getElementById('lang-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  // 한국어 모드들은 영어에선 무의미하므로 행 자체를 숨김
+  const koRow = document.getElementById('ko-modes-row');
+  if (koRow) koRow.style.display = (lang === 'en') ? 'none' : '';
 }
 
 // ==================== MODE SYSTEM ====================
@@ -294,6 +306,8 @@ function isKillerWord(word) {
 
 // 모드 기반 단어 유효성 체크
 function isModeValidWord(word) {
+  // 영어 모드: 사전 존재 여부만 체크
+  if (state.gameLang === 'en') return isValidWord(word);
   // 기본: DB에 존재하는지
   if (!modes.injeong) {
     // 어인정 OFF: 표준 단어만
@@ -579,6 +593,7 @@ async function startGame(level) {
   state.currentRound = 1;
   state.playerRoundWins = 0;
   state.botRoundWins = 0;
+  state.gameLang = selectedBotLang || 'ko';
 
   // UI 초기화
   document.getElementById('bot-name').textContent = BOT_NAMES[level];
@@ -636,6 +651,10 @@ function showStartWord(word) {
 }
 
 function showNextCharHint(char) {
+  if (state.gameLang === 'en') {
+    document.getElementById('next-char').innerHTML = `Next letter: <strong>${char}</strong>`;
+    return;
+  }
   const alternatives = getAlternativeChars(char);
   let hint = `다음 글자: <strong>${char}</strong>`;
   if (alternatives.length > 1) {
@@ -723,10 +742,13 @@ function submitWord() {
   setTimeout(() => { submitLock = false; }, 500);
 
   const input = document.getElementById('word-input');
-  const word = input.value.trim();
+  let word = input.value.trim();
   input.value = '';
 
   if (!word) return;
+
+  // 영어 모드: 소문자로 정규화
+  if (state.gameLang === 'en') word = word.toLowerCase();
 
   const msg = validateWord(word);
   if (msg) {
@@ -760,17 +782,23 @@ function submitWord() {
 }
 
 function validateWord(word) {
-  if (word.length < 2) return '2글자 이상 입력하세요.';
+  const isEn = state.gameLang === 'en';
+  if (word.length < 2) return isEn ? 'Enter at least 2 letters.' : '2글자 이상 입력하세요.';
+  if (isEn && !/^[a-z]+$/.test(word)) return 'English letters only.';
   if (!isValidChain(state.nextChar, word)) {
+    if (isEn) {
+      return `Word must start with "${state.nextChar}".`;
+    }
     const alts = getAlternativeChars(state.nextChar);
     return `"${alts.join('" 또는 "')}"(으)로 시작하는 단어를 입력하세요.`;
   }
-  if (state.usedWords.has(word)) return '이미 사용한 단어입니다.';
-  // 어인정 모드 체크
+  if (state.usedWords.has(word)) return isEn ? 'Word already used.' : '이미 사용한 단어입니다.';
+  if (!isValidWord(word)) return isEn ? 'Not in dictionary.' : '사전에 없는 단어입니다.';
+  // 영어는 표준/어인정/~다금지/매너 모드 적용 안 함
+  if (isEn) return null;
+  // 어인정 모드 체크 (한국어)
   if (!modes.injeong) {
     if (!isStandardWord(word)) return '사전에 없는 단어입니다. (어인정 모드를 켜보세요)';
-  } else {
-    if (!isValidWord(word)) return '사전에 없는 단어입니다.';
   }
   // ~다 금지
   if (modes.noda && word.endsWith('다')) return '"다"로 끝나는 단어는 사용할 수 없습니다.';
