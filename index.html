@@ -188,6 +188,10 @@
           <span class="btn-icon">&#128214;</span>
           단어 사전
         </button>
+        <button class="btn btn-secondary btn-large" onclick="openSettings()">
+          <span class="btn-icon">&#9881;</span>
+          <span data-i18n="home.settings">설정</span>
+        </button>
         <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterTestServer()">
           <span class="btn-icon">&#9881;</span>
           테스트 서버
@@ -546,6 +550,46 @@
     </div>
   </div>
 
+  <!-- ===== 설정 화면 ===== -->
+  <div id="screen-settings" class="screen">
+    <div class="settings-container">
+      <button class="btn-back" onclick="showScreen('screen-home')"><span data-i18n="common.back">← 뒤로</span></button>
+      <h2 class="settings-title" data-i18n="settings.title">설정</h2>
+
+      <div class="settings-section">
+        <div class="settings-section-title" data-i18n="settings.audio">오디오</div>
+        <div class="settings-row">
+          <label data-i18n="settings.bgmVolume">배경음악 볼륨</label>
+          <div class="settings-slider-wrap">
+            <input type="range" id="settings-bgm-vol" min="0" max="100" value="30" oninput="onSettingsBGMSlider(this.value)">
+            <span class="settings-vol-text" id="settings-bgm-vol-text">30%</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="settings.sfxVolume">효과음 볼륨</label>
+          <div class="settings-slider-wrap">
+            <input type="range" id="settings-sfx-vol" min="0" max="100" value="100" oninput="onSettingsSFXSlider(this.value)">
+            <span class="settings-vol-text" id="settings-sfx-vol-text">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title" data-i18n="settings.language">언어 설정</div>
+        <div class="settings-row settings-lang-row">
+          <label class="settings-radio">
+            <input type="radio" name="settings-lang" value="ko" onchange="setLanguage('ko')">
+            <span data-i18n="settings.lang.ko">한국어</span>
+          </label>
+          <label class="settings-radio">
+            <input type="radio" name="settings-lang" value="en" onchange="setLanguage('en')">
+            <span data-i18n="settings.lang.en">English</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 멀티 로비 ===== -->
   <div id="screen-multi-lobby" class="screen">
     <div class="multi-lobby-container">
@@ -707,6 +751,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="settings.js"></script>
   <script src="words.js"></script>
   <script src="customDefs.js"></script>
   <script src="dict.js"></script>
