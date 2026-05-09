@@ -31,6 +31,11 @@
   font-size: 1rem;
 }
 
+.sidebar-toggle-icon-gear {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
 .sidebar-toggle-label {
   font-size: 0.75rem;
   font-weight: 700;
