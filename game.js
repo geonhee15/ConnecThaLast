@@ -171,7 +171,7 @@ function enterTestServer() {
   };
 
   // UI 업데이트
-  document.getElementById('home-server-badge').textContent = '서버: 테스트';
+  document.getElementById('home-server-badge').textContent = t('home.serverTest');
   document.getElementById('home-server-badge').className = 'server-badge test';
   document.getElementById('test-back-btn').style.display = '';
   document.getElementById('test-panel').style.display = 'block';
@@ -186,7 +186,7 @@ function exitTestServer() {
   serverMode = 'normal';
   testProfile = null;
 
-  document.getElementById('home-server-badge').textContent = '서버: 일반';
+  document.getElementById('home-server-badge').textContent = t('home.serverNormal');
   document.getElementById('home-server-badge').className = 'server-badge';
   document.getElementById('test-back-btn').style.display = 'none';
   document.getElementById('test-panel').style.display = 'none';
@@ -271,11 +271,11 @@ const modes = {
   injeong: true    // 어인정: 비표준 단어 허용 (기본 ON)
 };
 
-const MODE_DESCS = {
-  manner: '매너: 한방단어 금지 (이을 수 없는 글자로 끝나는 단어 사용 불가)',
-  noda: '~다 금지: "다"로 끝나는 단어 사용 불가',
-  freedueum: '자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환 (예: 륨 → 륨/늄/윰 다 가능)',
-  injeong: '어인정: 게임/애니/노래 제목 등 비표준 단어 허용'
+const MODE_DESC_KEYS = {
+  manner: 'mode.mannerDesc',
+  noda: 'mode.nodaDesc',
+  freedueum: 'mode.freedueumDesc',
+  injeong: 'mode.injeongDesc'
 };
 
 function toggleMode(mode) {
@@ -283,17 +283,15 @@ function toggleMode(mode) {
   const btn = document.getElementById('mode-' + mode);
   btn.classList.toggle('active', modes[mode]);
 
-  // 두음 관련 캐시 무효화 (자유두음 토글로 인한 chain 영향)
   if (mode === 'freedueum') {
     killerCharSet = null;
     charWinState = null;
     charMovesCache = null;
   }
 
-  // 설명 업데이트
-  const active = Object.entries(modes).filter(([k, v]) => v).map(([k]) => MODE_DESCS[k]);
+  const active = Object.entries(modes).filter(([k, v]) => v).map(([k]) => t(MODE_DESC_KEYS[k]));
   document.getElementById('mode-desc-text').textContent =
-    active.length > 0 ? active.join(' / ') : '모드를 선택하세요 (복수 선택 가능)';
+    active.length > 0 ? active.join(' / ') : t('select.modeDescDefault');
 }
 
 // 한방단어 체크: 마지막 글자로 시작하는 단어가 2개 미만이면 한방
@@ -328,6 +326,7 @@ function isModeValidWord(word) {
 }
 
 const BOT_NAMES = ['', '초보봇', '중수봇', '고수봇', '좀고수봇', '초고수봇', '신봇', '롱봇'];
+function botName(level) { return t('bot.' + level + '.name'); }
 const BOT_AVATARS = ['', '🤖', '🤖', '🤖', '🤖', '🤖', '👹', '🐉'];
 
 const BOT_CONFIG = {
@@ -602,10 +601,10 @@ async function startGame(level) {
   state.gameLang = selectedBotLang || 'ko';
 
   // UI 초기화
-  document.getElementById('bot-name').textContent = BOT_NAMES[level];
+  document.getElementById('bot-name').textContent = botName(level);
   document.getElementById('bot-avatar').textContent = BOT_AVATARS[level];
-  document.getElementById('score-player').textContent = '0점';
-  document.getElementById('score-bot').textContent = '0점';
+  document.getElementById('score-player').textContent = '0' + t('game.scoreSuffix');
+  document.getElementById('score-bot').textContent = '0' + t('game.scoreSuffix');
   document.getElementById('used-words').innerHTML = '';
   document.getElementById('game-message').textContent = '';
   document.getElementById('word-input').value = '';
@@ -634,7 +633,7 @@ function showStartWord(word) {
 
   // 제시어 표시
   const turnInd = document.getElementById('turn-indicator');
-  turnInd.textContent = '제시어';
+  turnInd.textContent = t('game.startWord');
   turnInd.className = 'turn-indicator';
 
   playWordAnimation(word, () => {
@@ -657,14 +656,15 @@ function showStartWord(word) {
 }
 
 function showNextCharHint(char) {
-  if (state.gameLang === 'en') {
-    document.getElementById('next-char').innerHTML = `Next letter: <strong>${char}</strong>`;
-    return;
-  }
-  const alternatives = getAlternativeChars(char);
-  let hint = `다음 글자: <strong>${char}</strong>`;
-  if (alternatives.length > 1) {
-    hint += ` (${alternatives.slice(1).map(c => `<strong>${c}</strong>`).join(', ')} 가능)`;
+  // UI 언어는 설정값(userSettings.lang)으로 결정. 게임 언어와 별개.
+  let hint = `${t('game.nextLetter')} <strong>${char}</strong>`;
+  // 두음법칙은 한국어 게임에서만 적용
+  if (state.gameLang !== 'en') {
+    const alternatives = getAlternativeChars(char);
+    if (alternatives.length > 1) {
+      const altsStr = alternatives.slice(1).map(c => `<strong>${c}</strong>`).join(', ');
+      hint += ' ' + t('game.nextLetterAlts', altsStr);
+    }
   }
   document.getElementById('next-char').innerHTML = hint;
 }
@@ -716,11 +716,11 @@ function updateTimerDisplay() {
 
 function handleTimeout() {
   if (state.isPlayerTurn) {
-    endGame(false, '시간 초과! 제한 시간 안에 단어를 입력하지 못했습니다.');
+    endGame(false, t('game.timeout'));
   } else {
     // 봇이 못 이으면 한방단어로 끝낸 것
     state.killerFinish = true;
-    endGame(true, '봇이 시간 초과! 단어를 찾지 못했습니다.');
+    endGame(true, t('game.botTimeout'));
   }
 }
 
@@ -728,7 +728,7 @@ function handleTimeout() {
 function startPlayerTurn() {
   state.isPlayerTurn = true;
   const turnInd = document.getElementById('turn-indicator');
-  turnInd.textContent = '내 턴';
+  turnInd.textContent = t('game.myTurn');
   turnInd.className = 'turn-indicator my-turn';
 
   const input = document.getElementById('word-input');
@@ -788,28 +788,25 @@ function submitWord() {
 }
 
 function validateWord(word) {
-  const isEn = state.gameLang === 'en';
-  if (word.length < 2) return isEn ? 'Enter at least 2 letters.' : '2글자 이상 입력하세요.';
-  if (isEn && !/^[a-z]+$/.test(word)) return 'English letters only.';
+  const isEnGame = state.gameLang === 'en';
+  if (word.length < 2) return t('msg.minLength');
+  if (isEnGame && !/^[a-z]+$/.test(word)) return t('msg.englishOnly');
   if (!isValidChain(state.nextChar, word)) {
-    if (isEn) {
-      return `Word must start with "${state.nextChar}".`;
+    if (isEnGame) {
+      return t('msg.startsWith', state.nextChar);
     }
     const alts = getAlternativeChars(state.nextChar);
-    return `"${alts.join('" 또는 "')}"(으)로 시작하는 단어를 입력하세요.`;
+    return t('msg.startsWith', alts.join(', '));
   }
-  if (state.usedWords.has(word)) return isEn ? 'Word already used.' : '이미 사용한 단어입니다.';
-  if (!isValidWord(word)) return isEn ? 'Not in dictionary.' : '사전에 없는 단어입니다.';
-  // 영어는 표준/어인정/~다금지/매너 모드 적용 안 함
-  if (isEn) return null;
-  // 어인정 모드 체크 (한국어)
+  if (state.usedWords.has(word)) return t('msg.alreadyUsed');
+  if (!isValidWord(word)) return t('msg.notInDict');
+  // 영어 게임은 한국어 전용 모드 스킵
+  if (isEnGame) return null;
   if (!modes.injeong) {
-    if (!isStandardWord(word)) return '사전에 없는 단어입니다. (어인정 모드를 켜보세요)';
+    if (!isStandardWord(word)) return t('msg.notStandard');
   }
-  // ~다 금지
-  if (modes.noda && word.endsWith('다')) return '"다"로 끝나는 단어는 사용할 수 없습니다.';
-  // 매너 모드: 한방단어 금지
-  if (modes.manner && isKillerWord(word)) return '매너 모드: 한방단어는 사용할 수 없습니다.';
+  if (modes.noda && word.endsWith('다')) return t('msg.daBanned');
+  if (modes.manner && isKillerWord(word)) return t('msg.killerBanned');
   return null;
 }
 
@@ -823,7 +820,7 @@ function disableInput() {
 function startBotTurn() {
   state.isPlayerTurn = false;
   const turnInd = document.getElementById('turn-indicator');
-  turnInd.textContent = BOT_NAMES[state.botLevel] + ' 턴';
+  turnInd.textContent = botName(state.botLevel) + t('game.turnSuffix');
   turnInd.className = 'turn-indicator bot-turn';
 
   // 입력 필드는 타이핑 가능 유지, 제출만 불가
@@ -941,17 +938,17 @@ function updateBotRoundDisplay() {
   if (!el) return;
   if (state.totalRounds > 1) {
     el.style.display = '';
-    el.textContent = `라운드 ${state.currentRound} / ${state.totalRounds}`;
+    el.textContent = t('game.roundDisplay', state.currentRound, state.totalRounds);
   } else {
     el.style.display = 'none';
   }
   // 점수 옆에 라운드 승수
   if (state.totalRounds > 1) {
-    document.getElementById('score-player').textContent = `${state.playerScore}점 (${state.playerRoundWins}승)`;
-    document.getElementById('score-bot').textContent = `${state.botScore}점 (${state.botRoundWins}승)`;
+    document.getElementById('score-player').textContent = t('game.scoreWithWins', state.playerScore, state.playerRoundWins);
+    document.getElementById('score-bot').textContent = t('game.scoreWithWins', state.botScore, state.botRoundWins);
   } else {
-    document.getElementById('score-player').textContent = state.playerScore + '점';
-    document.getElementById('score-bot').textContent = state.botScore + '점';
+    document.getElementById('score-player').textContent = state.playerScore + t('game.scoreSuffix');
+    document.getElementById('score-bot').textContent = state.botScore + t('game.scoreSuffix');
   }
 }
 
@@ -997,7 +994,7 @@ function gameoverHome() {
 // ==================== GAME END ====================
 function leaveBotGame() {
   if (!state.gameActive) return;
-  if (!confirm('나가면 패배로 처리됩니다. 정말 나가시겠습니까?')) return;
+  if (!confirm(t('game.confirmLeave'))) return;
   // 패배 처리: 라운드 승수 보장 위해 최종 종료로 강제
   state.currentRound = state.totalRounds;
   state.botRoundWins = Math.max(state.botRoundWins, state.playerRoundWins + 1);
@@ -1015,7 +1012,7 @@ function endGame(playerWins, reason) {
   // 다중 라운드: 아직 라운드 남았으면 다음 라운드
   if (state.totalRounds > 1 && state.currentRound < state.totalRounds) {
     const roundEl = document.getElementById('bot-round-display');
-    if (roundEl) roundEl.textContent = `라운드 ${state.currentRound} 종료 - ${playerWins ? '승리!' : '패배'}`;
+    if (roundEl) roundEl.textContent = t('game.roundOver', state.currentRound, playerWins ? t('game.win') : t('game.lose'));
     updateBotRoundDisplay();
 
     setTimeout(() => {
@@ -1094,16 +1091,16 @@ function endGame(playerWins, reason) {
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
-    title.textContent = finalWin ? '승리!' : '패배...';
+    title.textContent = finalWin ? t('game.win') : t('game.lose');
     title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
-    document.getElementById('final-player-score').textContent = state.playerScore + '점';
-    document.getElementById('final-bot-score').textContent = state.botScore + '점';
-    document.getElementById('final-bot-name').textContent = BOT_NAMES[state.botLevel];
+    document.getElementById('final-player-score').textContent = state.playerScore + t('game.scoreSuffix');
+    document.getElementById('final-bot-score').textContent = state.botScore + t('game.scoreSuffix');
+    document.getElementById('final-bot-name').textContent = botName(state.botLevel);
 
     let reasonText = reason;
     if (state.totalRounds > 1) {
-      reasonText = `${state.totalRounds}라운드 종료! (${state.playerRoundWins}승 ${state.botRoundWins}패) ` + reasonText;
+      reasonText = t('game.multiRoundOver', state.totalRounds, state.playerRoundWins, state.botRoundWins) + ' ' + reasonText;
     }
     document.getElementById('gameover-reason').textContent =
       reasonText + (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');

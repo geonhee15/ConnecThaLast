@@ -1,17 +1,13 @@
 // ==================== SETTINGS SYSTEM ====================
-// localStorage 키
 const SETTINGS_KEY = 'ctl_settings_v1';
 
-// 기본값
 const DEFAULT_SETTINGS = {
-  bgmVolume: 30,    // 0-100
-  sfxVolume: 100,   // 0-100
-  lang: 'ko'        // 'ko' | 'en'
+  bgmVolume: 30,
+  sfxVolume: 100,
+  lang: 'ko'
 };
 
 let userSettings = { ...DEFAULT_SETTINGS };
-
-// 효과음 볼륨 (0.0-1.0) — playSound/playKickAt에서 사용
 let sfxUserVolume = 1.0;
 
 function loadSettings() {
@@ -29,16 +25,9 @@ function saveSettings() {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(userSettings)); } catch(e) {}
 }
 
-function getSetting(key) {
-  return userSettings[key];
-}
+function getSetting(key) { return userSettings[key]; }
+function setSetting(key, val) { userSettings[key] = val; saveSettings(); }
 
-function setSetting(key, val) {
-  userSettings[key] = val;
-  saveSettings();
-}
-
-// ===== 효과음 볼륨 =====
 function setSFXVolume(val) {
   const v = Math.max(0, Math.min(100, +val || 0));
   userSettings.sfxVolume = v;
@@ -48,9 +37,137 @@ function setSFXVolume(val) {
   if (t) t.textContent = Math.round(v) + '%';
 }
 
-// ===== 언어 =====
+// ==================== I18N ====================
 const I18N = {
   ko: {
+    // Common
+    'common.back': '← 뒤로',
+    'common.loading': '불러오는 중...',
+    'common.cancel': '취소',
+    'common.confirm': '확인',
+    'common.copy': '복사',
+    'common.send': '전송',
+    'common.submit': '입력',
+    'common.delete': '삭제',
+    // Maintenance
+    'maintenance.title': '업데이트 점검 중',
+    'maintenance.desc': '더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!',
+    'maintenance.next': '다음 업데이트:',
+    'maintenance.features': '설정 메뉴 추가 (BGM/효과음 볼륨, 언어 설정)<br>신규 게임 종류: English 끝말잇기',
+    'maintenance.adminPw': '관리자 비밀번호',
+    'maintenance.enter': '접속',
+    // Login
+    'login.subtitle': '한글 끝말잇기',
+    'login.tabLogin': '로그인',
+    'login.tabRegister': '회원가입',
+    'login.nicknamePh': '닉네임',
+    'login.passwordPh': '비밀번호',
+    'login.btnLogin': '로그인',
+    'login.btnRegister': '회원가입',
+    // Home
+    'home.subtitle': '한글 끝말잇기',
+    'home.soundRecommend': '🔊 소리를 키고 플레이하시는걸 권장드립니다',
+    'home.serverNormal': '서버: 일반',
+    'home.serverTest': '서버: 테스트',
+    'home.player': '플레이어',
+    'home.botBattle': '봇 대전',
+    'home.multiplayer': '멀티플레이',
+    'home.ranking': '랭킹',
+    'home.dictionary': '단어 사전',
+    'home.testServer': '테스트 서버',
+    'home.bugReport': '💬 문의 / 버그제보',
+    'home.settings': '설정',
+    // Sidebar
+    'sidebar.notice': '공지사항',
+    'sidebar.social': '소셜',
+    'sidebar.noticeTitle': '제목',
+    'sidebar.noticeContent': '내용 작성...',
+    'sidebar.noticeSubmit': '등록',
+    'sidebar.onlinePlayers': '온라인 플레이어',
+    'sidebar.friendRequests': '친구 요청',
+    'sidebar.friends': '친구',
+    'sidebar.messageInput': '메시지 입력...',
+    // Profile
+    'profile.title': '프로필',
+    'profile.stats': '전적',
+    'profile.wins': '승리',
+    'profile.losses': '패배',
+    'profile.totalExp': '총 경험치',
+    'profile.winrate': '승률',
+    'profile.bugReport': '문의 / 버그제보',
+    'profile.logout': '로그아웃',
+    // Select (bot game setup)
+    'select.gameType': '게임 종류',
+    'select.koGame': '한국어 끝말잇기',
+    'select.enGame': '영어 끝말잇기 (English Word Chain)',
+    'select.modes': '모드',
+    'select.modeManner': '매너',
+    'select.modeNoda': '~다 금지',
+    'select.modeFreedueum': '자유두음',
+    'select.modeInjeong': '어인정',
+    'select.modeDescDefault': '모드를 선택하세요 (복수 선택 가능)',
+    'select.rounds': '라운드',
+    'select.botLevel': '봇 레벨 선택',
+    'select.boss': '보스전',
+    'select.bossLocked': 'Lv.10 이상부터 입장 가능',
+    'mode.mannerDesc': '매너: 한방단어 금지 (이을 수 없는 글자로 끝나는 단어 사용 불가)',
+    'mode.nodaDesc': '~다 금지: "다"로 끝나는 단어 사용 불가',
+    'mode.freedueumDesc': '자유두음: ㄴ/ㄹ/ㅇ 초성 자유 호환 (예: 륨 → 륨/늄/윰 다 가능)',
+    'mode.injeongDesc': '어인정: 게임/애니/노래 제목 등 비표준 단어 허용',
+    // Bot names + descriptions
+    'bot.1.name': '초보봇',
+    'bot.2.name': '중수봇',
+    'bot.3.name': '고수봇',
+    'bot.4.name': '좀고수봇',
+    'bot.5.name': '초고수봇',
+    'bot.6.name': '신봇',
+    'bot.7.name': '롱봇',
+    'bot.1.desc': '쉬운 단어 위주 사용<br>반응속도 느림 / 타이핑 느림',
+    'bot.2.desc': '보통 단어 사용<br>반응속도 보통 / 타이핑 보통',
+    'bot.3.desc': '어려운 단어도 사용<br>반응속도 빠름 / 타이핑 준수',
+    'bot.4.desc': '단어 탐색 능력 우수 / 타이핑 빠름<br>한방단어를 잘 못 씀',
+    'bot.5.desc': '희귀 단어까지 사용<br>반응속도 매우 빠름 / 타이핑 빠름',
+    'bot.6.desc': '긴단어 60% + 한방단어 40%<br>초인적 반응 / 항상 플레이어 선공',
+    'bot.7.desc': '6글자 이상 긴 단어 전문<br>반응속도 빠름 / 길이로 승부',
+    // Game
+    'game.leave': '나가기',
+    'game.confirmLeave': '나가면 패배로 처리됩니다. 정말 나가시겠습니까?',
+    'game.myTurn': '내 턴',
+    'game.startWord': '제시어',
+    'game.nextLetter': '다음 글자:',
+    'game.nextLetterAlts': '({0} 가능)',
+    'game.inputPh': '단어를 입력하세요...',
+    'game.usedWordsLabel': '사용된 단어',
+    'game.timeout': '시간 초과! 제한 시간 안에 단어를 입력하지 못했습니다.',
+    'game.botTimeout': '봇이 시간 초과! 단어를 찾지 못했습니다.',
+    'game.timeoutShort': '시간 초과!',
+    'game.win': '승리!',
+    'game.lose': '패배...',
+    'game.player': '나',
+    'game.bot': '봇',
+    'game.vs': 'VS',
+    'game.scoreSuffix': '점',
+    'game.scoreWithWins': '{0}점 ({1}승)',
+    'game.roundDisplay': '라운드 {0} / {1}',
+    'game.roundOver': '라운드 {0} 종료 - {1}',
+    'game.multiRoundOver': '{0}라운드 종료! ({1}승 {2}패)',
+    'game.bossChallenge': '최강의 보스에 도전하라',
+    'game.bossLocked': 'Lv.10 이상부터 입장 가능 (현재 Lv.{0})',
+    'game.turnSuffix': ' 턴',
+    // Validation messages
+    'msg.minLength': '2글자 이상 입력하세요.',
+    'msg.englishOnly': '영문자만 입력하세요.',
+    'msg.startsWith': '"{0}"(으)로 시작하는 단어를 입력하세요.',
+    'msg.alreadyUsed': '이미 사용한 단어입니다.',
+    'msg.notInDict': '사전에 없는 단어입니다.',
+    'msg.notStandard': '사전에 없는 단어입니다. (어인정 모드를 켜보세요)',
+    'msg.daBanned': '"다"로 끝나는 단어는 사용할 수 없습니다.',
+    'msg.killerBanned': '매너 모드: 한방단어는 사용할 수 없습니다.',
+    // Game over screen
+    'gameover.title': '게임 종료',
+    'gameover.retry': '다시 하기',
+    'gameover.home': '홈으로',
+    // Settings
     'settings.title': '설정',
     'settings.audio': '오디오',
     'settings.bgmVolume': '배경음악 볼륨',
@@ -58,10 +175,160 @@ const I18N = {
     'settings.language': '언어 설정',
     'settings.lang.ko': '한국어',
     'settings.lang.en': 'English',
-    'common.back': '← 뒤로',
-    'home.settings': '설정'
+    // Dictionary
+    'dict.title': '단어 사전',
+    'dict.totalCount': '총 {0}개',
+    'dict.searchPh': '단어 검색...',
+    'dict.startChar': '시작 글자',
+    'dict.endChar': '끝 글자',
+    'dict.length': '글자수',
+    'dict.lengthAll': '전체',
+    'dict.lengthN': '{0}글자',
+    'dict.lengthNPlus': '{0}글자 이상',
+    'dict.killerRoute': '한방루트',
+    'dict.killerOnly': '한방 단어만 보기',
+    'dict.resultCount': '검색 결과: {0}개{1}',
+    'dict.killerSuffix': ' (한방 단어)',
+    // Multi (lobby + game basics)
+    'multi.title': '멀티플레이',
+    'multi.createRoom': '방 만들기',
+    'multi.roomTitlePh': '방 제목 (선택)',
+    'multi.gameType': '게임 종류',
+    'multi.createBtn': '방 만들기',
+    'multi.joinByCode': '방 코드로 참가',
+    'multi.codePh': '방 코드 입력',
+    'multi.joinBtn': '참가',
+    'multi.publicRooms': '공개 방 목록',
+    'multi.leave': '← 나가기',
+    'multi.waitingRoom': '대기실',
+    'multi.roomCode': '방 코드',
+    'multi.modesPrefix': '모드:',
+    'multi.modesNone': '모드: 없음',
+    'multi.waiting': '대기중...',
+    'multi.waitingOpponent': '상대를 기다리는 중...',
+    'multi.startBtn': '게임 시작',
+    'multi.readyBtn': '준비',
+    'multi.opponentTurn': '{0} 턴',
+    // Maintenance footer
+    'common.copyright': '© 2026. Geonhee. All rights reserved.'
   },
   en: {
+    'common.back': '← Back',
+    'common.loading': 'Loading...',
+    'common.cancel': 'Cancel',
+    'common.confirm': 'OK',
+    'common.copy': 'Copy',
+    'common.send': 'Send',
+    'common.submit': 'Submit',
+    'common.delete': 'Delete',
+    'maintenance.title': 'Server Under Maintenance',
+    'maintenance.desc': "We're updating the server to bring you a better experience.<br>Please wait a moment!",
+    'maintenance.next': 'Next update:',
+    'maintenance.features': 'Settings menu (BGM/SFX volume, language)<br>New game type: English Word Chain',
+    'maintenance.adminPw': 'Admin password',
+    'maintenance.enter': 'Enter',
+    'login.subtitle': 'Korean Word Chain',
+    'login.tabLogin': 'Login',
+    'login.tabRegister': 'Register',
+    'login.nicknamePh': 'Nickname',
+    'login.passwordPh': 'Password',
+    'login.btnLogin': 'Log In',
+    'login.btnRegister': 'Register',
+    'home.subtitle': 'Korean Word Chain',
+    'home.soundRecommend': '🔊 We recommend playing with sound on',
+    'home.serverNormal': 'Server: Main',
+    'home.serverTest': 'Server: Test',
+    'home.player': 'Player',
+    'home.botBattle': 'Bot Battle',
+    'home.multiplayer': 'Multiplayer',
+    'home.ranking': 'Ranking',
+    'home.dictionary': 'Dictionary',
+    'home.testServer': 'Test Server',
+    'home.bugReport': '💬 Feedback / Bug Report',
+    'home.settings': 'Settings',
+    'sidebar.notice': 'Notices',
+    'sidebar.social': 'Social',
+    'sidebar.noticeTitle': 'Title',
+    'sidebar.noticeContent': 'Write content...',
+    'sidebar.noticeSubmit': 'Post',
+    'sidebar.onlinePlayers': 'Online Players',
+    'sidebar.friendRequests': 'Friend Requests',
+    'sidebar.friends': 'Friends',
+    'sidebar.messageInput': 'Type a message...',
+    'profile.title': 'Profile',
+    'profile.stats': 'Stats',
+    'profile.wins': 'Wins',
+    'profile.losses': 'Losses',
+    'profile.totalExp': 'Total EXP',
+    'profile.winrate': 'Win Rate',
+    'profile.bugReport': 'Feedback / Bug Report',
+    'profile.logout': 'Log out',
+    'select.gameType': 'Game Type',
+    'select.koGame': 'Korean Word Chain',
+    'select.enGame': 'English Word Chain',
+    'select.modes': 'Modes',
+    'select.modeManner': 'Manner',
+    'select.modeNoda': 'No -다',
+    'select.modeFreedueum': 'Free 두음',
+    'select.modeInjeong': 'Permissive',
+    'select.modeDescDefault': 'Pick modes (multiple OK)',
+    'select.rounds': 'Rounds',
+    'select.botLevel': 'Pick Bot Level',
+    'select.boss': 'Boss Battle',
+    'select.bossLocked': 'Unlocks at Lv.10',
+    'mode.mannerDesc': 'Manner: No killer words (words ending in unconnectable letters)',
+    'mode.nodaDesc': 'No -다: Words ending in "다" not allowed',
+    'mode.freedueumDesc': 'Free 두음: ㄴ/ㄹ/ㅇ initials are interchangeable',
+    'mode.injeongDesc': 'Permissive: Allow non-standard words (game/anime/song titles)',
+    'bot.1.name': 'Beginner Bot',
+    'bot.2.name': 'Mid Bot',
+    'bot.3.name': 'Skilled Bot',
+    'bot.4.name': 'Pro Bot',
+    'bot.5.name': 'Master Bot',
+    'bot.6.name': 'God Bot',
+    'bot.7.name': 'Long Bot',
+    'bot.1.desc': 'Easy words<br>Slow reaction / slow typing',
+    'bot.2.desc': 'Average words<br>Average reaction / average typing',
+    'bot.3.desc': 'Hard words too<br>Fast reaction / decent typing',
+    'bot.4.desc': 'Strong word search / fast typing<br>Avoids killer words',
+    'bot.5.desc': 'Uses rare words<br>Very fast reaction / fast typing',
+    'bot.6.desc': '60% long words + 40% killer words<br>Superhuman reaction / player goes first',
+    'bot.7.desc': 'Specializes in 6+ letter words<br>Fast reaction / wins on length',
+    'game.leave': 'Leave',
+    'game.confirmLeave': 'Leaving counts as a loss. Continue?',
+    'game.myTurn': 'My turn',
+    'game.startWord': 'Start word',
+    'game.nextLetter': 'Next letter:',
+    'game.nextLetterAlts': '({0} also allowed)',
+    'game.inputPh': 'Type a word...',
+    'game.usedWordsLabel': 'Used words',
+    'game.timeout': 'Time out! You did not enter a word in time.',
+    'game.botTimeout': 'Bot timed out! Could not find a word.',
+    'game.timeoutShort': 'Time out!',
+    'game.win': 'Victory!',
+    'game.lose': 'Defeat...',
+    'game.player': 'Me',
+    'game.bot': 'Bot',
+    'game.vs': 'VS',
+    'game.scoreSuffix': 'pts',
+    'game.scoreWithWins': '{0} pts ({1}W)',
+    'game.roundDisplay': 'Round {0} / {1}',
+    'game.roundOver': 'Round {0} ended - {1}',
+    'game.multiRoundOver': '{0} rounds done! ({1}W {2}L)',
+    'game.bossChallenge': 'Challenge the strongest boss',
+    'game.bossLocked': 'Unlocks at Lv.10 (you are Lv.{0})',
+    'game.turnSuffix': "'s turn",
+    'msg.minLength': 'Enter at least 2 characters.',
+    'msg.englishOnly': 'English letters only.',
+    'msg.startsWith': 'Word must start with "{0}".',
+    'msg.alreadyUsed': 'Word already used.',
+    'msg.notInDict': 'Not in dictionary.',
+    'msg.notStandard': 'Not a standard word. Try enabling 어인정 mode.',
+    'msg.daBanned': 'Words ending in "다" are not allowed.',
+    'msg.killerBanned': 'Manner mode: killer words are not allowed.',
+    'gameover.title': 'Game Over',
+    'gameover.retry': 'Retry',
+    'gameover.home': 'Home',
     'settings.title': 'Settings',
     'settings.audio': 'Audio',
     'settings.bgmVolume': 'BGM Volume',
@@ -69,20 +336,58 @@ const I18N = {
     'settings.language': 'Language',
     'settings.lang.ko': '한국어',
     'settings.lang.en': 'English',
-    'common.back': '← Back',
-    'home.settings': 'Settings'
+    'dict.title': 'Dictionary',
+    'dict.totalCount': '{0} words total',
+    'dict.searchPh': 'Search words...',
+    'dict.startChar': 'Start letter',
+    'dict.endChar': 'End letter',
+    'dict.length': 'Length',
+    'dict.lengthAll': 'All',
+    'dict.lengthN': '{0} letters',
+    'dict.lengthNPlus': '{0}+ letters',
+    'dict.killerRoute': 'Killer routes',
+    'dict.killerOnly': 'Killer words only',
+    'dict.resultCount': 'Results: {0}{1}',
+    'dict.killerSuffix': ' (killer words)',
+    'multi.title': 'Multiplayer',
+    'multi.createRoom': 'Create Room',
+    'multi.roomTitlePh': 'Room title (optional)',
+    'multi.gameType': 'Game Type',
+    'multi.createBtn': 'Create',
+    'multi.joinByCode': 'Join by code',
+    'multi.codePh': 'Enter room code',
+    'multi.joinBtn': 'Join',
+    'multi.publicRooms': 'Public Rooms',
+    'multi.leave': '← Leave',
+    'multi.waitingRoom': 'Waiting Room',
+    'multi.roomCode': 'Room Code',
+    'multi.modesPrefix': 'Modes:',
+    'multi.modesNone': 'Modes: None',
+    'multi.waiting': 'Waiting...',
+    'multi.waitingOpponent': 'Waiting for opponent...',
+    'multi.startBtn': 'Start Game',
+    'multi.readyBtn': 'Ready',
+    'multi.opponentTurn': "{0}'s turn",
+    'common.copyright': '© 2026. Geonhee. All rights reserved.'
   }
 };
 
-function t(key) {
+function t(key, ...args) {
   const lang = userSettings.lang || 'ko';
-  return (I18N[lang] && I18N[lang][key]) || (I18N.ko[key]) || key;
+  let s = (I18N[lang] && I18N[lang][key]) || (I18N.ko[key]) || key;
+  args.forEach((v, i) => { s = s.replace('{' + i + '}', v); });
+  return s;
 }
 
 function applyLanguage() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const k = el.getAttribute('data-i18n');
-    el.textContent = t(k);
+    el.innerHTML = t(k);
+  });
+  // placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const k = el.getAttribute('data-i18n-ph');
+    el.placeholder = t(k);
   });
   document.documentElement.lang = userSettings.lang || 'ko';
 }
@@ -92,13 +397,11 @@ function setLanguage(lang) {
   userSettings.lang = lang;
   saveSettings();
   applyLanguage();
-  // 라디오 UI 동기화
   document.querySelectorAll('input[name="settings-lang"]').forEach(r => {
     r.checked = (r.value === lang);
   });
 }
 
-// ===== 설정 화면 진입 시 슬라이더/라디오 동기화 =====
 function openSettings() {
   const bgmEl = document.getElementById('settings-bgm-vol');
   const sfxEl = document.getElementById('settings-sfx-vol');
@@ -128,12 +431,10 @@ function onSettingsSFXSlider(val) {
   if (t) t.textContent = Math.round(+val) + '%';
 }
 
-// 초기 로드
 loadSettings();
 
 document.addEventListener('DOMContentLoaded', () => {
   applyLanguage();
-  // 상단 BGM 슬라이더 초기값 동기화
   const top = document.getElementById('bgm-volume');
   if (top) {
     top.value = userSettings.bgmVolume;
