@@ -40,23 +40,29 @@ function engIsValidChain(lastChar, word) {
   return String(word).toLowerCase()[0] === String(lastChar).toLowerCase();
 }
 
-// 시작 단어: 이어쓰기 가능한 흔한 짧은 단어
+// 시작 단어: 이어쓰기 가능한 흔한 짧은 단어 (한 번 계산해서 캐시)
+let _engEasyStarts = null;
 function engGetRandomStartWord() {
-  const easy = [];
-  for (const letter in ENG_WORD_DB) {
-    for (const entry of ENG_WORD_DB[letter]) {
-      if (entry.d <= 2 && engFindWordsStartingWith(entry.w[entry.w.length - 1]).length >= 50) {
-        easy.push(entry.w);
-      }
-    }
-  }
-  if (easy.length === 0) {
-    // fallback: 아무거나 짧은 단어
+  if (!_engEasyStarts) {
+    // 글자별 단어 수 미리 계산
+    const counts = {};
+    for (const letter in ENG_WORD_DB) counts[letter] = ENG_WORD_DB[letter].length;
+    const easy = [];
     for (const letter in ENG_WORD_DB) {
       for (const entry of ENG_WORD_DB[letter]) {
-        if (entry.w.length >= 3 && entry.w.length <= 5) easy.push(entry.w);
+        if (entry.d <= 2 && (counts[entry.w[entry.w.length - 1]] || 0) >= 50) {
+          easy.push(entry.w);
+        }
       }
     }
+    if (easy.length === 0) {
+      for (const letter in ENG_WORD_DB) {
+        for (const entry of ENG_WORD_DB[letter]) {
+          if (entry.w.length >= 3 && entry.w.length <= 5) easy.push(entry.w);
+        }
+      }
+    }
+    _engEasyStarts = easy;
   }
-  return easy[Math.floor(Math.random() * easy.length)];
+  return _engEasyStarts[Math.floor(Math.random() * _engEasyStarts.length)];
 }

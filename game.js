@@ -299,8 +299,14 @@ function toggleMode(mode) {
 // 한방단어 체크: 마지막 글자로 시작하는 단어가 2개 미만이면 한방
 function isKillerWord(word) {
   const lastChar = word[word.length - 1];
-  const nextWords = findWordsStartingWith(lastChar)
-    .filter(e => !state.usedWords.has(e.w) && isModeValidWord(e.w));
+  const all = findWordsStartingWith(lastChar);
+  // 영어: 사전이 워낙 커서 raw count로 빠르게 판정 (사용된 단어 영향 미미)
+  if (state.gameLang === 'en') {
+    return all.length < 2;
+  }
+  // 한국어: raw count가 충분히 크면 추가 필터 없이 즉시 false (성능)
+  if (all.length >= 50) return false;
+  const nextWords = all.filter(e => !state.usedWords.has(e.w) && isModeValidWord(e.w));
   return nextWords.length < 2;
 }
 
@@ -884,19 +890,23 @@ function chooseBotWord() {
     return filtered[0].w;
   }
 
+  // 글자별 후속 가능 수 캐시 (정렬 비교 시 재계산 방지 — 영어/큰 사전에서 필수)
+  const _nextCountCache = new Map();
+  function _nextCount(w) {
+    const c = w[w.length - 1];
+    if (_nextCountCache.has(c)) return _nextCountCache.get(c);
+    const v = findWordsStartingWith(c).filter(e => !state.usedWords.has(e.w)).length;
+    _nextCountCache.set(c, v);
+    return v;
+  }
+
   // === 신봇 (레벨 6): 긴단어 60% + 한방단어 40% ===
   if (state.botLevel === 6) {
     const roll = Math.random();
 
     if (roll < 0.4) {
       // 40%: 한방단어 (상대가 이을 단어가 가장 적은 것)
-      filtered.sort((a, b) => {
-        const aNext = findWordsStartingWith(a.w[a.w.length - 1])
-          .filter(e => !state.usedWords.has(e.w)).length;
-        const bNext = findWordsStartingWith(b.w[b.w.length - 1])
-          .filter(e => !state.usedWords.has(e.w)).length;
-        return aNext - bNext;
-      });
+      filtered.sort((a, b) => _nextCount(a.w) - _nextCount(b.w));
       return filtered[0].w;
     } else {
       // 60%: 긴 단어 우선 (점수 극대화)
@@ -908,13 +918,7 @@ function chooseBotWord() {
 
   // === 초고수봇 (레벨 5): 한방단어 전략 ===
   if (state.botLevel === 5) {
-    filtered.sort((a, b) => {
-      const aNext = findWordsStartingWith(a.w[a.w.length - 1])
-        .filter(e => !state.usedWords.has(e.w)).length;
-      const bNext = findWordsStartingWith(b.w[b.w.length - 1])
-        .filter(e => !state.usedWords.has(e.w)).length;
-      return aNext - bNext;
-    });
+    filtered.sort((a, b) => _nextCount(a.w) - _nextCount(b.w));
     return filtered[Math.floor(Math.random() * Math.min(3, filtered.length))].w;
   }
 
