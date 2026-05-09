@@ -1150,10 +1150,10 @@ async function viewUserProfile(nickname) {
         <div class="user-popup-uid">#${u.userId || '???'}</div>
         <div class="user-popup-level">${getLevelIcon(u.level || 1) ? `<img src="${getLevelIcon(u.level || 1)}" style="height:50px;vertical-align:middle">` : ''} <span style="font-size:1.2rem;font-weight:900;color:#667eea">Lv.${u.level || 1}</span></div>
         <div class="user-popup-stats">
-          <div class="user-popup-stat"><div class="stat-value">${u.wins || 0}</div><div class="stat-label">승리</div></div>
-          <div class="user-popup-stat"><div class="stat-value">${u.losses || 0}</div><div class="stat-label">패배</div></div>
-          <div class="user-popup-stat"><div class="stat-value">${winrate}%</div><div class="stat-label">승률</div></div>
-          <div class="user-popup-stat"><div class="stat-value">${(u.totalExp || 0).toLocaleString()}</div><div class="stat-label">총 경험치</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${u.wins || 0}</div><div class="stat-label">${t('profile.wins')}</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${u.losses || 0}</div><div class="stat-label">${t('profile.losses')}</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${winrate}%</div><div class="stat-label">${t('profile.winrate')}</div></div>
+          <div class="user-popup-stat"><div class="stat-value">${(u.totalExp || 0).toLocaleString()}</div><div class="stat-label">${t('profile.totalExp')}</div></div>
         </div>
       </div>
     `;
@@ -1631,14 +1631,14 @@ function renderKillerRouteHTML(startChar) {
   const startState = computeCharWinStates().get(startChar);
   const moves = _movesFrom(startChar);
   if (moves.length === 0) {
-    return `<div class="route-empty">"${startChar}"(으)로 시작하는 단어가 없습니다.</div>`;
+    return `<div class="route-empty">${t('route.noWords', startChar)}</div>`;
   }
   if (startState !== 'W') {
-    return `<div class="route-empty">"${startChar}"(으)로 시작하는 한방 루트가 없습니다 (이기는 수가 존재하지 않음).</div>`;
+    return `<div class="route-empty">${t('route.noWin', startChar)}</div>`;
   }
   const tree = buildKillerRouteTree(startChar);
   if (!tree || tree.length === 0) {
-    return `<div class="route-empty">한방 루트를 찾지 못했습니다.</div>`;
+    return `<div class="route-empty">${t('route.notFound')}</div>`;
   }
   let html = `<div class="route-tree">`;
   for (const node of tree) html += renderRouteNode(node, 'user');
@@ -1648,7 +1648,7 @@ function renderKillerRouteHTML(startChar) {
 
 function renderRouteNode(node, role) {
   if (!node) {
-    return `<div class="route-node opp-loss">상대 대응 불가 (한방)</div>`;
+    return `<div class="route-node opp-loss">${t('route.oppLoss')}</div>`;
   }
   const cls = role === 'user' ? 'user' : 'opp';
   const killerCls = node.killer ? ' killer' : '';
@@ -1661,12 +1661,12 @@ function renderRouteNode(node, role) {
       if (b.userResponse) {
         html += renderRouteNode(b.userResponse, 'user');
       } else {
-        html += `<div class="route-node user error">대응 없음</div>`;
+        html += `<div class="route-node user error">${t('route.noResponse')}</div>`;
       }
       html += `</div>`;
     }
     if (node.moreOpp && node.moreOpp > 0) {
-      html += `<div class="route-more">상대 옵션 외 ${node.moreOpp}개 (모두 동일하게 처리)</div>`;
+      html += `<div class="route-more">${t('route.moreOpp', node.moreOpp)}</div>`;
     }
     html += `</div>`;
   }
@@ -1686,7 +1686,7 @@ function openDictionary() {
   document.getElementById('dict-length').value = '0';
   const killerEl = document.getElementById('dict-killer-only');
   if (killerEl) killerEl.checked = false;
-  document.getElementById('dict-total').textContent = `총 ${dictCache.length.toLocaleString()}개`;
+  document.getElementById('dict-total').textContent = t('dict.totalCount', dictCache.length.toLocaleString());
 
   showScreen('screen-dict');
   filterDictionary();
@@ -1731,7 +1731,7 @@ function filterDictionary() {
   });
 
   document.getElementById('dict-result-count').textContent =
-    `검색 결과: ${dictFiltered.length.toLocaleString()}개${killerOnly ? ' (한방 단어)' : ''}`;
+    t('dict.resultCount', dictFiltered.length.toLocaleString(), killerOnly ? t('dict.killerSuffix') : '');
 
   dictDisplayed = 0;
   const listEl = document.getElementById('dict-list');
@@ -1752,17 +1752,17 @@ async function openDictDefModal(word) {
   const bodyEl = document.getElementById('dict-def-body');
   if (!modal || !wordEl || !bodyEl) return;
   wordEl.textContent = word;
-  bodyEl.innerHTML = '<div class="dict-def-loading">불러오는 중...</div>';
+  bodyEl.innerHTML = `<div class="dict-def-loading">${t('common.loading')}</div>`;
   modal.style.display = 'flex';
   try {
     const entries = (typeof fetchDef === 'function') ? await fetchDef(word) : [];
     if (!entries || entries.length === 0) {
-      bodyEl.innerHTML = '<div class="dict-def-none">사전에 등재되지 않은 단어입니다</div>';
+      bodyEl.innerHTML = `<div class="dict-def-none">${t('msg.notInDict')}</div>`;
     } else {
       bodyEl.innerHTML = renderDefHTML(word, entries);
     }
   } catch {
-    bodyEl.innerHTML = '<div class="dict-def-none">뜻을 불러오지 못했습니다</div>';
+    bodyEl.innerHTML = `<div class="dict-def-none">${t('common.loading')}</div>`;
   }
 }
 
