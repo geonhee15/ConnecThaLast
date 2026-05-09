@@ -15,7 +15,7 @@ function switchAuthTab(mode) {
   authMode = mode;
   document.getElementById('tab-login').classList.toggle('active', mode === 'login');
   document.getElementById('tab-register').classList.toggle('active', mode === 'register');
-  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? '로그인' : '회원가입';
+  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? t('login.btnLogin') : t('login.btnRegister');
   document.getElementById('auth-message').textContent = '';
   document.getElementById('auth-message').className = 'auth-message';
 }

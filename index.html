@@ -26,17 +26,17 @@
   <div id="screen-maintenance" class="screen active maintenance-screen">
     <div class="maintenance-container">
       <div class="maintenance-icon">&#128679;</div>
-      <h1 class="maintenance-title">업데이트 점검 중</h1>
-      <p class="maintenance-desc">더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!</p>
+      <h1 class="maintenance-title" data-i18n="maintenance.title">업데이트 점검 중</h1>
+      <p class="maintenance-desc" data-i18n="maintenance.desc">더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!</p>
       <div class="maintenance-info">
-        <p>다음 업데이트: <strong>v3.0.0</strong></p>
-        <p style="margin-top:8px;font-size:0.9rem">설정 메뉴 추가 (BGM/효과음 볼륨, 언어 설정)<br>신규 게임 종류: English 끝말잇기</p>
+        <p><span data-i18n="maintenance.next">다음 업데이트:</span> <strong>v3.0.0</strong></p>
+        <p style="margin-top:8px;font-size:0.9rem" data-i18n="maintenance.features">설정 메뉴 추가 (BGM/효과음 볼륨, 언어 설정)<br>신규 게임 종류: English 끝말잇기</p>
       </div>
       <div id="maintenance-admin" class="maintenance-admin" style="display:none">
-        <input type="password" id="maintenance-pw" class="login-input" placeholder="관리자 비밀번호" style="max-width:250px">
-        <button class="btn btn-primary" onclick="maintenanceBypass()">접속</button>
+        <input type="password" id="maintenance-pw" class="login-input" data-i18n-ph="maintenance.adminPw" placeholder="관리자 비밀번호" style="max-width:250px">
+        <button class="btn btn-primary" onclick="maintenanceBypass()" data-i18n="maintenance.enter">접속</button>
       </div>
-      <p class="maintenance-footer">&copy; 2026. Geonhee. All rights reserved.</p>
+      <p class="maintenance-footer" data-i18n="common.copyright">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
 
@@ -44,7 +44,7 @@
   <div class="sidebar-toggles">
     <div class="sidebar-toggle-btn" onclick="toggleSidebar('notice')">
       <span class="sidebar-toggle-icon">&#128227;</span>
-      <span class="sidebar-toggle-label">공지사항</span>
+      <span class="sidebar-toggle-label" data-i18n="sidebar.notice">공지사항</span>
       <span class="notif-badge" id="notif-badge" style="display:none">0</span>
     </div>
     <div class="sidebar-toggle-btn" onclick="openSettings()">
@@ -53,7 +53,7 @@
     </div>
     <div class="sidebar-toggle-btn" onclick="toggleSidebar('social')">
       <span class="sidebar-toggle-icon">&#128101;</span>
-      <span class="sidebar-toggle-label">소셜</span>
+      <span class="sidebar-toggle-label" data-i18n="sidebar.social">소셜</span>
       <span class="notif-badge" id="social-badge" style="display:none">0</span>
     </div>
   </div>
@@ -113,35 +113,35 @@
     <div class="login-container">
       <div class="logo-area">
         <h1 class="game-title">ConnecThaLast</h1>
-        <p class="game-subtitle">한글 끝말잇기</p>
+        <p class="game-subtitle" data-i18n="login.subtitle">한글 끝말잇기</p>
       </div>
       <div class="login-card">
         <div class="login-tabs">
-          <button class="login-tab active" id="tab-login" onclick="switchAuthTab('login')">로그인</button>
-          <button class="login-tab" id="tab-register" onclick="switchAuthTab('register')">회원가입</button>
+          <button class="login-tab active" id="tab-login" onclick="switchAuthTab('login')" data-i18n="login.tabLogin">로그인</button>
+          <button class="login-tab" id="tab-register" onclick="switchAuthTab('register')" data-i18n="login.tabRegister">회원가입</button>
         </div>
         <div class="login-form">
-          <input type="text" id="auth-nickname" class="login-input" placeholder="닉네임" maxlength="12" autocomplete="off">
-          <input type="password" id="auth-password" class="login-input" placeholder="비밀번호" maxlength="30">
-          <button class="btn btn-primary btn-large" id="auth-submit-btn" onclick="handleAuth()" style="width:100%">로그인</button>
+          <input type="text" id="auth-nickname" class="login-input" data-i18n-ph="login.nicknamePh" placeholder="닉네임" maxlength="12" autocomplete="off">
+          <input type="password" id="auth-password" class="login-input" data-i18n-ph="login.passwordPh" placeholder="비밀번호" maxlength="30">
+          <button class="btn btn-primary btn-large" id="auth-submit-btn" onclick="handleAuth()" style="width:100%" data-i18n="login.btnLogin">로그인</button>
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
       <p class="version-text">v2.10.3</p>
-      <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
+      <p class="copyright-text" data-i18n="common.copyright">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
 
   <!-- ===== 홈 화면 ===== -->
   <div id="screen-home" class="screen">
     <div class="home-container">
-      <div class="server-badge" id="home-server-badge">서버: 일반</div>
-      <button class="btn-back" id="test-back-btn" style="display:none" onclick="exitTestServer()">&larr; 뒤로</button>
+      <div class="server-badge" id="home-server-badge" data-i18n="home.serverNormal">서버: 일반</div>
+      <button class="btn-back" id="test-back-btn" style="display:none" onclick="exitTestServer()" data-i18n="common.back">&larr; 뒤로</button>
 
       <div class="logo-area">
         <h1 class="game-title">ConnecThaLast</h1>
-        <p class="game-subtitle">한글 끝말잇기</p>
-        <p class="sound-recommend">&#128264; 소리를 키고 플레이하시는걸 권장드립니다</p>
+        <p class="game-subtitle" data-i18n="home.subtitle">한글 끝말잇기</p>
+        <p class="sound-recommend" data-i18n="home.soundRecommend">&#128264; 소리를 키고 플레이하시는걸 권장드립니다</p>
       </div>
 
       <!-- 프로필 카드 -->
@@ -178,28 +178,28 @@
       <div class="menu-buttons">
         <button class="btn btn-primary btn-large" onclick="showScreen('screen-select')">
           <span class="btn-icon">&#9876;</span>
-          봇 대전
+          <span data-i18n="home.botBattle">봇 대전</span>
         </button>
         <button class="btn btn-multi btn-large" onclick="showScreen('screen-multi-lobby')">
           <span class="btn-icon">&#127760;</span>
-          멀티플레이
+          <span data-i18n="home.multiplayer">멀티플레이</span>
         </button>
         <button class="btn btn-rank btn-large" onclick="openRanking()">
           <span class="btn-icon">&#127942;</span>
-          랭킹
+          <span data-i18n="home.ranking">랭킹</span>
         </button>
         <button class="btn btn-secondary btn-large" onclick="openDictionary()">
           <span class="btn-icon">&#128214;</span>
-          단어 사전
+          <span data-i18n="home.dictionary">단어 사전</span>
         </button>
         <button class="btn btn-test btn-large" id="btn-test-server" style="display:none" onclick="enterTestServer()">
           <span class="btn-icon">&#9881;</span>
-          테스트 서버
+          <span data-i18n="home.testServer">테스트 서버</span>
         </button>
       </div>
-      <button class="btn-bug-small" onclick="openBugReport()">&#128172; 문의 / 버그제보</button>
+      <button class="btn-bug-small" onclick="openBugReport()" data-i18n="home.bugReport">&#128172; 문의 / 버그제보</button>
       <p class="version-text">v2.10.3</p>
-      <p class="copyright-text">&copy; 2026. Geonhee. All rights reserved.</p>
+      <p class="copyright-text" data-i18n="common.copyright">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
 
@@ -252,29 +252,29 @@
   <!-- ===== 봇 선택 화면 ===== -->
   <div id="screen-select" class="screen">
     <div class="select-container">
-      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
+      <button class="btn-back" onclick="showScreen('screen-home')" data-i18n="common.back">&larr; 뒤로</button>
 
       <!-- 모드 선택 -->
       <div class="mode-section">
         <div class="mode-row">
-          <span class="mode-label">게임 종류</span>
+          <span class="mode-label" data-i18n="select.gameType">게임 종류</span>
           <div class="mode-toggles">
-            <button class="mode-btn active" id="lang-ko" onclick="setBotGameLang('ko')">한국어 끝말잇기</button>
-            <button class="mode-btn" id="lang-en" onclick="setBotGameLang('en')">English Word Chain</button>
+            <button class="mode-btn active" id="lang-ko" onclick="setBotGameLang('ko')" data-i18n="select.koGame">한국어 끝말잇기</button>
+            <button class="mode-btn" id="lang-en" onclick="setBotGameLang('en')" data-i18n="select.enGame">영어 끝말잇기 (English Word Chain)</button>
           </div>
         </div>
         <div class="mode-row" id="ko-modes-row">
-          <span class="mode-label">모드</span>
+          <span class="mode-label" data-i18n="select.modes">모드</span>
           <div class="mode-toggles">
-            <button class="mode-btn" id="mode-manner" onclick="toggleMode('manner')">매너</button>
-            <button class="mode-btn" id="mode-noda" onclick="toggleMode('noda')">~다 금지</button>
-            <button class="mode-btn active" id="mode-freedueum" onclick="toggleMode('freedueum')">자유두음</button>
-            <button class="mode-btn active" id="mode-injeong" onclick="toggleMode('injeong')">어인정</button>
+            <button class="mode-btn" id="mode-manner" onclick="toggleMode('manner')" data-i18n="select.modeManner">매너</button>
+            <button class="mode-btn" id="mode-noda" onclick="toggleMode('noda')" data-i18n="select.modeNoda">~다 금지</button>
+            <button class="mode-btn active" id="mode-freedueum" onclick="toggleMode('freedueum')" data-i18n="select.modeFreedueum">자유두음</button>
+            <button class="mode-btn active" id="mode-injeong" onclick="toggleMode('injeong')" data-i18n="select.modeInjeong">어인정</button>
           </div>
         </div>
-        <div class="mode-desc" id="mode-desc-text">모드를 선택하세요 (복수 선택 가능)</div>
+        <div class="mode-desc" id="mode-desc-text" data-i18n="select.modeDescDefault">모드를 선택하세요 (복수 선택 가능)</div>
         <div class="round-select-row" style="margin-top:10px">
-          <label>라운드</label>
+          <label data-i18n="select.rounds">라운드</label>
           <div class="round-btns" id="bot-round-btns">
             <button class="round-btn active" onclick="selectBotRound(1, this)">1</button>
             <button class="round-btn" onclick="selectBotRound(3, this)">3</button>
@@ -284,71 +284,71 @@
         </div>
       </div>
 
-      <h2 class="select-title">봇 레벨 선택</h2>
+      <h2 class="select-title" data-i18n="select.botLevel">봇 레벨 선택</h2>
       <div class="bot-grid">
         <div class="bot-card" onclick="startGame(1)">
           <div class="bot-avatar bot-lv1">&#129302;</div>
           <div class="bot-info">
-            <h3>초보봇</h3>
+            <h3 data-i18n="bot.1.name">초보봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">쉬운 단어 위주 사용<br>반응속도 느림 / 타이핑 느림</p>
+            <p class="bot-desc" data-i18n="bot.1.desc">쉬운 단어 위주 사용<br>반응속도 느림 / 타이핑 느림</p>
           </div>
         </div>
         <div class="bot-card" onclick="startGame(2)">
           <div class="bot-avatar bot-lv2">&#129302;</div>
           <div class="bot-info">
-            <h3>중수봇</h3>
+            <h3 data-i18n="bot.2.name">중수봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">보통 단어 사용<br>반응속도 보통 / 타이핑 보통</p>
+            <p class="bot-desc" data-i18n="bot.2.desc">보통 단어 사용<br>반응속도 보통 / 타이핑 보통</p>
           </div>
         </div>
         <div class="bot-card" onclick="startGame(3)">
           <div class="bot-avatar bot-lv3">&#129302;</div>
           <div class="bot-info">
-            <h3>고수봇</h3>
+            <h3 data-i18n="bot.3.name">고수봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">어려운 단어도 사용<br>반응속도 빠름 / 타이핑 준수</p>
+            <p class="bot-desc" data-i18n="bot.3.desc">어려운 단어도 사용<br>반응속도 빠름 / 타이핑 준수</p>
           </div>
         </div>
         <div class="bot-card" onclick="startGame(4)">
           <div class="bot-avatar bot-lv4">&#129302;</div>
           <div class="bot-info">
-            <h3>좀고수봇</h3>
+            <h3 data-i18n="bot.4.name">좀고수봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star half">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">단어 탐색 능력 우수 / 타이핑 빠름<br>한방단어를 잘 못 씀</p>
+            <p class="bot-desc" data-i18n="bot.4.desc">단어 탐색 능력 우수 / 타이핑 빠름<br>한방단어를 잘 못 씀</p>
           </div>
         </div>
         <div class="bot-card" onclick="startGame(5)">
           <div class="bot-avatar bot-lv5">&#129302;</div>
           <div class="bot-info">
-            <h3>초고수봇</h3>
+            <h3 data-i18n="bot.5.name">초고수봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">희귀 단어까지 사용<br>반응속도 매우 빠름 / 타이핑 빠름</p>
+            <p class="bot-desc" data-i18n="bot.5.desc">희귀 단어까지 사용<br>반응속도 매우 빠름 / 타이핑 빠름</p>
           </div>
         </div>
         <div class="bot-card bot-card-god" onclick="startGame(6)">
           <div class="bot-avatar bot-lv6">&#128126;</div>
           <div class="bot-info">
-            <h3>신봇</h3>
+            <h3 data-i18n="bot.6.name">신봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span></div>
-            <p class="bot-desc">긴단어 60% + 한방단어 40%<br>초인적 반응 / 항상 플레이어 선공</p>
+            <p class="bot-desc" data-i18n="bot.6.desc">긴단어 60% + 한방단어 40%<br>초인적 반응 / 항상 플레이어 선공</p>
           </div>
         </div>
         <div class="bot-card bot-card-long" onclick="startGame(7)">
           <div class="bot-avatar bot-lv7">&#128009;</div>
           <div class="bot-info">
-            <h3>롱봇</h3>
+            <h3 data-i18n="bot.7.name">롱봇</h3>
             <div class="bot-stars"><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span></div>
-            <p class="bot-desc">6글자 이상 긴 단어 전문<br>반응속도 빠름 / 길이로 승부</p>
+            <p class="bot-desc" data-i18n="bot.7.desc">6글자 이상 긴 단어 전문<br>반응속도 빠름 / 길이로 승부</p>
           </div>
         </div>
         <div class="bot-card bot-card-boss" id="boss-card" onclick="tryBossBattle()">
           <div class="boss-lock" id="boss-lock">&#128274;</div>
           <div class="bot-avatar bot-boss">&#128520;</div>
           <div class="bot-info">
-            <h3>보스전</h3>
+            <h3 data-i18n="select.boss">보스전</h3>
             <div class="bot-stars"><span class="star filled" style="color:#e74c3c">&#9733;</span><span class="star filled" style="color:#e74c3c">&#9733;</span><span class="star filled" style="color:#e74c3c">&#9733;</span><span class="star filled" style="color:#e74c3c">&#9733;</span><span class="star filled" style="color:#e74c3c">&#9733;</span></div>
-            <p class="bot-desc" id="boss-desc">Lv.10 이상부터 입장 가능</p>
+            <p class="bot-desc" id="boss-desc" data-i18n="select.bossLocked">Lv.10 이상부터 입장 가능</p>
           </div>
         </div>
       </div>
@@ -358,7 +358,7 @@
   <!-- ===== 게임 화면 ===== -->
   <div id="screen-game" class="screen">
     <div class="game-container">
-      <button class="btn-leave-game" onclick="leaveBotGame()">나가기</button>
+      <button class="btn-leave-game" onclick="leaveBotGame()" data-i18n="game.leave">나가기</button>
       <!-- 타이머 바 -->
       <div class="timer-section">
         <div class="timer-bar-bg">
@@ -369,21 +369,21 @@
 
       <!-- 턴 표시 -->
       <div id="bot-round-display" class="round-display" style="display:none">라운드 1 / 1</div>
-      <div id="turn-indicator" class="turn-indicator">내 턴</div>
+      <div id="turn-indicator" class="turn-indicator" data-i18n="game.myTurn">내 턴</div>
 
       <!-- 플레이어 패널 -->
       <div class="players-area">
         <div class="player-panel player-me">
           <div class="player-avatar">&#128100;</div>
-          <div class="player-name">나</div>
+          <div class="player-name" data-i18n="game.player">나</div>
           <div class="player-score" id="score-player">0점</div>
         </div>
 
-        <div class="vs-text">VS</div>
+        <div class="vs-text" data-i18n="game.vs">VS</div>
 
         <div class="player-panel player-bot">
           <div class="player-avatar" id="bot-avatar">&#129302;</div>
-          <div class="player-name" id="bot-name">봇</div>
+          <div class="player-name" id="bot-name" data-i18n="game.bot">봇</div>
           <div class="player-score" id="score-bot">0점</div>
         </div>
       </div>
@@ -397,8 +397,8 @@
 
       <!-- 입력 영역 -->
       <div class="input-area">
-        <input type="text" id="word-input" class="word-input" placeholder="단어를 입력하세요..." autocomplete="off">
-        <button id="submit-btn" class="btn btn-submit" onclick="submitWord()" disabled>입력</button>
+        <input type="text" id="word-input" class="word-input" data-i18n-ph="game.inputPh" placeholder="단어를 입력하세요..." autocomplete="off">
+        <button id="submit-btn" class="btn btn-submit" onclick="submitWord()" disabled data-i18n="common.submit">입력</button>
       </div>
 
       <!-- 메시지 영역 -->
@@ -406,7 +406,7 @@
 
       <!-- 사용된 단어 -->
       <div class="used-words-section">
-        <h4>사용된 단어</h4>
+        <h4 data-i18n="game.usedWordsLabel">사용된 단어</h4>
         <div id="used-words" class="used-words-list"></div>
       </div>
     </div>
@@ -731,13 +731,13 @@
   <!-- ===== 게임 오버 화면 ===== -->
   <div id="screen-gameover" class="screen">
     <div class="gameover-container">
-      <h2 id="gameover-title" class="gameover-title">게임 종료</h2>
+      <h2 id="gameover-title" class="gameover-title" data-i18n="gameover.title">게임 종료</h2>
       <div class="gameover-result">
         <div class="result-panel">
-          <div class="result-label">나</div>
+          <div class="result-label" data-i18n="game.player">나</div>
           <div class="result-score" id="final-player-score">0점</div>
         </div>
-        <div class="result-vs">VS</div>
+        <div class="result-vs" data-i18n="game.vs">VS</div>
         <div class="result-panel">
           <div class="result-label" id="final-bot-name">봇</div>
           <div class="result-score" id="final-bot-score">0점</div>
@@ -745,8 +745,8 @@
       </div>
       <div id="gameover-reason" class="gameover-reason"></div>
       <div class="gameover-buttons">
-        <button class="btn btn-primary" id="btn-gameover-retry" onclick="gameoverRetry()">다시 하기</button>
-        <button class="btn btn-secondary" onclick="gameoverHome()">홈으로</button>
+        <button class="btn btn-primary" id="btn-gameover-retry" onclick="gameoverRetry()" data-i18n="gameover.retry">다시 하기</button>
+        <button class="btn btn-secondary" onclick="gameoverHome()" data-i18n="gameover.home">홈으로</button>
       </div>
     </div>
   </div>
