@@ -60,8 +60,8 @@
   <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-tabs">
-        <button class="sidebar-tab active" id="sb-tab-notice" onclick="switchSidebarTab('notice')">공지사항</button>
-        <button class="sidebar-tab" id="sb-tab-social" onclick="switchSidebarTab('social')">소셜</button>
+        <button class="sidebar-tab active" id="sb-tab-notice" onclick="switchSidebarTab('notice')" data-i18n="sidebar.notice">공지사항</button>
+        <button class="sidebar-tab" id="sb-tab-social" onclick="switchSidebarTab('social')" data-i18n="sidebar.social">소셜</button>
       </div>
       <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
     </div>
@@ -69,9 +69,9 @@
     <!-- 공지사항 탭 -->
     <div id="sb-notice" class="sidebar-content">
       <div id="notice-write" class="notice-write" style="display:none">
-        <input type="text" id="notice-title-input" class="notice-title-input" placeholder="제목" maxlength="50">
-        <textarea id="notice-input" class="notice-textarea" placeholder="내용 작성..." rows="2"></textarea>
-        <button class="btn btn-primary btn-small" onclick="postNotice()">등록</button>
+        <input type="text" id="notice-title-input" class="notice-title-input" data-i18n-ph="sidebar.noticeTitle" placeholder="제목" maxlength="50">
+        <textarea id="notice-input" class="notice-textarea" data-i18n-ph="sidebar.noticeContent" placeholder="내용 작성..." rows="2"></textarea>
+        <button class="btn btn-primary btn-small" onclick="postNotice()" data-i18n="sidebar.noticeSubmit">등록</button>
       </div>
       <div id="notice-list" class="notice-list"></div>
     </div>
@@ -79,15 +79,15 @@
     <!-- 소셜 탭 -->
     <div id="sb-social" class="sidebar-content" style="display:none">
       <div class="social-section">
-        <div class="social-section-title">온라인 플레이어</div>
+        <div class="social-section-title" data-i18n="sidebar.onlinePlayers">온라인 플레이어</div>
         <div id="online-players-list" class="social-list"></div>
       </div>
       <div class="social-section">
-        <div class="social-section-title">친구 요청 <span id="friend-req-count"></span></div>
+        <div class="social-section-title"><span data-i18n="sidebar.friendRequests">친구 요청</span> <span id="friend-req-count"></span></div>
         <div id="friend-requests-list" class="social-list"></div>
       </div>
       <div class="social-section">
-        <div class="social-section-title">친구 (<span id="friend-count">0</span>)</div>
+        <div class="social-section-title"><span data-i18n="sidebar.friends">친구</span> (<span id="friend-count">0</span>)</div>
         <div id="friends-list" class="social-list"></div>
       </div>
     </div>
@@ -96,13 +96,13 @@
     <div id="sb-chat" class="sidebar-content" style="display:none">
       <div class="chat-header">
         <button class="chat-back" onclick="closeChatPanel()">←</button>
-        <span id="chat-partner-name">친구</span>
+        <span id="chat-partner-name" data-i18n="sidebar.friends">친구</span>
       </div>
       <div id="chat-messages" class="chat-messages"></div>
       <div id="chat-typing-indicator" class="chat-typing-indicator"></div>
       <div class="chat-input-area">
-        <input type="text" id="chat-input" class="chat-input" placeholder="메시지 입력..." autocomplete="off">
-        <button class="btn btn-primary btn-small" onclick="sendChat()">전송</button>
+        <input type="text" id="chat-input" class="chat-input" data-i18n-ph="sidebar.messageInput" placeholder="메시지 입력..." autocomplete="off">
+        <button class="btn btn-primary btn-small" onclick="sendChat()" data-i18n="common.send">전송</button>
       </div>
     </div>
   </div>
@@ -206,8 +206,8 @@
   <!-- ===== 프로필 화면 ===== -->
   <div id="screen-profile" class="screen">
     <div class="profile-container">
-      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
-      <h2 class="profile-title">프로필</h2>
+      <button class="btn-back" onclick="showScreen('screen-home')" data-i18n="common.back">&larr; 뒤로</button>
+      <h2 class="profile-title" data-i18n="profile.title">프로필</h2>
 
       <div class="profile-card">
         <div class="profile-avatar-large">&#128100;</div>
@@ -223,29 +223,29 @@
       </div>
 
       <div class="profile-stats">
-        <h3>전적</h3>
+        <h3 data-i18n="profile.stats">전적</h3>
         <div class="stats-grid">
           <div class="stat-item">
             <div class="stat-value" id="stat-wins">0</div>
-            <div class="stat-label">승리</div>
+            <div class="stat-label" data-i18n="profile.wins">승리</div>
           </div>
           <div class="stat-item">
             <div class="stat-value" id="stat-losses">0</div>
-            <div class="stat-label">패배</div>
+            <div class="stat-label" data-i18n="profile.losses">패배</div>
           </div>
           <div class="stat-item">
             <div class="stat-value" id="stat-total-exp">0</div>
-            <div class="stat-label">총 경험치</div>
+            <div class="stat-label" data-i18n="profile.totalExp">총 경험치</div>
           </div>
           <div class="stat-item">
             <div class="stat-value" id="stat-winrate">0%</div>
-            <div class="stat-label">승률</div>
+            <div class="stat-label" data-i18n="profile.winrate">승률</div>
           </div>
         </div>
       </div>
 
-      <button class="btn btn-secondary" onclick="openBugReport()" style="margin-top:16px;width:100%">문의 / 버그제보</button>
-      <button class="btn btn-secondary" onclick="logout()" style="margin-top:8px;width:100%">로그아웃</button>
+      <button class="btn btn-secondary" onclick="openBugReport()" style="margin-top:16px;width:100%" data-i18n="profile.bugReport">문의 / 버그제보</button>
+      <button class="btn btn-secondary" onclick="logout()" style="margin-top:8px;width:100%" data-i18n="profile.logout">로그아웃</button>
     </div>
   </div>
 
@@ -504,37 +504,37 @@
 
   <div id="screen-dict" class="screen">
     <div class="dict-container">
-      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
-      <h2 class="dict-title">단어 사전</h2>
+      <button class="btn-back" onclick="showScreen('screen-home')" data-i18n="common.back">&larr; 뒤로</button>
+      <h2 class="dict-title" data-i18n="dict.title">단어 사전</h2>
       <div class="dict-total" id="dict-total">총 0개</div>
 
       <div class="dict-filters">
-        <input type="text" id="dict-search" class="dict-search" placeholder="단어 검색..." oninput="filterDictionary()">
+        <input type="text" id="dict-search" class="dict-search" data-i18n-ph="dict.searchPh" placeholder="단어 검색..." oninput="filterDictionary()">
         <div class="dict-filter-row">
-          <label>시작 글자</label>
+          <label data-i18n="dict.startChar">시작 글자</label>
           <input type="text" id="dict-start-char" class="dict-filter-input" maxlength="1" placeholder="예: 가" oninput="filterDictionary()">
         </div>
         <div class="dict-filter-row">
-          <label>끝 글자</label>
+          <label data-i18n="dict.endChar">끝 글자</label>
           <input type="text" id="dict-end-char" class="dict-filter-input" maxlength="1" placeholder="예: 다" oninput="filterDictionary()">
         </div>
         <div class="dict-filter-row">
-          <label>글자수</label>
+          <label data-i18n="dict.length">글자수</label>
           <select id="dict-length" class="dict-filter-select" onchange="filterDictionary()">
-            <option value="0">전체</option>
-            <option value="2">2글자</option>
-            <option value="3">3글자</option>
-            <option value="4">4글자</option>
-            <option value="5">5글자</option>
-            <option value="6">6글자</option>
-            <option value="7">7글자 이상</option>
+            <option value="0" data-i18n="dict.lengthAll">전체</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7+</option>
           </select>
         </div>
         <div class="dict-filter-row">
-          <label>한방루트</label>
+          <label data-i18n="dict.killerRoute">한방루트</label>
           <label class="dict-killer-toggle">
             <input type="checkbox" id="dict-killer-only" onchange="filterDictionary()">
-            <span>한방 단어만 보기</span>
+            <span data-i18n="dict.killerOnly">한방 단어만 보기</span>
           </label>
         </div>
       </div>
@@ -596,24 +596,24 @@
   <!-- ===== 멀티 로비 ===== -->
   <div id="screen-multi-lobby" class="screen">
     <div class="multi-lobby-container">
-      <button class="btn-back" onclick="showScreen('screen-home')">&larr; 뒤로</button>
-      <h2 class="select-title">멀티플레이</h2>
+      <button class="btn-back" onclick="showScreen('screen-home')" data-i18n="common.back">&larr; 뒤로</button>
+      <h2 class="select-title" data-i18n="multi.title">멀티플레이</h2>
 
       <div class="multi-lobby-card">
-        <p class="multi-lobby-label">방 만들기</p>
-        <input type="text" id="room-title-input" class="room-title-input" placeholder="방 제목 (선택)" maxlength="30">
+        <p class="multi-lobby-label" data-i18n="multi.createRoom">방 만들기</p>
+        <input type="text" id="room-title-input" class="room-title-input" data-i18n-ph="multi.roomTitlePh" placeholder="방 제목 (선택)" maxlength="30">
         <div class="mode-row" style="margin:8px 0">
-          <span class="mode-label">게임 종류</span>
-          <span class="mode-fixed">한국어 끝말잇기</span>
+          <span class="mode-label" data-i18n="multi.gameType">게임 종류</span>
+          <span class="mode-fixed" data-i18n="select.koGame">한국어 끝말잇기</span>
         </div>
         <div class="mode-toggles" style="margin-bottom:12px">
-          <button class="mode-btn active" id="room-mode-injeong" onclick="toggleRoomMode(this)">어인정</button>
-          <button class="mode-btn" id="room-mode-manner" onclick="toggleRoomMode(this)">매너</button>
-          <button class="mode-btn" id="room-mode-noda" onclick="toggleRoomMode(this)">~다 금지</button>
-          <button class="mode-btn active" id="room-mode-freedueum" onclick="toggleRoomMode(this)">자유두음</button>
+          <button class="mode-btn active" id="room-mode-injeong" onclick="toggleRoomMode(this)" data-i18n="select.modeInjeong">어인정</button>
+          <button class="mode-btn" id="room-mode-manner" onclick="toggleRoomMode(this)" data-i18n="select.modeManner">매너</button>
+          <button class="mode-btn" id="room-mode-noda" onclick="toggleRoomMode(this)" data-i18n="select.modeNoda">~다 금지</button>
+          <button class="mode-btn active" id="room-mode-freedueum" onclick="toggleRoomMode(this)" data-i18n="select.modeFreedueum">자유두음</button>
         </div>
         <div class="round-select-row">
-          <label>라운드</label>
+          <label data-i18n="select.rounds">라운드</label>
           <div class="round-btns">
             <button class="round-btn active" onclick="selectRound(1, this)">1</button>
             <button class="round-btn" onclick="selectRound(3, this)">3</button>
@@ -621,23 +621,23 @@
             <button class="round-btn" onclick="selectRound(7, this)">7</button>
           </div>
         </div>
-        <button class="btn btn-primary btn-large" onclick="createRoom()" style="width:100%">
+        <button class="btn btn-primary btn-large" onclick="createRoom()" style="width:100%" data-i18n="multi.createBtn">
           방 만들기
         </button>
       </div>
 
       <div class="multi-lobby-card">
-        <p class="multi-lobby-label">방 코드로 참가</p>
+        <p class="multi-lobby-label" data-i18n="multi.joinByCode">방 코드로 참가</p>
         <div class="multi-join-row">
-          <input type="text" id="join-room-code" class="multi-code-input" placeholder="방 코드 입력" maxlength="6" style="text-transform:uppercase">
-          <button class="btn btn-primary" onclick="joinRoom()">참가</button>
+          <input type="text" id="join-room-code" class="multi-code-input" data-i18n-ph="multi.codePh" placeholder="방 코드 입력" maxlength="6" style="text-transform:uppercase">
+          <button class="btn btn-primary" onclick="joinRoom()" data-i18n="multi.joinBtn">참가</button>
         </div>
       </div>
 
       <div class="multi-lobby-card">
-        <p class="multi-lobby-label">공개 방 목록</p>
+        <p class="multi-lobby-label" data-i18n="multi.publicRooms">공개 방 목록</p>
         <div id="public-room-list" class="room-list">
-          <div class="room-list-empty">대기 중인 방이 없습니다</div>
+          <div class="room-list-empty" data-i18n="multi.noRooms">대기 중인 방이 없습니다</div>
         </div>
       </div>
 
@@ -648,34 +648,34 @@
   <!-- ===== 멀티 대기실 ===== -->
   <div id="screen-multi-waiting" class="screen">
     <div class="multi-waiting-container">
-      <button class="btn-back" onclick="leaveRoom()">&larr; 나가기</button>
-      <h2 class="select-title">대기실</h2>
+      <button class="btn-back" onclick="leaveRoom()" data-i18n="multi.leave">&larr; 나가기</button>
+      <h2 class="select-title" data-i18n="multi.waitingRoom">대기실</h2>
 
       <div id="waiting-room-title" class="waiting-room-title" style="display:none"></div>
       <div class="room-code-display">
-        <span class="room-code-label">방 코드</span>
+        <span class="room-code-label" data-i18n="multi.roomCode">방 코드</span>
         <span class="room-code-value" id="room-code-display">------</span>
-        <button class="btn btn-small" onclick="copyRoomCode()">복사</button>
+        <button class="btn btn-small" onclick="copyRoomCode()" data-i18n="common.copy">복사</button>
       </div>
 
-      <div id="waiting-modes" class="waiting-modes">모드: 없음</div>
+      <div id="waiting-modes" class="waiting-modes" data-i18n="multi.modesNone">모드: 없음</div>
 
       <div class="waiting-players">
         <div class="waiting-player" id="waiting-p1">
           <div class="waiting-avatar">&#128100;</div>
-          <div class="waiting-name">대기중...</div>
+          <div class="waiting-name" data-i18n="multi.waiting">대기중...</div>
         </div>
-        <div class="waiting-vs">VS</div>
+        <div class="waiting-vs" data-i18n="game.vs">VS</div>
         <div class="waiting-player" id="waiting-p2">
           <div class="waiting-avatar">&#128100;</div>
-          <div class="waiting-name">대기중...</div>
+          <div class="waiting-name" data-i18n="multi.waiting">대기중...</div>
         </div>
       </div>
 
-      <div id="waiting-status" class="waiting-status">상대를 기다리는 중...</div>
+      <div id="waiting-status" class="waiting-status" data-i18n="multi.waitingOpponent">상대를 기다리는 중...</div>
       <div style="text-align:center">
-        <button class="btn btn-primary btn-large" id="btn-multi-start" style="display:none" onclick="startMultiGame()">게임 시작</button>
-        <button class="btn btn-primary btn-large" id="btn-multi-ready" style="display:none" onclick="toggleReady()">준비</button>
+        <button class="btn btn-primary btn-large" id="btn-multi-start" style="display:none" onclick="startMultiGame()" data-i18n="multi.startBtn">게임 시작</button>
+        <button class="btn btn-primary btn-large" id="btn-multi-ready" style="display:none" onclick="toggleReady()" data-i18n="multi.readyBtn">준비</button>
       </div>
     </div>
   </div>
@@ -691,7 +691,7 @@
       </div>
 
       <div id="multi-round-display" class="round-display" style="display:none">라운드 1 / 1</div>
-      <div id="multi-turn-indicator" class="turn-indicator">내 턴</div>
+      <div id="multi-turn-indicator" class="turn-indicator" data-i18n="game.myTurn">내 턴</div>
 
       <div class="players-area">
         <div class="player-panel player-me">
@@ -699,7 +699,7 @@
           <div class="player-name" id="multi-p1-name">플레이어1</div>
           <div class="player-score" id="multi-p1-score">0점</div>
         </div>
-        <div class="vs-text">VS</div>
+        <div class="vs-text" data-i18n="game.vs">VS</div>
         <div class="player-panel player-bot">
           <div class="player-avatar">&#128100;</div>
           <div class="player-name" id="multi-p2-name">플레이어2</div>
@@ -714,15 +714,15 @@
       </div>
 
       <div class="input-area" style="position:relative">
-        <input type="text" id="multi-word-input" class="word-input" placeholder="단어를 입력하세요..." autocomplete="off">
+        <input type="text" id="multi-word-input" class="word-input" data-i18n-ph="game.inputPh" placeholder="단어를 입력하세요..." autocomplete="off">
         <div id="multi-typing-overlay"></div>
-        <button id="multi-submit-btn" class="btn btn-submit" onclick="submitMultiWord()" disabled>입력</button>
+        <button id="multi-submit-btn" class="btn btn-submit" onclick="submitMultiWord()" disabled data-i18n="common.submit">입력</button>
       </div>
 
       <div id="multi-game-message" class="game-message"></div>
 
       <div class="used-words-section">
-        <h4>사용된 단어</h4>
+        <h4 data-i18n="game.usedWordsLabel">사용된 단어</h4>
         <div id="multi-used-words" class="used-words-list"></div>
       </div>
     </div>

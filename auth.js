@@ -26,18 +26,18 @@ async function handleAuth() {
   const msgEl = document.getElementById('auth-message');
 
   if (!nickname || nickname.length < 2) {
-    msgEl.textContent = '닉네임은 2글자 이상 입력하세요.';
+    msgEl.textContent = t('auth.nicknameMin');
     msgEl.className = 'auth-message error';
     return;
   }
   if (!password || password.length < 4) {
-    msgEl.textContent = '비밀번호는 4자리 이상 입력하세요.';
+    msgEl.textContent = t('auth.passwordMin');
     msgEl.className = 'auth-message error';
     return;
   }
 
   if (!db) {
-    msgEl.textContent = '서버 연결에 실패했습니다.';
+    msgEl.textContent = t('auth.connFail');
     msgEl.className = 'auth-message error';
     return;
   }
@@ -56,7 +56,7 @@ async function handleRegister(nickname, hashedPw, userRef, msgEl) {
   try {
     const snap = await userRef.get();
     if (snap.exists()) {
-      msgEl.textContent = '이미 사용 중인 닉네임입니다.';
+      msgEl.textContent = t('auth.nicknameTaken');
       msgEl.className = 'auth-message error';
       return;
     }
@@ -76,12 +76,12 @@ async function handleRegister(nickname, hashedPw, userRef, msgEl) {
 
     await userRef.set(userData);
 
-    msgEl.textContent = '회원가입 완료! 로그인합니다...';
+    msgEl.textContent = t('auth.registerOk');
     msgEl.className = 'auth-message success';
 
     setTimeout(() => loginSuccess(userData), 500);
   } catch (e) {
-    msgEl.textContent = '회원가입 실패: ' + e.message;
+    msgEl.textContent = t('auth.registerFail', e.message);
     msgEl.className = 'auth-message error';
   }
 }
@@ -90,21 +90,21 @@ async function handleLogin(nickname, hashedPw, userRef, msgEl) {
   try {
     const snap = await userRef.get();
     if (!snap.exists()) {
-      msgEl.textContent = '존재하지 않는 닉네임입니다.';
+      msgEl.textContent = t('auth.notFound');
       msgEl.className = 'auth-message error';
       return;
     }
 
     const userData = snap.val();
     if (userData.password !== hashedPw) {
-      msgEl.textContent = '비밀번호가 틀렸습니다.';
+      msgEl.textContent = t('auth.wrongPw');
       msgEl.className = 'auth-message error';
       return;
     }
 
     loginSuccess(userData);
   } catch (e) {
-    msgEl.textContent = '로그인 실패: ' + e.message;
+    msgEl.textContent = t('auth.loginFail', e.message);
     msgEl.className = 'auth-message error';
   }
 }

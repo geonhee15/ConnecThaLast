@@ -188,12 +188,12 @@ function displayRoomModes(roomModes, totalRounds) {
   const el = document.getElementById('waiting-modes');
   if (!el) return;
   const tags = [];
-  if (roomModes.manner) tags.push('매너');
-  if (roomModes.noda) tags.push('~다 금지');
-  if (roomModes.freedueum) tags.push('자유두음');
-  if (roomModes.injeong) tags.push('어인정');
-  let text = tags.length > 0 ? '모드: ' + tags.join(', ') : '모드: 없음';
-  if (totalRounds > 1) text += ` | ${totalRounds}라운드`;
+  if (roomModes.manner) tags.push(t('select.modeManner'));
+  if (roomModes.noda) tags.push(t('select.modeNoda'));
+  if (roomModes.freedueum) tags.push(t('select.modeFreedueum'));
+  if (roomModes.injeong) tags.push(t('select.modeInjeong'));
+  let text = tags.length > 0 ? t('multi.modesPrefix') + ' ' + tags.join(', ') : t('multi.modesNone');
+  if (totalRounds > 1) text += ` | ${totalRounds}` + (userSettings.lang === 'en' ? ' rounds' : '라운드');
   el.textContent = text;
 }
 
@@ -231,7 +231,7 @@ function startRoomListListener() {
 
     const rooms = snapshot.val();
     if (!rooms) {
-      list.innerHTML = '<div class="room-list-empty">대기 중인 방이 없습니다</div>';
+      list.innerHTML = `<div class="room-list-empty">${t('multi.noRooms')}</div>`;
       return;
     }
 
@@ -244,12 +244,12 @@ function startRoomListListener() {
 
       const modeTags = [];
       if (room.modes) {
-        if (room.modes.manner) modeTags.push('매너');
-        if (room.modes.noda) modeTags.push('~다금지');
-        if (room.modes.freedueum) modeTags.push('자유두음');
-        if (room.modes.injeong) modeTags.push('어인정');
+        if (room.modes.manner) modeTags.push(t('select.modeManner'));
+        if (room.modes.noda) modeTags.push(t('select.modeNoda'));
+        if (room.modes.freedueum) modeTags.push(t('select.modeFreedueum'));
+        if (room.modes.injeong) modeTags.push(t('select.modeInjeong'));
       }
-      if (room.totalRounds > 1) modeTags.push(room.totalRounds + '라운드');
+      if (room.totalRounds > 1) modeTags.push(room.totalRounds + (userSettings.lang === 'en' ? 'R' : '라운드'));
 
       const card = document.createElement('div');
       card.className = 'room-list-card';
@@ -267,7 +267,7 @@ function startRoomListListener() {
     }
 
     if (count === 0) {
-      list.innerHTML = '<div class="room-list-empty">대기 중인 방이 없습니다</div>';
+      list.innerHTML = `<div class="room-list-empty">${t('multi.noRooms')}</div>`;
     }
   });
 }
@@ -349,22 +349,22 @@ function updateWaitingUI(room) {
   if (room.p1) {
     wp1.innerHTML = `<div class="waiting-avatar">&#128100;</div>
       <div class="waiting-name">${room.p1.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p1.level}</span></div>
-      <div class="ready-badge ready">방장</div>`;
+      <div class="ready-badge ready">${t('multi.host')}</div>`;
   }
 
   if (room.p2 && room.p2.online) {
     const isReady = room.p2.ready;
     wp2.innerHTML = `<div class="waiting-avatar">&#128100;</div>
       <div class="waiting-name">${room.p2.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p2.level}</span></div>
-      <div class="ready-badge ${isReady ? 'ready' : 'not-ready'}">${isReady ? '준비 완료' : '대기중'}</div>`;
+      <div class="ready-badge ${isReady ? 'ready' : 'not-ready'}">${isReady ? t('multi.ready') : t('multi.notReady')}</div>`;
 
     if (multi.isHost) {
       // 호스트: p2가 준비되면 시작 가능
       if (isReady) {
-        statusEl.textContent = '모두 준비 완료!';
+        statusEl.textContent = t('multi.allReady');
         startBtn.style.display = '';
       } else {
-        statusEl.textContent = '상대가 준비하지 않았습니다...';
+        statusEl.textContent = t('multi.opponentNotReady');
         startBtn.style.display = 'none';
       }
       readyBtn.style.display = 'none';
@@ -372,15 +372,15 @@ function updateWaitingUI(room) {
       // 게스트: 준비 버튼 표시
       startBtn.style.display = 'none';
       readyBtn.style.display = '';
-      readyBtn.textContent = isReady ? '준비 취소' : '준비';
+      readyBtn.textContent = isReady ? t('multi.cancelReady') : t('multi.readyBtn');
       readyBtn.setAttribute('class', isReady ? 'btn btn-secondary btn-large' : 'btn btn-primary btn-large');
       readyBtn.onclick = toggleReady;
-      statusEl.textContent = isReady ? '호스트가 시작하기를 기다리는 중...' : '준비 버튼을 눌러주세요';
+      statusEl.textContent = isReady ? t('multi.waitingHost') : t('multi.pressReady');
     }
   } else {
     wp2.innerHTML = `<div class="waiting-avatar" style="opacity:0.3">&#128100;</div>
-      <div class="waiting-name" style="color:#ccc">대기중...</div>`;
-    statusEl.textContent = '상대를 기다리는 중...';
+      <div class="waiting-name" style="color:#ccc">${t('multi.waiting')}</div>`;
+    statusEl.textContent = t('multi.waitingOpponent');
     startBtn.style.display = 'none';
     if (readyBtn) readyBtn.style.display = 'none';
   }
@@ -471,13 +471,13 @@ function handleGameUpdate(room) {
   const btn = document.getElementById('multi-submit-btn');
 
   if (multi.isMyTurn) {
-    turnInd.textContent = '내 턴';
+    turnInd.textContent = t('game.myTurn');
     turnInd.className = 'turn-indicator my-turn';
     btn.disabled = false;
     input.focus();
   } else {
     const opName = multi.playerId === 'p1' ? room.p2.nickname : room.p1.nickname;
-    turnInd.textContent = opName + ' 턴';
+    turnInd.textContent = t('multi.opponentTurn', opName);
     turnInd.className = 'turn-indicator bot-turn';
     btn.disabled = true;
   }
@@ -609,7 +609,7 @@ async function handleMultiTimeout() {
   await multi.roomRef.update({
     status: 'finished',
     winner: winner,
-    reason: '시간 초과!'
+    reason: t('game.timeoutShort')
   });
 }
 
@@ -669,7 +669,7 @@ async function submitMultiWord() {
 }
 
 function validateMultiWord(word) {
-  if (word.length < 2) return '2글자 이상 입력하세요.';
+  if (word.length < 2) return t('msg.minLength');
 
   if (multi.usedWords.size > 0) {
     const nextCharEl = document.getElementById('multi-next-char');
@@ -678,16 +678,13 @@ function validateMultiWord(word) {
       const nc = match[1];
       if (!isValidChain(nc, word)) {
         const alts = getAlternativeChars(nc);
-        return `"${alts.join('" 또는 "')}"(으)로 시작하는 단어를 입력하세요.`;
+        return t('msg.startsWith', alts.join(', '));
       }
     }
   }
 
-  if (multi.usedWords.has(word)) return '이미 사용한 단어입니다.';
-  if (!isValidWord(word)) return '사전에 없는 단어입니다.';
-
-  // 방 모드 적용 (Firebase에서 가져온 모드)
-  // TODO: room.modes 체크 - 현재는 어인정 기본 ON
+  if (multi.usedWords.has(word)) return t('msg.alreadyUsed');
+  if (!isValidWord(word)) return t('msg.notInDict');
   return null;
 }
 
@@ -714,7 +711,7 @@ function handleMultiGameOver(room) {
   // 다중 라운드: 아직 라운드가 남아있으면 다음 라운드
   if (totalRounds > 1 && currentRound < totalRounds) {
     const roundEl = document.getElementById('multi-round-display');
-    if (roundEl) roundEl.textContent = `라운드 ${currentRound} 종료 - ${iWin ? '승리!' : '패배'}`;
+    if (roundEl) roundEl.textContent = t('game.roundOver', currentRound, iWin ? t('game.win') : t('game.lose'));
 
     setTimeout(() => {
       if (!multi.isHost) return;
@@ -784,7 +781,7 @@ function handleMultiGameOver(room) {
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
-    title.textContent = finalWin ? '승리!' : '패배...';
+    title.textContent = finalWin ? t('game.win') : t('game.lose');
     title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
     document.getElementById('final-player-score').textContent = (myData.score || 0) + '점';
