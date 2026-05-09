@@ -261,7 +261,7 @@ async function syncWithServer(session) {
 }
 
 // ==================== MAINTENANCE MODE ====================
-const MAINTENANCE = false; // false로 바꾸면 점검 해제
+const MAINTENANCE = true; // false로 바꾸면 점검 해제
 const ADMIN_PASS = 'admin123';
 
 async function maintenanceBypass() {
