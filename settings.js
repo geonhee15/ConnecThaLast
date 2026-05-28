@@ -53,7 +53,7 @@ const I18N = {
     'maintenance.title': '업데이트 점검 중',
     'maintenance.desc': '더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!',
     'maintenance.next': '다음 업데이트:',
-    'maintenance.features': '설정 메뉴 추가 (BGM/효과음 볼륨, 언어 설정)<br>신규 게임 종류: English 끝말잇기',
+    'maintenance.features': '멀티플레이 영어 끝말잇기 모드 추가',
     'maintenance.adminPw': '관리자 비밀번호',
     'maintenance.enter': '접속',
     // Login
@@ -248,7 +248,7 @@ const I18N = {
     'maintenance.title': 'Server Under Maintenance',
     'maintenance.desc': "We're updating the server to bring you a better experience.<br>Please wait a moment!",
     'maintenance.next': 'Next update:',
-    'maintenance.features': 'Settings menu (BGM/SFX volume, language)<br>New game type: English Word Chain',
+    'maintenance.features': 'Multiplayer English Word Chain mode added',
     'maintenance.adminPw': 'Admin password',
     'maintenance.enter': 'Enter',
     'login.subtitle': 'Korean Word Chain',
