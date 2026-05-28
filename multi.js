@@ -20,11 +20,25 @@ const multi = {
 };
 
 let selectedRounds = 1;
+let selectedGameLang = 'ko'; // 'ko' or 'en' — multiplayer 게임 언어
 
 function selectRound(n, btn) {
   selectedRounds = n;
   document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+function setRoomGameLang(lang) {
+  selectedGameLang = lang;
+  const koBtn = document.getElementById('room-lang-ko');
+  const enBtn = document.getElementById('room-lang-en');
+  if (koBtn && enBtn) {
+    koBtn.classList.toggle('active', lang === 'ko');
+    enBtn.classList.toggle('active', lang === 'en');
+  }
+  // 영어 모드는 한국어 전용 옵션(어인정/매너/~다/자유두음) 숨김
+  const koModesRow = document.getElementById('room-ko-modes-row');
+  if (koModesRow) koModesRow.style.display = (lang === 'en') ? 'none' : '';
 }
 
 // ==================== ROOM MANAGEMENT ====================
@@ -44,9 +58,12 @@ async function createRoom() {
 
   const p = getActiveProfile();
   const code = generateRoomCode();
+  const gameMode = (selectedGameLang === 'en') ? 'en' : 'ko';
 
-  // 방 만들기 모드 설정 읽기
-  const roomModes = {
+  // 방 만들기 모드 설정 읽기 (영어 모드에서는 한국어 전용 옵션 무시)
+  const roomModes = (gameMode === 'en') ? {
+    manner: false, noda: false, freedueum: false, injeong: false
+  } : {
     manner: document.getElementById('room-mode-manner').classList.contains('active'),
     noda: document.getElementById('room-mode-noda').classList.contains('active'),
     freedueum: document.getElementById('room-mode-freedueum').classList.contains('active'),
@@ -60,6 +77,7 @@ async function createRoom() {
     title: roomTitle,
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameMode: gameMode,
     modes: roomModes,
     totalRounds: selectedRounds,
     currentRound: 1,
@@ -99,7 +117,7 @@ async function createRoom() {
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
     showWaitingRoomTitle(roomTitle);
-    displayRoomModes(roomModes, selectedRounds);
+    displayRoomModes(roomModes, selectedRounds, gameMode);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '방 생성 실패: ' + e.message;
@@ -157,7 +175,7 @@ async function joinRoomByCode(code) {
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
     showWaitingRoomTitle(room.title);
-    if (room.modes) displayRoomModes(room.modes, room.totalRounds);
+    displayRoomModes(room.modes, room.totalRounds, room.gameMode);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '참가 실패: ' + e.message;
@@ -184,15 +202,19 @@ function showWaitingRoomTitle(title) {
   else { el.style.display = 'none'; }
 }
 
-function displayRoomModes(roomModes, totalRounds) {
+function displayRoomModes(roomModes, totalRounds, gameMode) {
   const el = document.getElementById('waiting-modes');
   if (!el) return;
   const tags = [];
-  if (roomModes.manner) tags.push(t('select.modeManner'));
-  if (roomModes.noda) tags.push(t('select.modeNoda'));
-  if (roomModes.freedueum) tags.push(t('select.modeFreedueum'));
-  if (roomModes.injeong) tags.push(t('select.modeInjeong'));
-  let text = tags.length > 0 ? t('multi.modesPrefix') + ' ' + tags.join(', ') : t('multi.modesNone');
+  const langTag = (gameMode === 'en') ? t('select.enGame') : t('select.koGame');
+  tags.push(langTag);
+  if (gameMode !== 'en' && roomModes) {
+    if (roomModes.manner) tags.push(t('select.modeManner'));
+    if (roomModes.noda) tags.push(t('select.modeNoda'));
+    if (roomModes.freedueum) tags.push(t('select.modeFreedueum'));
+    if (roomModes.injeong) tags.push(t('select.modeInjeong'));
+  }
+  let text = t('multi.modesPrefix') + ' ' + tags.join(', ');
   if (totalRounds > 1) text += ` | ${totalRounds}` + (userSettings.lang === 'en' ? ' rounds' : '라운드');
   el.textContent = text;
 }
@@ -243,7 +265,9 @@ function startRoomListListener() {
       count++;
 
       const modeTags = [];
-      if (room.modes) {
+      const roomLang = room.gameMode === 'en' ? 'en' : 'ko';
+      modeTags.push(roomLang === 'en' ? 'EN' : 'KO');
+      if (roomLang === 'ko' && room.modes) {
         if (room.modes.manner) modeTags.push(t('select.modeManner'));
         if (room.modes.noda) modeTags.push(t('select.modeNoda'));
         if (room.modes.freedueum) modeTags.push(t('select.modeFreedueum'));
@@ -388,10 +412,15 @@ function updateWaitingUI(room) {
 
 // ==================== GAME START ====================
 
-function startMultiGame() {
+async function startMultiGame() {
   if (!multi.isHost || !multi.roomRef) return;
 
   preloadAudio();
+
+  // 방에 저장된 gameMode 읽어 시작 단어를 해당 언어로 생성
+  const snap = await multi.roomRef.child('gameMode').get();
+  const gameMode = snap.val() || 'ko';
+  state.gameLang = gameMode;
 
   const startWord = getRandomStartWord();
   const lastChar = startWord[startWord.length - 1];
@@ -418,8 +447,11 @@ function startMultiGame() {
 let lastActionTimestamp = 0;
 
 function handleGameUpdate(room) {
-  // 룸 모드 적용 (자유두음 등)
-  state.roomFreeDueum = !!(room.modes && room.modes.freedueum);
+  // 룸의 게임 언어를 클라이언트 상태에 반영 (검증/사전 helper가 자동 분기)
+  state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
+  multi.gameMode = state.gameLang;
+  // 룸 모드 적용 (자유두음 등) — 영어 모드에서는 의미 없음
+  state.roomFreeDueum = (state.gameLang === 'ko') && !!(room.modes && room.modes.freedueum);
 
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen && currentScreen.id === 'screen-multi-waiting') {
@@ -715,6 +747,7 @@ function handleMultiGameOver(room) {
 
     setTimeout(() => {
       if (!multi.isHost) return;
+      state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
       const startWord = getRandomStartWord();
       const lastChar = startWord[startWord.length - 1];
 
@@ -774,6 +807,7 @@ function handleMultiGameOver(room) {
     wasHost: multi.isHost,
     roomRef: multi.roomRef,
     modes: room.modes || {},
+    gameMode: room.gameMode || 'ko',
     totalRounds: totalRounds,
     p1: room.p1,
     p2: room.p2
@@ -813,6 +847,7 @@ async function multiRematch() {
     code: code,
     status: 'waiting',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
+    gameMode: lastMultiGame.gameMode || 'ko',
     modes: lastMultiGame.modes,
     totalRounds: lastMultiGame.totalRounds,
     currentRound: 1,
@@ -850,7 +885,7 @@ async function multiRematch() {
 
   showScreen('screen-multi-waiting');
   document.getElementById('room-code-display').textContent = code;
-  displayRoomModes(lastMultiGame.modes, lastMultiGame.totalRounds);
+  displayRoomModes(lastMultiGame.modes, lastMultiGame.totalRounds, lastMultiGame.gameMode);
   listenRoom();
 
   lastMultiGame = null;
