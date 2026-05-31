@@ -461,18 +461,12 @@ function handleGameUpdate(room) {
 
   document.getElementById('multi-p1-name').innerHTML = room.p1.nickname + ' ' + roleBadgeHTML(room.p1.nickname, 40);
   document.getElementById('multi-p2-name').innerHTML = room.p2.nickname + ' ' + roleBadgeHTML(room.p2.nickname, 40);
-  const p1Wins = room.p1Wins || 0;
-  const p2Wins = room.p2Wins || 0;
   const totalRounds = room.totalRounds || 1;
   const currentRound = room.currentRound || 1;
 
-  if (totalRounds > 1) {
-    document.getElementById('multi-p1-score').textContent = `${room.p1.score || 0}점 (${p1Wins}승)`;
-    document.getElementById('multi-p2-score').textContent = `${room.p2.score || 0}점 (${p2Wins}승)`;
-  } else {
-    document.getElementById('multi-p1-score').textContent = (room.p1.score || 0) + '점';
-    document.getElementById('multi-p2-score').textContent = (room.p2.score || 0) + '점';
-  }
+  // v3.1.1+: 라운드 승수 표기 제거, 누적 점수만 — 애니메이션 적용
+  animateScoreUpdate('multi-p1-score', room.p1.score || 0);
+  animateScoreUpdate('multi-p2-score', room.p2.score || 0);
 
   // 라운드 표시
   const roundEl = document.getElementById('multi-round-display');
@@ -516,6 +510,11 @@ function handleGameUpdate(room) {
 
   if (room.lastAction && room.lastAction.timestamp > lastActionTimestamp) {
     lastActionTimestamp = room.lastAction.timestamp || Date.now();
+
+    // 게스트가 타임아웃 → 호스트가 다음 라운드 시작
+    if (room.lastAction.type === 'roundFail') {
+      handleMultiRoundFailIfHost(room);
+    }
 
     // 애니메이션 중 타이머 정지
     stopMultiTimer();
@@ -633,15 +632,95 @@ function updateMultiTimerDisplay() {
 
 async function handleMultiTimeout() {
   if (!multi.roomRef) return;
-  const winner = multi.playerId === 'p1' ? 'p2' : 'p1';
-  // 입력칸/타이핑 필드 즉시 비우기 (다음 라운드로 누적되지 않도록)
+  // v3.1.1+: 타임아웃 = 실패한 쪽 페널티 -25점, 다음 라운드 진행 (마지막 라운드면 최종 종료)
+  const failedField = multi.playerId; // 내가 타임아웃 → 내 점수 깎임
   const input = document.getElementById('multi-word-input');
   if (input) input.value = '';
   updateMultiTyping('');
+
+  const snap = await multi.roomRef.get();
+  const room = snap.val();
+  if (!room) return;
+  const curScore = (room[failedField] && room[failedField].score) || 0;
+  const newScore = Math.max(0, curScore - (typeof FAIL_PENALTY !== 'undefined' ? FAIL_PENALTY : 25));
+
+  const totalRounds = room.totalRounds || 1;
+  const currentRound = room.currentRound || 1;
+
+  if (totalRounds > 1 && currentRound < totalRounds) {
+    // 호스트만 다음 라운드 트리거 (양쪽이 동시에 update하지 않도록)
+    if (!multi.isHost) {
+      // 호스트가 처리하도록 점수만 갱신
+      await multi.roomRef.update({
+        [`${failedField}/score`]: newScore,
+        lastAction: {
+          type: 'roundFail',
+          by: failedField,
+          timestamp: Date.now()
+        }
+      });
+      return;
+    }
+    // 점수 감점 + 다음 라운드 시작
+    state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
+    const startWord = getRandomStartWord();
+    const lastChar = startWord[startWord.length - 1];
+    await multi.roomRef.update({
+      [`${failedField}/score`]: newScore,
+      currentRound: currentRound + 1,
+      turn: Math.random() > 0.5 ? 'p1' : 'p2',
+      turnCount: 1,
+      timerMax: 10,
+      currentWord: startWord,
+      nextChar: lastChar,
+      usedWords: startWord,
+      lastAction: {
+        type: 'start',
+        word: startWord,
+        by: 'system',
+        timestamp: Date.now()
+      }
+    });
+  } else {
+    // 마지막 라운드 (또는 단일 라운드): 페널티 적용 후 점수 비교로 승자 결정
+    const oppField = failedField === 'p1' ? 'p2' : 'p1';
+    const oppScore = (room[oppField] && room[oppField].score) || 0;
+    const winner = newScore > oppScore ? failedField : (oppScore > newScore ? oppField : failedField);
+    await multi.roomRef.update({
+      [`${failedField}/score`]: newScore,
+      status: 'finished',
+      winner: winner,
+      reason: t('game.timeoutShort')
+    });
+  }
+}
+
+// 게스트(호스트 아님)도 점수 감점을 호스트가 다음 라운드와 함께 처리하도록 보조
+async function handleMultiRoundFailIfHost(room) {
+  if (!multi.isHost || !multi.roomRef) return;
+  const last = room.lastAction;
+  if (!last || last.type !== 'roundFail') return;
+  // 호스트가 다음 라운드 시작
+  const totalRounds = room.totalRounds || 1;
+  const currentRound = room.currentRound || 1;
+  if (currentRound >= totalRounds) return;
+  state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
+  const startWord = getRandomStartWord();
+  const lastChar = startWord[startWord.length - 1];
   await multi.roomRef.update({
-    status: 'finished',
-    winner: winner,
-    reason: t('game.timeoutShort')
+    currentRound: currentRound + 1,
+    turn: Math.random() > 0.5 ? 'p1' : 'p2',
+    turnCount: 1,
+    timerMax: 10,
+    currentWord: startWord,
+    nextChar: lastChar,
+    usedWords: startWord,
+    lastAction: {
+      type: 'start',
+      word: startWord,
+      by: 'system',
+      timestamp: Date.now()
+    }
   });
 }
 
@@ -671,7 +750,8 @@ async function submitMultiWord() {
   document.getElementById('multi-game-message').textContent = '';
   updateMultiTyping(''); // 타이핑 정보 제거
 
-  const score = 10 + Math.max(0, (word.length - 2)) * 5;
+  // v3.1.1+: 새 점수 체계 — calculateScore(game.js) 공유 사용
+  const score = calculateScore(word);
   const lastChar = word[word.length - 1];
   const nextTurn = multi.playerId === 'p1' ? 'p2' : 'p1';
   const newTurnCount = multi.turnCount + 1;
@@ -732,68 +812,18 @@ function handleMultiGameOver(room) {
   room._handled = true;
 
   const totalRounds = room.totalRounds || 1;
-  const currentRound = room.currentRound || 1;
-  const iWin = room.winner === multi.playerId;
 
-  // 라운드 승패 기록
-  const winnerKey = room.winner; // 'p1' or 'p2'
-  const p1Wins = (room.p1Wins || 0) + (winnerKey === 'p1' ? 1 : 0);
-  const p2Wins = (room.p2Wins || 0) + (winnerKey === 'p2' ? 1 : 0);
-
-  // 다중 라운드: 아직 라운드가 남아있으면 다음 라운드
-  if (totalRounds > 1 && currentRound < totalRounds) {
-    const roundEl = document.getElementById('multi-round-display');
-    if (roundEl) roundEl.textContent = t('game.roundOver', currentRound, iWin ? t('game.win') : t('game.lose'));
-
-    setTimeout(() => {
-      if (!multi.isHost) return;
-      state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
-      const startWord = getRandomStartWord();
-      const lastChar = startWord[startWord.length - 1];
-
-      multi.roomRef.update({
-        status: 'playing',
-        currentRound: currentRound + 1,
-        p1Wins: p1Wins,
-        p2Wins: p2Wins,
-        turn: Math.random() > 0.5 ? 'p1' : 'p2',
-        turnCount: 1,
-        timerMax: 10,
-        currentWord: startWord,
-        nextChar: lastChar,
-        usedWords: startWord,
-        lastAction: {
-          type: 'start',
-          word: startWord,
-          by: 'system',
-          timestamp: Date.now()
-        }
-      });
-    }, 2000);
-    return;
-  }
-
-  // 최종 게임 종료 (1라운드 or 마지막 라운드)
+  // v3.1.1+: 승자 = 최종 점수가 더 높은 쪽 (room.winner 무시)
   const myData = room[multi.playerId];
   const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
   const opData = room[opId];
+  const myScore = (myData && myData.score) || 0;
+  const opScore = (opData && opData.score) || 0;
+  const finalWin = myScore > opScore;
 
-  const myWins = multi.playerId === 'p1' ? p1Wins : p2Wins;
-  const opWins = multi.playerId === 'p1' ? p2Wins : p1Wins;
-
-  let finalWin;
-  if (totalRounds === 1) {
-    finalWin = iWin;
-  } else {
-    finalWin = myWins > opWins; // 다중 라운드: 라운드 승수 비교
-  }
-
-  const myScore = myData.score || 0;
   let earnedExp = finalWin ? 15 : Math.max(2, Math.floor(myScore * 0.03));
   // 점수 비례 보너스: 총점의 5%
   earnedExp += Math.floor(myScore * 0.05);
-  // 다중 라운드 보너스: 라운드 승리 1회당 +3
-  if (totalRounds > 1) earnedExp += myWins * 3;
   if (multi.turnCount >= 2 || totalRounds > 1) {
     addExp(earnedExp);
     const p = getActiveProfile();
@@ -818,12 +848,12 @@ function handleMultiGameOver(room) {
     title.textContent = finalWin ? t('game.win') : t('game.lose');
     title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
-    document.getElementById('final-player-score').textContent = (myData.score || 0) + '점';
-    document.getElementById('final-bot-score').textContent = (opData.score || 0) + '점';
+    animateScoreUpdate('final-player-score', myScore);
+    animateScoreUpdate('final-bot-score', opScore);
     document.getElementById('final-bot-name').textContent = opData.nickname;
 
     let reasonText = room.reason || '';
-    if (totalRounds > 1) reasonText = `${totalRounds}라운드 종료! (${myWins}승 ${opWins}패) ` + reasonText;
+    if (totalRounds > 1) reasonText = t('game.multiFinalScore', totalRounds, myScore, opScore) + ' ' + reasonText;
     reasonText += (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
     document.getElementById('gameover-reason').textContent = reasonText;
 

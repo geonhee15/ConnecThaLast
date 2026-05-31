@@ -935,27 +935,75 @@ function chooseBotWord() {
 // ==================== ROUND DISPLAY ====================
 function updateBotRoundDisplay() {
   const el = document.getElementById('bot-round-display');
-  if (!el) return;
-  if (state.totalRounds > 1) {
-    el.style.display = '';
-    el.textContent = t('game.roundDisplay', state.currentRound, state.totalRounds);
-  } else {
-    el.style.display = 'none';
+  if (el) {
+    if (state.totalRounds > 1) {
+      el.style.display = '';
+      el.textContent = t('game.roundDisplay', state.currentRound, state.totalRounds);
+    } else {
+      el.style.display = 'none';
+    }
   }
-  // 점수 옆에 라운드 승수
-  if (state.totalRounds > 1) {
-    document.getElementById('score-player').textContent = t('game.scoreWithWins', state.playerScore, state.playerRoundWins);
-    document.getElementById('score-bot').textContent = t('game.scoreWithWins', state.botScore, state.botRoundWins);
-  } else {
-    document.getElementById('score-player').textContent = state.playerScore + t('game.scoreSuffix');
-    document.getElementById('score-bot').textContent = state.botScore + t('game.scoreSuffix');
-  }
+  // 점수: 라운드 승수 표기 제거 (v3.1.1+ 누적 점수만 의미가 있음)
+  animateScoreUpdate('score-player', state.playerScore);
+  animateScoreUpdate('score-bot', state.botScore);
 }
 
 // ==================== SCORING ====================
+// 새 점수 체계 (v3.1.0+):
+// - 기본 +20점 (끝말 이으면)
+// - 단어 길이 보너스: 2글자 초과분 1글자당 +5
+// - 희귀도/난이도 보너스: 한국어=비표준(어인정-only) +15, 영어=6글자+ +10, 8글자+ +25
 function calculateScore(word) {
-  const len = word.length;
-  return 10 + Math.max(0, (len - 2)) * 5;
+  const base = 20;
+  const lengthBonus = Math.max(0, word.length - 2) * 5;
+  let rarityBonus = 0;
+  if (state.gameLang === 'en') {
+    if (word.length >= 8) rarityBonus = 25;
+    else if (word.length >= 6) rarityBonus = 10;
+  } else {
+    if (typeof STD_WORDS !== 'undefined' && !STD_WORDS.has(word)) {
+      rarityBonus = 15;
+    }
+  }
+  return base + lengthBonus + rarityBonus;
+}
+
+// 실패 시 감점
+const FAIL_PENALTY = 25;
+
+// ==================== 점수 애니메이션 (롤링 카운터) ====================
+const _scoreAnimHandles = new Map();
+function animateScoreUpdate(elId, newScore, suffix) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const sfx = (suffix != null) ? suffix : t('game.scoreSuffix');
+  // 진행중 애니메이션 취소
+  const prev = _scoreAnimHandles.get(elId);
+  if (prev) cancelAnimationFrame(prev);
+  // 현재 표시값 파싱 (숫자만 추출, 음수도 지원)
+  const cur = parseInt(String(el.textContent).replace(/[^\-\d]/g, ''), 10) || 0;
+  if (cur === newScore) {
+    el.textContent = newScore + sfx;
+    return;
+  }
+  const delta = newScore - cur;
+  el.classList.remove('score-up', 'score-down');
+  el.classList.add(delta > 0 ? 'score-up' : 'score-down');
+  const dur = 600;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    const val = Math.round(cur + delta * ease);
+    el.textContent = val + sfx;
+    if (t < 1) {
+      _scoreAnimHandles.set(elId, requestAnimationFrame(step));
+    } else {
+      _scoreAnimHandles.delete(elId);
+      setTimeout(() => el.classList.remove('score-up', 'score-down'), 250);
+    }
+  }
+  _scoreAnimHandles.set(elId, requestAnimationFrame(step));
 }
 
 // ==================== TURN MANAGEMENT ====================
@@ -995,25 +1043,35 @@ function gameoverHome() {
 function leaveBotGame() {
   if (!state.gameActive) return;
   if (!confirm(t('game.confirmLeave'))) return;
-  // 패배 처리: 라운드 승수 보장 위해 최종 종료로 강제
+  // 패배 처리: 마지막 라운드로 강제 + 점수 0 (포기 = 자동 패)
   state.currentRound = state.totalRounds;
-  state.botRoundWins = Math.max(state.botRoundWins, state.playerRoundWins + 1);
+  state.playerScore = 0;
   endGame(false, '게임에서 나갔습니다.');
 }
 
 function endGame(playerWins, reason) {
+  // v3.1.1+: playerWins는 "이번 라운드 단어를 못 이은 쪽"의 반대 의미로 들어옴.
+  //   → playerWins=true  : 봇이 실패 → 봇 점수 감점
+  //   → playerWins=false : 플레이어가 실패 → 플레이어 점수 감점
+  // 승패는 최종 누적 점수로만 결정.
   stopTimer();
   disableInput();
 
-  // 라운드 승패 기록
-  if (playerWins) state.playerRoundWins++;
-  else state.botRoundWins++;
+  // 실패자에게 페널티 (음수 방지)
+  if (playerWins) {
+    state.botScore = Math.max(0, state.botScore - FAIL_PENALTY);
+  } else {
+    state.playerScore = Math.max(0, state.playerScore - FAIL_PENALTY);
+  }
+  updateBotRoundDisplay();
 
-  // 다중 라운드: 아직 라운드 남았으면 다음 라운드
+  // 다중 라운드: 아직 라운드 남았으면 페널티 적용 후 다음 라운드 진행
   if (state.totalRounds > 1 && state.currentRound < state.totalRounds) {
     const roundEl = document.getElementById('bot-round-display');
-    if (roundEl) roundEl.textContent = t('game.roundOver', state.currentRound, playerWins ? t('game.win') : t('game.lose'));
-    updateBotRoundDisplay();
+    if (roundEl) {
+      const tag = playerWins ? t('game.botFailed') : t('game.youFailed');
+      roundEl.textContent = t('game.roundOver', state.currentRound, tag);
+    }
 
     setTimeout(() => {
       // 다음 라운드 시작
@@ -1038,35 +1096,22 @@ function endGame(playerWins, reason) {
     return;
   }
 
-  // 최종 게임 종료
+  // 최종 게임 종료 — 누적 점수 비교
   state.gameActive = false;
   gameFinishedProperly = true;
   lastGameWasMulti = false;
 
-  let finalWin;
-  if (state.totalRounds === 1) {
-    finalWin = playerWins;
-  } else {
-    finalWin = state.playerRoundWins > state.botRoundWins;
-  }
+  const finalWin = state.playerScore > state.botScore;
 
-  // 경험치 계산
+  // 경험치 계산 (v3.1.1+: 라운드 승수 보너스 제거, 점수만 반영)
   const expEntry = EXP_TABLE[state.botLevel] || { win: 0, lose: 0 };
   let earnedExp = 0;
   if (state.turnCount >= 2 || state.totalRounds > 1) {
-    // 기본 승/패 경험치
     earnedExp = finalWin ? expEntry.win : expEntry.lose;
-    // 긴단어 보너스
     earnedExp += state.bonusExp;
-    // 한방단어 보너스
     if (finalWin && state.killerFinish) earnedExp += 10;
-    // 점수 비례 보너스: 총점의 5%를 경험치로
+    // 점수 비례 보너스: 총점의 5%를 경험치로 (페널티 적용 후 점수 기준)
     earnedExp += Math.floor(state.playerScore * 0.05);
-    // 다중 라운드 보너스: 라운드 승리 1회당 +3 EXP
-    if (state.totalRounds > 1) {
-      earnedExp += state.playerRoundWins * 3;
-    }
-    // 승리 시 1.5배 보너스
     if (finalWin) {
       earnedExp = Math.floor(earnedExp * 1.5);
     }
@@ -1094,13 +1139,13 @@ function endGame(playerWins, reason) {
     title.textContent = finalWin ? t('game.win') : t('game.lose');
     title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
 
-    document.getElementById('final-player-score').textContent = state.playerScore + t('game.scoreSuffix');
-    document.getElementById('final-bot-score').textContent = state.botScore + t('game.scoreSuffix');
+    animateScoreUpdate('final-player-score', state.playerScore);
+    animateScoreUpdate('final-bot-score', state.botScore);
     document.getElementById('final-bot-name').textContent = botName(state.botLevel);
 
     let reasonText = reason;
     if (state.totalRounds > 1) {
-      reasonText = t('game.multiRoundOver', state.totalRounds, state.playerRoundWins, state.botRoundWins) + ' ' + reasonText;
+      reasonText = t('game.multiFinalScore', state.totalRounds, state.playerScore, state.botScore) + ' ' + reasonText;
     }
     document.getElementById('gameover-reason').textContent =
       reasonText + (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
