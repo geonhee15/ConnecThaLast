@@ -1275,6 +1275,67 @@ body {
   color: white;
 }
 
+.player-count-input {
+  width: 56px;
+  height: 38px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+  -moz-appearance: textfield;
+}
+.player-count-input::-webkit-outer-spin-button,
+.player-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.player-count-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+.player-count-hint {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  color: #888;
+  align-self: center;
+}
+
+/* 3명 이상 멀티: VS 빼고 가로 나열, 가운데 정렬 */
+.players-area.players-area-many {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
+}
+.players-area.players-area-many .player-panel {
+  min-width: 110px;
+}
+.players-area.players-area-many .player-panel.turn-active {
+  outline: 3px solid #667eea;
+  border-radius: 12px;
+  background: rgba(102, 126, 234, 0.06);
+  padding: 6px 4px;
+}
+
+/* 대기실 N인 슬롯 */
+.waiting-players.waiting-many {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+.waiting-players.waiting-many .waiting-player {
+  min-width: 120px;
+}
+.waiting-players.waiting-many .waiting-vs {
+  display: none;
+}
+
 .round-display {
   text-align: center;
   font-size: 0.85rem;

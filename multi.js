@@ -21,11 +21,21 @@ const multi = {
 
 let selectedRounds = 1;
 let selectedGameLang = 'ko'; // 'ko' or 'en' — multiplayer 게임 언어
+let selectedMaxPlayers = 2;  // v3.2.0+ 인원수 (2~30)
 
 function selectRound(n, btn) {
   selectedRounds = n;
   document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+function setMaxPlayers(n) {
+  selectedMaxPlayers = Math.max(2, Math.min(30, parseInt(n, 10) || 2));
+  const input = document.getElementById('room-max-players');
+  if (input) input.value = selectedMaxPlayers;
+}
+function adjustMaxPlayers(delta) {
+  setMaxPlayers(selectedMaxPlayers + delta);
 }
 
 function setRoomGameLang(lang) {
@@ -81,6 +91,7 @@ async function createRoom() {
     modes: roomModes,
     totalRounds: selectedRounds,
     currentRound: 1,
+    maxPlayers: selectedMaxPlayers,
     p1: {
       nickname: p.nickname,
       level: p.level,
@@ -117,7 +128,7 @@ async function createRoom() {
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
     showWaitingRoomTitle(roomTitle);
-    displayRoomModes(roomModes, selectedRounds, gameMode);
+    displayRoomModes(roomModes, selectedRounds, gameMode, selectedMaxPlayers);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '방 생성 실패: ' + e.message;
@@ -151,12 +162,20 @@ async function joinRoomByCode(code) {
       document.getElementById('multi-lobby-msg').textContent = '이미 게임이 시작된 방입니다.';
       return;
     }
-    if (room.p2 && room.p2.online) {
+    // v3.2.0+: 첫 빈 슬롯 찾기 (p2..pN)
+    const maxP = room.maxPlayers || 2;
+    let mySlot = null;
+    for (let i = 2; i <= maxP; i++) {
+      const k = 'p' + i;
+      const sd = room[k];
+      if (!sd || !sd.online) { mySlot = k; break; }
+    }
+    if (!mySlot) {
       document.getElementById('multi-lobby-msg').textContent = '방이 이미 가득 찼습니다.';
       return;
     }
 
-    await ref.child('p2').set({
+    await ref.child(mySlot).set({
       nickname: p.nickname,
       level: p.level,
       userId: p.userId,
@@ -167,15 +186,15 @@ async function joinRoomByCode(code) {
 
     multi.roomId = code;
     multi.roomRef = ref;
-    multi.playerId = 'p2';
+    multi.playerId = mySlot;
     multi.isHost = false;
 
-    ref.child('p2/online').onDisconnect().set(false);
+    ref.child(mySlot + '/online').onDisconnect().set(false);
 
     showScreen('screen-multi-waiting');
     document.getElementById('room-code-display').textContent = code;
     showWaitingRoomTitle(room.title);
-    displayRoomModes(room.modes, room.totalRounds, room.gameMode);
+    displayRoomModes(room.modes, room.totalRounds, room.gameMode, room.maxPlayers);
     listenRoom();
   } catch (e) {
     document.getElementById('multi-lobby-msg').textContent = '참가 실패: ' + e.message;
@@ -202,7 +221,7 @@ function showWaitingRoomTitle(title) {
   else { el.style.display = 'none'; }
 }
 
-function displayRoomModes(roomModes, totalRounds, gameMode) {
+function displayRoomModes(roomModes, totalRounds, gameMode, maxPlayers) {
   const el = document.getElementById('waiting-modes');
   if (!el) return;
   const tags = [];
@@ -216,6 +235,7 @@ function displayRoomModes(roomModes, totalRounds, gameMode) {
   }
   let text = t('multi.modesPrefix') + ' ' + tags.join(', ');
   if (totalRounds > 1) text += ` | ${totalRounds}` + (userSettings.lang === 'en' ? ' rounds' : '라운드');
+  if (maxPlayers && maxPlayers > 2) text += ` | ${maxPlayers}` + (userSettings.lang === 'en' ? 'P' : '인');
   el.textContent = text;
 }
 
@@ -232,7 +252,8 @@ function toggleReady() {
   // 오디오 프리로드 (비동기, 기다리지 않음)
   preloadAudio();
 
-  const ref = multi.roomRef.child('p2/ready');
+  // v3.2.0+: 본인 슬롯의 ready 토글
+  const ref = multi.roomRef.child(multi.playerId + '/ready');
   ref.get().then(snap => {
     const current = snap.val();
     ref.set(!current);
@@ -259,9 +280,14 @@ function startRoomListListener() {
 
     let count = 0;
     for (const [code, room] of Object.entries(rooms)) {
-      // p2가 없거나 오프라인인 방만 표시
-      if (room.p2 && room.p2.online) continue;
       if (!room.p1 || !room.p1.online) continue;
+      // v3.2.0+: 빈 자리가 있는 방만 표시
+      const maxP = room.maxPlayers || 2;
+      let joined = 0;
+      for (let i = 1; i <= maxP; i++) {
+        if (room['p' + i] && room['p' + i].online) joined++;
+      }
+      if (joined >= maxP) continue;
       count++;
 
       const modeTags = [];
@@ -274,6 +300,7 @@ function startRoomListListener() {
         if (room.modes.injeong) modeTags.push(t('select.modeInjeong'));
       }
       if (room.totalRounds > 1) modeTags.push(room.totalRounds + (userSettings.lang === 'en' ? 'R' : '라운드'));
+      modeTags.push(`${joined}/${maxP}` + (userSettings.lang === 'en' ? 'P' : '명'));
 
       const card = document.createElement('div');
       card.className = 'room-list-card';
@@ -313,7 +340,8 @@ async function leaveRoom() {
     if (multi.isHost) {
       await multi.roomRef.remove();
     } else {
-      await multi.roomRef.child('p2').remove();
+      // v3.2.0+: 본인 슬롯만 비우기 (p2 하드코딩 X)
+      await multi.roomRef.child(multi.playerId).remove();
     }
   }
   resetMultiState();
@@ -363,50 +391,87 @@ function listenRoom() {
   multi.listeners.push(() => multi.roomRef.off('value', unsub));
 }
 
+// v3.2.0+: N인 대기실 — 슬롯을 maxPlayers만큼 동적 생성
 function updateWaitingUI(room) {
-  const wp1 = document.getElementById('waiting-p1');
-  const wp2 = document.getElementById('waiting-p2');
+  const maxP = room.maxPlayers || 2;
+  const container = document.querySelector('#screen-multi-waiting .waiting-players');
   const statusEl = document.getElementById('waiting-status');
   const startBtn = document.getElementById('btn-multi-start');
   const readyBtn = document.getElementById('btn-multi-ready');
 
-  if (room.p1) {
-    wp1.innerHTML = `<div class="waiting-avatar">&#128100;</div>
-      <div class="waiting-name">${room.p1.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p1.level}</span></div>
-      <div class="ready-badge ready">${t('multi.host')}</div>`;
+  if (container) {
+    container.classList.toggle('waiting-many', maxP > 2);
+
+    // 슬롯 카드 (필요 시 한 번에 다시 그림)
+    const slotsNeeded = maxP;
+    let html = '';
+    for (let i = 1; i <= maxP; i++) {
+      const pkey = 'p' + i;
+      const pd = room[pkey];
+      const isHostSlot = (i === 1);
+      let badge, name, avatarStyle = '';
+      if (pd && pd.online) {
+        const isReady = pd.ready;
+        badge = isHostSlot
+          ? `<div class="ready-badge ready">${t('multi.host')}</div>`
+          : `<div class="ready-badge ${isReady ? 'ready' : 'not-ready'}">${isReady ? t('multi.ready') : t('multi.notReady')}</div>`;
+        name = `<div class="waiting-name">${pd.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${pd.level}</span></div>`;
+      } else {
+        badge = '';
+        name = `<div class="waiting-name" style="color:#ccc">${t('multi.waiting')}</div>`;
+        avatarStyle = ' style="opacity:0.3"';
+      }
+      html += `<div class="waiting-player" id="waiting-${pkey}">
+        <div class="waiting-avatar"${avatarStyle}>&#128100;</div>
+        ${name}
+        ${badge}
+      </div>`;
+      // 2명 모드일 때만 VS
+      if (maxP === 2 && i === 1) {
+        html += `<div class="waiting-vs" data-i18n="game.vs">VS</div>`;
+      }
+    }
+    container.innerHTML = html;
   }
 
-  if (room.p2 && room.p2.online) {
-    const isReady = room.p2.ready;
-    wp2.innerHTML = `<div class="waiting-avatar">&#128100;</div>
-      <div class="waiting-name">${room.p2.nickname}<br><span style="font-size:0.75rem;color:#888">Lv.${room.p2.level}</span></div>
-      <div class="ready-badge ${isReady ? 'ready' : 'not-ready'}">${isReady ? t('multi.ready') : t('multi.notReady')}</div>`;
+  // 준비 상태 집계
+  let onlineGuests = 0, readyGuests = 0;
+  for (let i = 2; i <= maxP; i++) {
+    const pd = room['p' + i];
+    if (pd && pd.online) {
+      onlineGuests++;
+      if (pd.ready) readyGuests++;
+    }
+  }
+  const allFilledAndReady = onlineGuests === (maxP - 1) && readyGuests === onlineGuests;
 
-    if (multi.isHost) {
-      // 호스트: p2가 준비되면 시작 가능
-      if (isReady) {
-        statusEl.textContent = t('multi.allReady');
-        startBtn.style.display = '';
-      } else {
-        statusEl.textContent = t('multi.opponentNotReady');
-        startBtn.style.display = 'none';
-      }
-      readyBtn.style.display = 'none';
-    } else {
-      // 게스트: 준비 버튼 표시
+  if (multi.isHost) {
+    if (onlineGuests === 0) {
+      statusEl.textContent = t('multi.waitingOpponent');
       startBtn.style.display = 'none';
+    } else if (!allFilledAndReady) {
+      // 빈 자리 있거나 미준비 게스트 있음
+      statusEl.textContent = (onlineGuests < maxP - 1)
+        ? t('multi.waitingOpponent')
+        : t('multi.opponentNotReady');
+      startBtn.style.display = 'none';
+    } else {
+      statusEl.textContent = t('multi.allReady');
+      startBtn.style.display = '';
+    }
+    if (readyBtn) readyBtn.style.display = 'none';
+  } else {
+    // 게스트
+    startBtn.style.display = 'none';
+    const myData = room[multi.playerId];
+    const isReady = myData && myData.ready;
+    if (readyBtn) {
       readyBtn.style.display = '';
       readyBtn.textContent = isReady ? t('multi.cancelReady') : t('multi.readyBtn');
       readyBtn.setAttribute('class', isReady ? 'btn btn-secondary btn-large' : 'btn btn-primary btn-large');
       readyBtn.onclick = toggleReady;
-      statusEl.textContent = isReady ? t('multi.waitingHost') : t('multi.pressReady');
     }
-  } else {
-    wp2.innerHTML = `<div class="waiting-avatar" style="opacity:0.3">&#128100;</div>
-      <div class="waiting-name" style="color:#ccc">${t('multi.waiting')}</div>`;
-    statusEl.textContent = t('multi.waitingOpponent');
-    startBtn.style.display = 'none';
-    if (readyBtn) readyBtn.style.display = 'none';
+    statusEl.textContent = isReady ? t('multi.waitingHost') : t('multi.pressReady');
   }
 }
 
@@ -417,17 +482,25 @@ async function startMultiGame() {
 
   preloadAudio();
 
-  // 방에 저장된 gameMode 읽어 시작 단어를 해당 언어로 생성
-  const snap = await multi.roomRef.child('gameMode').get();
-  const gameMode = snap.val() || 'ko';
+  // 방에 저장된 gameMode + maxPlayers 읽기
+  const snap = await multi.roomRef.get();
+  const room = snap.val() || {};
+  const gameMode = room.gameMode || 'ko';
+  const maxP = room.maxPlayers || 2;
   state.gameLang = gameMode;
 
   const startWord = getRandomStartWord();
   const lastChar = startWord[startWord.length - 1];
+  // v3.2.0+: 첫 턴 무작위 (p1 ~ pN 중 온라인 슬롯)
+  const onlinePlayers = [];
+  for (let i = 1; i <= maxP; i++) {
+    if (room['p' + i] && room['p' + i].online) onlinePlayers.push('p' + i);
+  }
+  const firstTurn = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)] || 'p1';
 
   multi.roomRef.update({
     status: 'playing',
-    turn: Math.random() > 0.5 ? 'p1' : 'p2',
+    turn: firstTurn,
     turnCount: 1,
     timerMax: 10,
     currentWord: startWord,
@@ -459,14 +532,26 @@ function handleGameUpdate(room) {
     initMultiGameUI(room);
   }
 
-  document.getElementById('multi-p1-name').innerHTML = room.p1.nickname + ' ' + roleBadgeHTML(room.p1.nickname, 40);
-  document.getElementById('multi-p2-name').innerHTML = room.p2.nickname + ' ' + roleBadgeHTML(room.p2.nickname, 40);
+  const maxP = room.maxPlayers || 2;
+  // v3.2.0+: 모든 슬롯의 이름/점수 갱신
+  for (let i = 1; i <= maxP; i++) {
+    const pkey = 'p' + i;
+    const pd = room[pkey];
+    const nameEl = document.getElementById('multi-' + pkey + '-name');
+    const scoreEl = document.getElementById('multi-' + pkey + '-score');
+    if (nameEl && pd) {
+      nameEl.innerHTML = pd.nickname + ' ' + roleBadgeHTML(pd.nickname, 32);
+    } else if (nameEl) {
+      nameEl.innerHTML = `<span style="opacity:0.5">${t('multi.waiting')}</span>`;
+    }
+    if (scoreEl) animateScoreUpdate('multi-' + pkey + '-score', (pd && pd.score) || 0);
+  }
+  // 현재 턴 플레이어 강조 (N>2일 때만 outline 표시)
+  document.querySelectorAll('#screen-multi-game .player-panel').forEach(el => {
+    el.classList.toggle('turn-active', el.dataset.pkey === room.turn);
+  });
   const totalRounds = room.totalRounds || 1;
   const currentRound = room.currentRound || 1;
-
-  // v3.1.1+: 라운드 승수 표기 제거, 누적 점수만 — 애니메이션 적용
-  animateScoreUpdate('multi-p1-score', room.p1.score || 0);
-  animateScoreUpdate('multi-p2-score', room.p2.score || 0);
 
   // 라운드 표시
   const roundEl = document.getElementById('multi-round-display');
@@ -502,7 +587,9 @@ function handleGameUpdate(room) {
     btn.disabled = false;
     input.focus();
   } else {
-    const opName = multi.playerId === 'p1' ? room.p2.nickname : room.p1.nickname;
+    // v3.2.0+: 현재 턴 플레이어의 닉네임 조회
+    const turnData = room[room.turn] || {};
+    const opName = turnData.nickname || '?';
     turnInd.textContent = t('multi.opponentTurn', opName);
     turnInd.className = 'turn-indicator bot-turn';
     btn.disabled = true;
@@ -555,10 +642,39 @@ async function initMultiGameUI(room) {
   lastActionTimestamp = 0;
   multi.myScore = 0;
   multi.opScore = 0;
+
+  // v3.2.0+: maxPlayers에 맞춰 게임 화면 플레이어 영역 동적 구성
+  buildMultiPlayersArea(room);
+
   // 타이핑 리스너 시작
   listenMultiTyping();
   // WAV 파일 프리로드 (백그라운드)
   preloadAudio();
+}
+
+// v3.2.0+: 게임 화면 플레이어 패널을 maxPlayers만큼 생성
+function buildMultiPlayersArea(room) {
+  const maxP = room.maxPlayers || 2;
+  const container = document.querySelector('#screen-multi-game .players-area');
+  if (!container) return;
+  container.classList.toggle('players-area-many', maxP > 2);
+
+  let html = '';
+  for (let i = 1; i <= maxP; i++) {
+    const pkey = 'p' + i;
+    const pd = room[pkey];
+    const isMe = pkey === multi.playerId;
+    const cls = isMe ? 'player-me' : (maxP === 2 ? 'player-bot' : '');
+    html += `<div class="player-panel ${cls}" data-pkey="${pkey}">
+      <div class="player-avatar">&#128100;</div>
+      <div class="player-name" id="multi-${pkey}-name">${(pd && pd.nickname) || t('multi.waiting')}</div>
+      <div class="player-score" id="multi-${pkey}-score">0${t('game.scoreSuffix')}</div>
+    </div>`;
+    if (maxP === 2 && i === 1) {
+      html += `<div class="vs-text">VS</div>`;
+    }
+  }
+  container.innerHTML = html;
 }
 
 function showMultiNextCharHint(char) {
@@ -661,14 +777,20 @@ async function handleMultiTimeout() {
       });
       return;
     }
-    // 점수 감점 + 다음 라운드 시작
+    // 점수 감점 + 다음 라운드 시작 (v3.2.0+: N인 무작위 첫 턴)
     state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
     const startWord = getRandomStartWord();
     const lastChar = startWord[startWord.length - 1];
+    const maxP = room.maxPlayers || 2;
+    const onlinePlayers = [];
+    for (let i = 1; i <= maxP; i++) {
+      if (room['p' + i] && room['p' + i].online) onlinePlayers.push('p' + i);
+    }
+    const firstTurn = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)] || 'p1';
     await multi.roomRef.update({
       [`${failedField}/score`]: newScore,
       currentRound: currentRound + 1,
-      turn: Math.random() > 0.5 ? 'p1' : 'p2',
+      turn: firstTurn,
       turnCount: 1,
       timerMax: 10,
       currentWord: startWord,
@@ -682,14 +804,19 @@ async function handleMultiTimeout() {
       }
     });
   } else {
-    // 마지막 라운드 (또는 단일 라운드): 페널티 적용 후 점수 비교로 승자 결정
-    const oppField = failedField === 'p1' ? 'p2' : 'p1';
-    const oppScore = (room[oppField] && room[oppField].score) || 0;
-    const winner = newScore > oppScore ? failedField : (oppScore > newScore ? oppField : failedField);
+    // 마지막 라운드: 페널티 적용 후 모든 슬롯 중 최고 점수가 승자
+    const maxP = room.maxPlayers || 2;
+    let topKey = failedField, topScore = newScore;
+    for (let i = 1; i <= maxP; i++) {
+      const pk = 'p' + i;
+      if (pk === failedField) continue;
+      const s = (room[pk] && room[pk].score) || 0;
+      if (s > topScore) { topScore = s; topKey = pk; }
+    }
     await multi.roomRef.update({
       [`${failedField}/score`]: newScore,
       status: 'finished',
-      winner: winner,
+      winner: topKey,
       reason: t('game.timeoutShort')
     });
   }
@@ -707,9 +834,16 @@ async function handleMultiRoundFailIfHost(room) {
   state.gameLang = room.gameMode === 'en' ? 'en' : 'ko';
   const startWord = getRandomStartWord();
   const lastChar = startWord[startWord.length - 1];
+  // v3.2.0+: N인 무작위 첫 턴
+  const maxP = room.maxPlayers || 2;
+  const onlinePlayers = [];
+  for (let i = 1; i <= maxP; i++) {
+    if (room['p' + i] && room['p' + i].online) onlinePlayers.push('p' + i);
+  }
+  const firstTurn = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)] || 'p1';
   await multi.roomRef.update({
     currentRound: currentRound + 1,
-    turn: Math.random() > 0.5 ? 'p1' : 'p2',
+    turn: firstTurn,
     turnCount: 1,
     timerMax: 10,
     currentWord: startWord,
@@ -753,7 +887,18 @@ async function submitMultiWord() {
   // v3.1.1+: 새 점수 체계 — calculateScore(game.js) 공유 사용
   const score = calculateScore(word);
   const lastChar = word[word.length - 1];
-  const nextTurn = multi.playerId === 'p1' ? 'p2' : 'p1';
+  // v3.2.0+: N인 턴 사이클 — 다음 슬롯이 온라인이 아닐 경우 계속 다음으로
+  const roomSnap = await multi.roomRef.get();
+  const roomNow = roomSnap.val() || {};
+  const maxP = roomNow.maxPlayers || 2;
+  const myIdx = parseInt(multi.playerId.slice(1), 10);
+  let nextTurn = null;
+  for (let step = 1; step <= maxP; step++) {
+    const candIdx = ((myIdx - 1 + step) % maxP) + 1;
+    const candKey = 'p' + candIdx;
+    if (roomNow[candKey] && roomNow[candKey].online) { nextTurn = candKey; break; }
+  }
+  if (!nextTurn) nextTurn = multi.playerId; // fallback (혼자 남음)
   const newTurnCount = multi.turnCount + 1;
   const newTimerMax = Math.max(2, 10 - (newTurnCount - 1) * 0.25);
 
@@ -812,14 +957,26 @@ function handleMultiGameOver(room) {
   room._handled = true;
 
   const totalRounds = room.totalRounds || 1;
+  const maxP = room.maxPlayers || 2;
 
-  // v3.1.1+: 승자 = 최종 점수가 더 높은 쪽 (room.winner 무시)
-  const myData = room[multi.playerId];
-  const opId = multi.playerId === 'p1' ? 'p2' : 'p1';
-  const opData = room[opId];
-  const myScore = (myData && myData.score) || 0;
-  const opScore = (opData && opData.score) || 0;
-  const finalWin = myScore > opScore;
+  // v3.2.0+: 승자 = 모든 슬롯 중 최고 점수 (동점 시 슬롯 번호 작은 쪽)
+  let topScore = -Infinity;
+  let topKey = null;
+  const allPlayers = [];
+  for (let i = 1; i <= maxP; i++) {
+    const pd = room['p' + i];
+    if (!pd) continue;
+    const s = pd.score || 0;
+    allPlayers.push({ pkey: 'p' + i, score: s, nickname: pd.nickname });
+    if (s > topScore) { topScore = s; topKey = 'p' + i; }
+  }
+  const myData = room[multi.playerId] || { score: 0, nickname: '' };
+  const myScore = myData.score || 0;
+  const finalWin = (topKey === multi.playerId);
+
+  // 화면에 비교용 상대 데이터 (가장 점수 높은 다른 슬롯 또는 처음 비-나)
+  const opData = allPlayers.find(p => p.pkey !== multi.playerId) || { score: 0, nickname: '?' };
+  const opScore = opData.score || 0;
 
   let earnedExp = finalWin ? 15 : Math.max(2, Math.floor(myScore * 0.03));
   // 점수 비례 보너스: 총점의 5%
@@ -838,6 +995,7 @@ function handleMultiGameOver(room) {
     roomRef: multi.roomRef,
     modes: room.modes || {},
     gameMode: room.gameMode || 'ko',
+    maxPlayers: maxP,
     totalRounds: totalRounds,
     p1: room.p1,
     p2: room.p2
@@ -880,6 +1038,7 @@ async function multiRematch() {
     gameMode: lastMultiGame.gameMode || 'ko',
     modes: lastMultiGame.modes,
     totalRounds: lastMultiGame.totalRounds,
+    maxPlayers: lastMultiGame.maxPlayers || 2,
     currentRound: 1,
     rematchFrom: lastMultiGame.roomCode,
     p1: {
@@ -915,7 +1074,7 @@ async function multiRematch() {
 
   showScreen('screen-multi-waiting');
   document.getElementById('room-code-display').textContent = code;
-  displayRoomModes(lastMultiGame.modes, lastMultiGame.totalRounds, lastMultiGame.gameMode);
+  displayRoomModes(lastMultiGame.modes, lastMultiGame.totalRounds, lastMultiGame.gameMode, lastMultiGame.maxPlayers);
   listenRoom();
 
   lastMultiGame = null;
