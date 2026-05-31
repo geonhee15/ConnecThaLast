@@ -1056,59 +1056,47 @@ function handleMultiGameOver(room) {
     const title = document.getElementById('gameover-title');
     const resultContainer = document.querySelector('#screen-gameover .gameover-result');
 
+    const _ordinalLabel = (r) => {
+      if (userSettings.lang === 'en') {
+        const s = ['th', 'st', 'nd', 'rd'];
+        const v = r % 100;
+        return r + (s[(v - 20) % 10] || s[v] || s[0]);
+      }
+      return r + '등';
+    };
+
+    // v3.2.1+: 2P 포함 모든 게임에서 동일한 랭킹 보드 표시 — 모든 참가자가 같은 결과 봄
     if (maxP === 2) {
-      // 2P: 기존 승/패 UI 유지
+      // 2P 타이틀은 친숙한 "승리/패배" 유지, 본문은 랭킹 보드
       title.textContent = finalWin ? t('game.win') : t('game.lose');
       title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
-      // 결과 패널 복구 (3+ 게임 후 리매치로 돌아왔을 수도 있음)
-      resultContainer.innerHTML = `
-        <div class="result-panel">
-          <div class="result-label" data-i18n="game.player">${t('game.player')}</div>
-          <div class="result-score" id="final-player-score">0${t('game.scoreSuffix')}</div>
-        </div>
-        <div class="result-vs" data-i18n="game.vs">${t('game.vs')}</div>
-        <div class="result-panel">
-          <div class="result-label" id="final-bot-name">${opData.nickname}</div>
-          <div class="result-score" id="final-bot-score">0${t('game.scoreSuffix')}</div>
-        </div>
-      `;
-      animateScoreUpdate('final-player-score', myScore);
-      animateScoreUpdate('final-bot-score', opScore);
     } else {
-      // v3.2.1+: 3+인 게임 — 등수 랭킹 표시
-      const _ordinalLabel = (r) => {
-        if (userSettings.lang === 'en') {
-          const s = ['th', 'st', 'nd', 'rd'];
-          const v = r % 100;
-          return r + (s[(v - 20) % 10] || s[v] || s[0]);
-        }
-        return r + '등';
-      };
       title.textContent = _ordinalLabel(myRank);
       title.className = 'gameover-title ' + (myRank === 1 ? 'win' : (myRank === allPlayers.length ? 'lose' : ''));
-      let html = '<div class="gameover-rankings">';
-      const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
-      for (const p of allPlayers) {
-        const meCls = p.isMe ? ' me' : '';
-        const medal = medals[p.rank] || '';
-        html += `<div class="rank-row${meCls}">
-          <span class="rank-num">${medal} ${_ordinalLabel(p.rank)}</span>
-          <span class="rank-name">${p.nickname}</span>
-          <span class="rank-score">${p.score}${t('game.scoreSuffix')}</span>
-        </div>`;
-      }
-      html += '</div>';
-      resultContainer.innerHTML = html;
     }
 
-    let reasonText = room.reason || '';
-    if (maxP === 2 && totalRounds > 1) {
-      reasonText = t('game.multiFinalScore', totalRounds, myScore, opScore) + ' ' + reasonText;
-    } else if (maxP > 2) {
-      reasonText = (totalRounds > 1 ? `${totalRounds}` + (userSettings.lang === 'en' ? 'R ' : '라운드 ') : '') +
-                   `${maxP}` + (userSettings.lang === 'en' ? `P · ${myRank}` + (myRank === 1 ? 'st' : myRank === 2 ? 'nd' : myRank === 3 ? 'rd' : 'th') : `명 · ${myRank}등`) +
-                   (reasonText ? ' · ' + reasonText : '');
+    // 랭킹 보드 본문 (항상 동일 형식 — 메달 + 등수 + 닉네임 + 점수, 본인 행 강조)
+    let html = '<div class="gameover-rankings">';
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    for (const p of allPlayers) {
+      const meCls = p.isMe ? ' me' : '';
+      const medal = medals[p.rank] || '';
+      html += `<div class="rank-row${meCls}">
+        <span class="rank-num">${medal} ${_ordinalLabel(p.rank)}</span>
+        <span class="rank-name">${p.nickname}</span>
+        <span class="rank-score">${p.score}${t('game.scoreSuffix')}</span>
+      </div>`;
     }
+    html += '</div>';
+    resultContainer.innerHTML = html;
+
+    // 요약 한 줄 (라운드 · 인원 · 내 등수)
+    let reasonText = room.reason || '';
+    const playersLabel = userSettings.lang === 'en' ? `${maxP}P` : `${maxP}명`;
+    const roundsLabel = totalRounds > 1 ? (userSettings.lang === 'en' ? `${totalRounds}R` : `${totalRounds}라운드`) : '';
+    const myRankLabel = (maxP === 2) ? '' : _ordinalLabel(myRank);
+    const summary = [roundsLabel, playersLabel, myRankLabel].filter(Boolean).join(' · ');
+    if (summary) reasonText = summary + (reasonText ? ' · ' + reasonText : '');
     reasonText += (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
     document.getElementById('gameover-reason').textContent = reasonText;
 
