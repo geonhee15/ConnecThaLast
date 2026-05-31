@@ -787,7 +787,7 @@ async function handleMultiTimeout() {
       if (room['p' + i] && room['p' + i].online) onlinePlayers.push('p' + i);
     }
     const firstTurn = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)] || 'p1';
-    await multi.roomRef.update({
+    const midUpdates = {
       [`${failedField}/score`]: newScore,
       currentRound: currentRound + 1,
       turn: firstTurn,
@@ -802,23 +802,40 @@ async function handleMultiTimeout() {
         by: 'system',
         timestamp: Date.now()
       }
-    });
+    };
+    // v3.2.1+: 1대1 라운드 패배 → 상대방 보너스 +25
+    if (maxP === 2) {
+      const oppKey = failedField === 'p1' ? 'p2' : 'p1';
+      const oppCur = (room[oppKey] && room[oppKey].score) || 0;
+      midUpdates[`${oppKey}/score`] = oppCur + (typeof DUEL_WIN_BONUS !== 'undefined' ? DUEL_WIN_BONUS : 25);
+    }
+    await multi.roomRef.update(midUpdates);
   } else {
-    // 마지막 라운드: 페널티 적용 후 모든 슬롯 중 최고 점수가 승자
+    // 마지막 라운드: 페널티 적용 후 (1대1이면 상대 보너스) 모든 슬롯 중 최고 점수가 승자
     const maxP = room.maxPlayers || 2;
+    const finalUpdates = {
+      [`${failedField}/score`]: newScore,
+      status: 'finished',
+      reason: t('game.timeoutShort')
+    };
+    // v3.2.1+: 1대1이면 상대방 보너스
+    if (maxP === 2) {
+      const oppKey = failedField === 'p1' ? 'p2' : 'p1';
+      const oppCur = (room[oppKey] && room[oppKey].score) || 0;
+      finalUpdates[`${oppKey}/score`] = oppCur + (typeof DUEL_WIN_BONUS !== 'undefined' ? DUEL_WIN_BONUS : 25);
+    }
+    // 최고 점수 슬롯 찾기 (보너스 반영 후)
     let topKey = failedField, topScore = newScore;
     for (let i = 1; i <= maxP; i++) {
       const pk = 'p' + i;
       if (pk === failedField) continue;
-      const s = (room[pk] && room[pk].score) || 0;
+      const s = (finalUpdates[`${pk}/score`] != null)
+        ? finalUpdates[`${pk}/score`]
+        : ((room[pk] && room[pk].score) || 0);
       if (s > topScore) { topScore = s; topKey = pk; }
     }
-    await multi.roomRef.update({
-      [`${failedField}/score`]: newScore,
-      status: 'finished',
-      winner: topKey,
-      reason: t('game.timeoutShort')
-    });
+    finalUpdates.winner = topKey;
+    await multi.roomRef.update(finalUpdates);
   }
 }
 
@@ -959,32 +976,66 @@ function handleMultiGameOver(room) {
   const totalRounds = room.totalRounds || 1;
   const maxP = room.maxPlayers || 2;
 
-  // v3.2.0+: 승자 = 모든 슬롯 중 최고 점수 (동점 시 슬롯 번호 작은 쪽)
-  let topScore = -Infinity;
-  let topKey = null;
+  // v3.2.0+: 모든 슬롯 점수 수집
   const allPlayers = [];
   for (let i = 1; i <= maxP; i++) {
     const pd = room['p' + i];
     if (!pd) continue;
     const s = pd.score || 0;
-    allPlayers.push({ pkey: 'p' + i, score: s, nickname: pd.nickname });
-    if (s > topScore) { topScore = s; topKey = 'p' + i; }
+    allPlayers.push({
+      pkey: 'p' + i,
+      score: s,
+      nickname: pd.nickname,
+      isMe: ('p' + i) === multi.playerId
+    });
   }
+  // 점수 내림차순 정렬 + 등수 매기기 (동점 처리: 같은 등수)
+  allPlayers.sort((a, b) => b.score - a.score);
+  if (allPlayers.length > 0) {
+    allPlayers[0].rank = 1;
+    for (let i = 1; i < allPlayers.length; i++) {
+      allPlayers[i].rank = (allPlayers[i].score === allPlayers[i - 1].score)
+        ? allPlayers[i - 1].rank
+        : (i + 1);
+    }
+  }
+  const topKey = allPlayers[0] ? allPlayers[0].pkey : null;
   const myData = room[multi.playerId] || { score: 0, nickname: '' };
   const myScore = myData.score || 0;
+  const myEntry = allPlayers.find(p => p.isMe);
+  const myRank = myEntry ? myEntry.rank : allPlayers.length;
   const finalWin = (topKey === multi.playerId);
 
-  // 화면에 비교용 상대 데이터 (가장 점수 높은 다른 슬롯 또는 처음 비-나)
-  const opData = allPlayers.find(p => p.pkey !== multi.playerId) || { score: 0, nickname: '?' };
+  // 비교 화면용 (2P): 가장 점수 높은 다른 슬롯
+  const opData = allPlayers.find(p => !p.isMe) || { score: 0, nickname: '?' };
   const opScore = opData.score || 0;
 
-  let earnedExp = finalWin ? 15 : Math.max(2, Math.floor(myScore * 0.03));
-  // 점수 비례 보너스: 총점의 5%
+  // v3.2.1+: 등수 기반 EXP — 1등이 가장 많이, 등수 내려갈수록 적게
+  function _expByRank(rank) {
+    if (rank === 1) return 15;
+    if (rank === 2) return 10;
+    if (rank === 3) return 7;
+    if (rank === 4) return 5;
+    return 3;
+  }
+  let earnedExp;
+  if (maxP === 2) {
+    // 2P: 기존 공식 유지
+    earnedExp = finalWin ? 15 : Math.max(2, Math.floor(myScore * 0.03));
+  } else {
+    earnedExp = _expByRank(myRank);
+  }
   earnedExp += Math.floor(myScore * 0.05);
   if (multi.turnCount >= 2 || totalRounds > 1) {
     addExp(earnedExp);
     const p = getActiveProfile();
-    if (finalWin) p.wins++; else p.losses++;
+    if (maxP === 2) {
+      // 2P: 기존 승/패 카운트 유지
+      if (finalWin) p.wins++; else p.losses++;
+    } else {
+      // v3.2.1+: 3+ 게임은 1등만 wins++, 나머지는 카운트 안 함
+      if (myRank === 1) p.wins++;
+    }
     saveProfile();
   }
 
@@ -1003,15 +1054,61 @@ function handleMultiGameOver(room) {
 
   setTimeout(() => {
     const title = document.getElementById('gameover-title');
-    title.textContent = finalWin ? t('game.win') : t('game.lose');
-    title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
+    const resultContainer = document.querySelector('#screen-gameover .gameover-result');
 
-    animateScoreUpdate('final-player-score', myScore);
-    animateScoreUpdate('final-bot-score', opScore);
-    document.getElementById('final-bot-name').textContent = opData.nickname;
+    if (maxP === 2) {
+      // 2P: 기존 승/패 UI 유지
+      title.textContent = finalWin ? t('game.win') : t('game.lose');
+      title.className = 'gameover-title ' + (finalWin ? 'win' : 'lose');
+      // 결과 패널 복구 (3+ 게임 후 리매치로 돌아왔을 수도 있음)
+      resultContainer.innerHTML = `
+        <div class="result-panel">
+          <div class="result-label" data-i18n="game.player">${t('game.player')}</div>
+          <div class="result-score" id="final-player-score">0${t('game.scoreSuffix')}</div>
+        </div>
+        <div class="result-vs" data-i18n="game.vs">${t('game.vs')}</div>
+        <div class="result-panel">
+          <div class="result-label" id="final-bot-name">${opData.nickname}</div>
+          <div class="result-score" id="final-bot-score">0${t('game.scoreSuffix')}</div>
+        </div>
+      `;
+      animateScoreUpdate('final-player-score', myScore);
+      animateScoreUpdate('final-bot-score', opScore);
+    } else {
+      // v3.2.1+: 3+인 게임 — 등수 랭킹 표시
+      const _ordinalLabel = (r) => {
+        if (userSettings.lang === 'en') {
+          const s = ['th', 'st', 'nd', 'rd'];
+          const v = r % 100;
+          return r + (s[(v - 20) % 10] || s[v] || s[0]);
+        }
+        return r + '등';
+      };
+      title.textContent = _ordinalLabel(myRank);
+      title.className = 'gameover-title ' + (myRank === 1 ? 'win' : (myRank === allPlayers.length ? 'lose' : ''));
+      let html = '<div class="gameover-rankings">';
+      const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+      for (const p of allPlayers) {
+        const meCls = p.isMe ? ' me' : '';
+        const medal = medals[p.rank] || '';
+        html += `<div class="rank-row${meCls}">
+          <span class="rank-num">${medal} ${_ordinalLabel(p.rank)}</span>
+          <span class="rank-name">${p.nickname}</span>
+          <span class="rank-score">${p.score}${t('game.scoreSuffix')}</span>
+        </div>`;
+      }
+      html += '</div>';
+      resultContainer.innerHTML = html;
+    }
 
     let reasonText = room.reason || '';
-    if (totalRounds > 1) reasonText = t('game.multiFinalScore', totalRounds, myScore, opScore) + ' ' + reasonText;
+    if (maxP === 2 && totalRounds > 1) {
+      reasonText = t('game.multiFinalScore', totalRounds, myScore, opScore) + ' ' + reasonText;
+    } else if (maxP > 2) {
+      reasonText = (totalRounds > 1 ? `${totalRounds}` + (userSettings.lang === 'en' ? 'R ' : '라운드 ') : '') +
+                   `${maxP}` + (userSettings.lang === 'en' ? `P · ${myRank}` + (myRank === 1 ? 'st' : myRank === 2 ? 'nd' : myRank === 3 ? 'rd' : 'th') : `명 · ${myRank}등`) +
+                   (reasonText ? ' · ' + reasonText : '');
+    }
     reasonText += (earnedExp > 0 ? ` (+${earnedExp} EXP)` : ' (+0 EXP)');
     document.getElementById('gameover-reason').textContent = reasonText;
 
