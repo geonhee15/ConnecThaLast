@@ -970,6 +970,8 @@ function calculateScore(word) {
 
 // 실패 시 감점
 const FAIL_PENALTY = 25;
+// v3.2.1+: 1대1 멀티에서 상대 실패 시 보너스
+const DUEL_WIN_BONUS = 25;
 
 // ==================== 점수 애니메이션 (롤링 카운터) ====================
 const _scoreAnimHandles = new Map();
