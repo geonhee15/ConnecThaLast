@@ -1239,21 +1239,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const multiInput = document.getElementById('multi-word-input');
   if (!multiInput) return;
 
-  let composing = false;
-  let submitPending = false;
-
-  multiInput.addEventListener('compositionstart', () => { composing = true; });
+  // v3.2.2+: 공용 Enter 헬퍼 사용 (game.js bindEnterSubmit) — 한글 조합 중 Enter 도 한 번에 제출
+  bindEnterSubmit(multiInput, () => submitMultiWord());
   multiInput.addEventListener('compositionend', () => {
-    composing = false;
     updateMultiTyping(multiInput.value);
-    if (submitPending) { submitPending = false; submitMultiWord(); }
-  });
-  multiInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (composing || e.isComposing) { submitPending = true; return; }
-      submitMultiWord();
-    }
   });
   multiInput.addEventListener('input', () => {
     refreshMultiPlaceholder();

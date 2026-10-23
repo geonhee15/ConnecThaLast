@@ -2,3 +2,4 @@ Reference/
 mediaWords.js
 .DS_Store
 Boss_BGM.wav
+.claude/settings.local.json

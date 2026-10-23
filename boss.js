@@ -476,16 +476,37 @@ function endBossBattle(playerWins) {
 // ==================== INPUT HANDLING ====================
 
 document.addEventListener('DOMContentLoaded', () => {
+  // v3.2.2+: 한글 조합 중 Enter 도 한 번에 제출 (game.js bindEnterSubmit 와 같은 방식)
+  let bossEnterPending = false;
+  let bossEnterLastFire = 0;
+
+  function submitCurrentBossAnswer() {
+    if (!boss.active || boss.ended) return;
+    // 조합 종료 후 Enter 가 한 번 더 오는 브라우저 대비 150ms 중복 방지
+    const now = Date.now();
+    if (now - bossEnterLastFire < 150) return;
+    bossEnterLastFire = now;
+    const idx = boss.answerIndex;
+    if (idx >= 3) return;
+    const input = document.getElementById('boss-ans-' + idx);
+    if (!input || input.disabled) return;
+    handleBossAnswer(idx);
+  }
+
   document.addEventListener('keydown', (e) => {
     if (!boss.active || boss.ended) return;
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (e.isComposing) return;
-      const idx = boss.answerIndex;
-      if (idx >= 3) return;
-      const input = document.getElementById('boss-ans-' + idx);
-      if (!input || input.disabled) return;
-      setTimeout(() => handleBossAnswer(idx), 10);
-    }
+    if (!isEnterKey(e)) return;
+    e.preventDefault();
+    if (e.isComposing || e.keyCode === 229) { bossEnterPending = true; return; }
+    bossEnterPending = false;
+    submitCurrentBossAnswer();
+  });
+
+  // 보스 답변 input 은 동적으로 생성되므로 document 레벨에서 compositionend 를 받는다
+  document.addEventListener('compositionend', (e) => {
+    if (!bossEnterPending) return;
+    bossEnterPending = false;
+    if (!e.target || !e.target.classList || !e.target.classList.contains('boss-word-answer')) return;
+    setTimeout(submitCurrentBossAnswer, 0);
   });
 });

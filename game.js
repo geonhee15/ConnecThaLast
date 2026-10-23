@@ -1848,27 +1848,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==================== INPUT HANDLING ====================
+// v3.2.2+: Enter 키 공용 헬퍼 (한글 IME 호환)
+// 한글을 조합하는 도중 Enter를 누르면 브라우저가 keyCode 229 / isComposing=true 인
+// keydown만 보내고, 조합이 끝난 뒤 "진짜" Enter 를 다시 보내지 않는 경우가 많다.
+// 예전 코드는 이 이벤트를 그냥 무시해서 Enter 를 두 번 눌러야 입력이 됐다.
+// → 조합 중 Enter 는 "대기"로 표시해 두고 compositionend 직후 바로 제출한다.
+function isEnterKey(e) {
+  return e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter' || e.keyCode === 13;
+}
+
+function bindEnterSubmit(input, onSubmit) {
+  if (!input) return;
+  let pending = false;
+  let lastFire = 0;
+
+  function fire() {
+    // 브라우저에 따라 조합 종료 후 Enter 가 한 번 더 올 수 있으므로 150ms 내 중복 호출 무시
+    const now = Date.now();
+    if (now - lastFire < 150) return;
+    lastFire = now;
+    onSubmit();
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (!isEnterKey(e)) return;
+    e.preventDefault();
+    if (e.isComposing || e.keyCode === 229) { pending = true; return; }
+    pending = false;
+    fire();
+  });
+  input.addEventListener('compositionend', () => {
+    if (!pending) return;
+    pending = false;
+    // compositionend 시점에 input.value 는 이미 확정된 글자까지 반영되어 있음
+    setTimeout(fire, 0);
+  });
+  input.addEventListener('blur', () => { pending = false; });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadProfile();
   updateProfileUI();
 
-  const input = document.getElementById('word-input');
-  let composing = false;
-
-  input.addEventListener('compositionstart', () => {
-    composing = true;
-  });
-
-  input.addEventListener('compositionend', () => {
-    composing = false;
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (composing || e.isComposing) return;
-      // 약간의 딜레이로 compositionend 후 실행 보장
-      setTimeout(() => submitWord(), 10);
-    }
-  });
+  // 봇 대전 단어 입력: Enter 한 번으로 바로 제출
+  bindEnterSubmit(document.getElementById('word-input'), () => submitWord());
 });

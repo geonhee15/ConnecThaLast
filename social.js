@@ -344,11 +344,9 @@ function listenTypingStatus(partner) {
 document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chat-input');
   if (!chatInput) return;
-  let chatComposing = false;
-
-  chatInput.addEventListener('compositionstart', () => { chatComposing = true; });
+  // v3.2.2+: 공용 Enter 헬퍼 사용 (game.js bindEnterSubmit) — 한글 조합 중 Enter 도 한 번에 전송
+  bindEnterSubmit(chatInput, () => sendChat());
   chatInput.addEventListener('compositionend', () => {
-    chatComposing = false;
     updateMyTyping(chatInput.value);
   });
 
@@ -356,12 +354,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // 디바운싱 (50ms) - 너무 자주 쓰지 않게
     if (typingDebounce) clearTimeout(typingDebounce);
     typingDebounce = setTimeout(() => updateMyTyping(chatInput.value), 50);
-  });
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (chatComposing || e.isComposing) return;
-      sendChat();
-    }
   });
 });
