@@ -52,6 +52,17 @@
 - 호스팅: Vercel (정적 파일 + `/api/dict` 서버리스 함수)
 - 사전 뜻 조회: 국립국어원 표준국어대사전 → 우리말샘 → `customDefs.js` 순서로 조회, 결과는 localStorage에 30일 캐시
 
+### 환경변수
+
+`api/dict.js`는 국립국어원 Open API 키를 환경변수로만 읽습니다. 코드에 키를 넣지 마세요.
+
+| 이름 | 용도 | 발급 |
+|---|---|---|
+| `STDICT_KEY` | 표준국어대사전 API | https://stdict.korean.go.kr/openapi/openApiInfo.do |
+| `URIMAL_KEY` | 우리말샘 API | https://opendict.korean.go.kr/service/openApiInfo |
+
+Vercel 프로젝트 Settings → Environment Variables에 등록하면 됩니다. 로컬에서 `vercel dev`로 돌릴 때는 `.env.example`을 `.env.local`로 복사해 값을 채우세요 (`.env.local`은 git에서 제외됨). 키가 없으면 `/api/dict`가 500을 돌려주고 클라이언트는 `customDefs.js`로만 폴백합니다.
+
 ## 프로젝트 구조
 
 ```
@@ -69,6 +80,7 @@ dict.js            단어 뜻 조회 (클라이언트) · customDefs.js 수동 �
 words.js           한국어 단어 DB (43만) · eng_words.js 영어 단어 DB (37만)
 firebase-config.js Firebase 초기화
 api/dict.js        Vercel 서버리스: 표준국어대사전 / 우리말샘 API 프록시
+.env.example       서버리스 함수가 쓰는 환경변수 이름 (값은 Vercel에만)
 *.wav *.mp3 *.mp4 *.png   효과음 · BGM · 보스전 영상 · 레벨 배지
 Reference/         단어 추가용 원본 자료 (git 제외)
 업데이트할목록.txt    예정된 작업 메모

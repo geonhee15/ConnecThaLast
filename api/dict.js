@@ -1,7 +1,9 @@
-const STD_KEY = process.env.STDICT_KEY || 'REMOVED_STDICT_KEY';
-const URI_KEY = process.env.URIMAL_KEY || 'REMOVED_URIMAL_KEY';
+// 국립국어원 Open API 키 — 코드에 넣지 말고 Vercel 환경변수로만 설정 (.env.example 참고)
+const STD_KEY = process.env.STDICT_KEY || '';
+const URI_KEY = process.env.URIMAL_KEY || '';
 
 async function fetchStd(word) {
+  if (!STD_KEY) return null;
   const url = `https://stdict.korean.go.kr/api/search.do?key=${STD_KEY}&q=${encodeURIComponent(word)}&req_type=json&advanced=y&method=exact`;
   const r = await fetch(url);
   if (!r.ok) return null;
@@ -9,6 +11,7 @@ async function fetchStd(word) {
 }
 
 async function fetchUri(word) {
+  if (!URI_KEY) return null;
   const url = `https://opendict.korean.go.kr/api/search?key=${URI_KEY}&q=${encodeURIComponent(word)}&req_type=json&advanced=y&method=exact`;
   const r = await fetch(url);
   if (!r.ok) return null;
@@ -45,6 +48,12 @@ export default async function handler(req, res) {
   const word = (req.query.word || '').trim();
   if (!word) {
     res.status(400).json({ error: 'missing word' });
+    return;
+  }
+
+  if (!STD_KEY && !URI_KEY) {
+    // 키가 없으면 캐시하지 않고 바로 실패 → 클라이언트는 customDefs 로 폴백
+    res.status(500).json({ error: 'dictionary API keys not configured (STDICT_KEY / URIMAL_KEY)' });
     return;
   }
 
