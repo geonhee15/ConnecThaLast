@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "static",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "5555"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "dev-server.mjs",
+        "5555"
+      ],
       "port": 5555
     }
   ]

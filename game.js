@@ -1527,8 +1527,12 @@ async function openRanking() {
 }
 
 // ==================== DICTIONARY ====================
-let dictCache = null; // 정렬된 전체 단어 캐시
+let dictCache = null;   // 한국어: 정렬된 전체 단어 캐시
+let dictCacheEn = null; // v3.3.0+: 영어 정렬 캐시 (ENG_ALL_WORDS)
+let dictLang = 'ko';    // v3.3.0+: 사전 언어 ('ko' | 'en')
 const DICT_PAGE_SIZE = 200;
+// 글자수 필터에서 "N+" 로 묶이는 시작 값 (한국어 7+, 영어 12+)
+const DICT_LENGTH_PLUS = { ko: 7, en: 12 };
 let dictDisplayed = 0;
 let dictFiltered = [];
 let killerCharSet = null;
@@ -1721,30 +1725,74 @@ function renderRouteNode(node, role) {
   return html;
 }
 
-function openDictionary() {
-  // 첫 호출 시 캐시 생성
-  if (!dictCache) {
-    dictCache = Array.from(ALL_WORDS).sort();
+// 현재 사전 언어의 정렬된 단어 배열 (첫 호출 시 생성)
+function getDictCache() {
+  if (dictLang === 'en') {
+    if (!dictCacheEn) {
+      dictCacheEn = (typeof ENG_ALL_WORDS !== 'undefined') ? Array.from(ENG_ALL_WORDS).sort() : [];
+    }
+    return dictCacheEn;
   }
-  // 필터 초기화
+  if (!dictCache) dictCache = Array.from(ALL_WORDS).sort();
+  return dictCache;
+}
+
+function resetDictFilters() {
   document.getElementById('dict-search').value = '';
   document.getElementById('dict-start-char').value = '';
   document.getElementById('dict-end-char').value = '';
-  document.getElementById('dict-length').value = '0';
   const killerEl = document.getElementById('dict-killer-only');
   if (killerEl) killerEl.checked = false;
-  document.getElementById('dict-total').textContent = t('dict.totalCount', dictCache.length.toLocaleString());
+}
 
+// v3.3.0+: 언어별 UI — 토글 상태, 플레이스홀더, 글자수 옵션, 한방루트 행, 총 단어 수
+function applyDictLangUI() {
+  const isEn = dictLang === 'en';
+  document.getElementById('dict-lang-ko')?.classList.toggle('active', !isEn);
+  document.getElementById('dict-lang-en')?.classList.toggle('active', isEn);
+  document.getElementById('dict-start-char').placeholder = isEn ? 'a' : '예: 가';
+  document.getElementById('dict-end-char').placeholder = isEn ? 'e' : '예: 다';
+  // 영어는 a~z 모든 글자로 시작하는 단어가 있어 한방 단어가 존재하지 않음 → 행 숨김
+  const killerRow = document.getElementById('dict-killer-row');
+  if (killerRow) killerRow.style.display = isEn ? 'none' : '';
+  // 글자수 옵션: 2 ~ (plus-1), 마지막은 "plus+"
+  const sel = document.getElementById('dict-length');
+  const plus = DICT_LENGTH_PLUS[dictLang];
+  let html = `<option value="0" data-i18n="dict.lengthAll">${t('dict.lengthAll')}</option>`;
+  for (let n = 2; n < plus; n++) html += `<option value="${n}">${n}</option>`;
+  html += `<option value="${plus}">${plus}+</option>`;
+  sel.innerHTML = html;
+  sel.value = '0';
+  document.getElementById('dict-total').textContent = t('dict.totalCount', getDictCache().length.toLocaleString());
+}
+
+function setDictLang(lang) {
+  if (lang !== 'ko' && lang !== 'en') return;
+  if (dictLang === lang) return;
+  dictLang = lang;
+  resetDictFilters();
+  applyDictLangUI();
+  filterDictionary();
+}
+
+function openDictionary() {
+  resetDictFilters();
+  applyDictLangUI();
   showScreen('screen-dict');
   filterDictionary();
 }
 
 function filterDictionary() {
-  const search = document.getElementById('dict-search').value.trim();
-  const startChar = document.getElementById('dict-start-char').value.trim();
-  const endChar = document.getElementById('dict-end-char').value.trim();
+  const isEn = dictLang === 'en';
+  const norm = (s) => isEn ? s.toLowerCase() : s; // 영어는 대소문자 무시
+  const search = norm(document.getElementById('dict-search').value.trim());
+  const startChar = norm(document.getElementById('dict-start-char').value.trim());
+  const endChar = norm(document.getElementById('dict-end-char').value.trim());
   const lengthVal = parseInt(document.getElementById('dict-length').value) || 0;
-  const killerOnly = document.getElementById('dict-killer-only')?.checked;
+  const plus = DICT_LENGTH_PLUS[dictLang];
+  const lengthOk = (w) => lengthVal === 0 || (lengthVal >= plus ? w.length >= plus : w.length === lengthVal);
+  // 한방 단어는 한국어 전용
+  const killerOnly = !isEn && !!document.getElementById('dict-killer-only')?.checked;
 
   // 한방 모드: 시작 글자/검색어로 시작하는 모든 한방 단어 (마지막 글자가 후속 단어 없는 글자)
   // startChar가 단일 글자가 아닌 경우(예: 검색창에 "가나" 입력) search로 시작 매칭
@@ -1756,25 +1804,17 @@ function filterDictionary() {
       }
     : null;
 
-  dictFiltered = dictCache.filter(w => {
+  dictFiltered = getDictCache().filter(w => {
     if (killerOnly) {
       if (!startMatcher(w)) return false;
       if (!isDeadEndWord(w)) return false;
       if (endChar && w[w.length - 1] !== endChar) return false;
-      if (lengthVal > 0) {
-        if (lengthVal === 7) { if (w.length < 7) return false; }
-        else { if (w.length !== lengthVal) return false; }
-      }
-      return true;
+      return lengthOk(w);
     }
     if (search && !w.includes(search)) return false;
     if (startChar && w[0] !== startChar) return false;
     if (endChar && w[w.length - 1] !== endChar) return false;
-    if (lengthVal > 0) {
-      if (lengthVal === 7) { if (w.length < 7) return false; }
-      else { if (w.length !== lengthVal) return false; }
-    }
-    return true;
+    return lengthOk(w);
   });
 
   document.getElementById('dict-result-count').textContent =
@@ -1807,6 +1847,10 @@ async function openDictDefModal(word) {
       bodyEl.innerHTML = `<div class="dict-def-none">${t('msg.notInDict')}</div>`;
     } else {
       bodyEl.innerHTML = renderDefHTML(word, entries);
+      // v3.3.0+: 영어 뜻은 Wiktionary 기반 Free Dictionary API → 출처 표기
+      if (typeof isEnglishWord === 'function' && isEnglishWord(word)) {
+        bodyEl.innerHTML += `<div class="dict-def-source">${t('dict.sourceEn')}</div>`;
+      }
     }
   } catch {
     bodyEl.innerHTML = `<div class="dict-def-none">${t('common.loading')}</div>`;
@@ -1822,11 +1866,13 @@ function loadMoreDict() {
   const list = document.getElementById('dict-list');
   const end = Math.min(dictDisplayed + DICT_PAGE_SIZE, dictFiltered.length);
 
+  const isEn = dictLang === 'en';
   let html = '';
   for (let i = dictDisplayed; i < end; i++) {
     const w = dictFiltered[i];
-    const cls = STD_WORDS.has(w) ? 'std' : 'inj';
-    const killerCls = isDeadEndWord(w) ? ' killer' : '';
+    // 영어는 표준/어인정 구분·한방 단어 없음 → 전부 std 스타일
+    const cls = (isEn || STD_WORDS.has(w)) ? 'std' : 'inj';
+    const killerCls = (!isEn && isDeadEndWord(w)) ? ' killer' : '';
     html += `<span class="dict-word ${cls}${killerCls}" onclick="openDictDefModal('${w.replace(/'/g, "\\'")}')">${w}</span>`;
   }
   list.insertAdjacentHTML('beforeend', html);

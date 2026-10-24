@@ -6,7 +6,7 @@
   <title>ConnecThaLast</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.2.2">
+  <link rel="stylesheet" href="style.css?v=3.3.0">
 
 </head>
 <body>
@@ -29,7 +29,7 @@
       <h1 class="maintenance-title" data-i18n="maintenance.title">업데이트 점검 중</h1>
       <p class="maintenance-desc" data-i18n="maintenance.desc">더 나은 서비스를 위해 업데이트 점검을 진행하고 있습니다.<br>잠시만 기다려주세요!</p>
       <div class="maintenance-info">
-        <p><span data-i18n="maintenance.next">다음 업데이트:</span> <strong>v3.2.2</strong></p>
+        <p><span data-i18n="maintenance.next">다음 업데이트:</span> <strong>v3.3.0</strong></p>
         <p style="margin-top:8px;font-size:0.9rem" data-i18n="maintenance.features">3인 이상 게임 등수제 + 1대1 라운드 보너스</p>
       </div>
       <div id="maintenance-admin" class="maintenance-admin" style="display:none">
@@ -127,7 +127,7 @@
         </div>
         <div id="auth-message" class="auth-message"></div>
       </div>
-      <p class="version-text">v3.2.2</p>
+      <p class="version-text">v3.3.0</p>
       <p class="copyright-text" data-i18n="common.copyright">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -198,7 +198,7 @@
         </button>
       </div>
       <button class="btn-bug-small" onclick="openBugReport()" data-i18n="home.bugReport">&#128172; 문의 / 버그제보</button>
-      <p class="version-text">v3.2.2</p>
+      <p class="version-text">v3.3.0</p>
       <p class="copyright-text" data-i18n="common.copyright">&copy; 2026. Geonhee. All rights reserved.</p>
     </div>
   </div>
@@ -509,6 +509,14 @@
       <div class="dict-total" id="dict-total">총 0개</div>
 
       <div class="dict-filters">
+        <!-- v3.3.0+: 사전 언어 전환 (한국어 / 영어) -->
+        <div class="dict-filter-row dict-lang-row">
+          <label data-i18n="dict.lang">언어</label>
+          <div class="mode-toggles">
+            <button class="mode-btn active" id="dict-lang-ko" onclick="setDictLang('ko')" data-i18n="dict.langKo">한국어</button>
+            <button class="mode-btn" id="dict-lang-en" onclick="setDictLang('en')" data-i18n="dict.langEn">영어</button>
+          </div>
+        </div>
         <input type="text" id="dict-search" class="dict-search" data-i18n-ph="dict.searchPh" placeholder="단어 검색..." oninput="filterDictionary()">
         <div class="dict-filter-row">
           <label data-i18n="dict.startChar">시작 글자</label>
@@ -530,7 +538,7 @@
             <option value="7">7+</option>
           </select>
         </div>
-        <div class="dict-filter-row">
+        <div class="dict-filter-row" id="dict-killer-row">
           <label data-i18n="dict.killerRoute">한방루트</label>
           <label class="dict-killer-toggle">
             <input type="checkbox" id="dict-killer-only" onchange="filterDictionary()">
@@ -765,18 +773,18 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=3.2.2"></script>
-  <script src="settings.js?v=3.2.2"></script>
-  <script src="words.js?v=3.2.2"></script>
-  <script src="eng_words.js?v=3.2.2"></script>
-  <script src="eng.js?v=3.2.2"></script>
-  <script src="customDefs.js?v=3.2.2"></script>
-  <script src="dict.js?v=3.2.2"></script>
-  <script src="game.js?v=3.2.2"></script>
-  <script src="multi.js?v=3.2.2"></script>
-  <script src="boss.js?v=3.2.2"></script>
-  <script src="social.js?v=3.2.2"></script>
-  <script src="bgm.js?v=3.2.2"></script>
-  <script src="auth.js?v=3.2.2"></script>
+  <script src="firebase-config.js?v=3.3.0"></script>
+  <script src="settings.js?v=3.3.0"></script>
+  <script src="words.js?v=3.3.0"></script>
+  <script src="eng_words.js?v=3.3.0"></script>
+  <script src="eng.js?v=3.3.0"></script>
+  <script src="customDefs.js?v=3.3.0"></script>
+  <script src="dict.js?v=3.3.0"></script>
+  <script src="game.js?v=3.3.0"></script>
+  <script src="multi.js?v=3.3.0"></script>
+  <script src="boss.js?v=3.3.0"></script>
+  <script src="social.js?v=3.3.0"></script>
+  <script src="bgm.js?v=3.3.0"></script>
+  <script src="auth.js?v=3.3.0"></script>
 </body>
 </html>

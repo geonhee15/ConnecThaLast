@@ -2382,6 +2382,24 @@ body {
   cursor: pointer;
 }
 
+/* v3.3.0+: 사전 언어 전환 */
+.dict-lang-row {
+  margin-bottom: 10px;
+}
+
+.dict-lang-row .mode-btn {
+  padding: 5px 14px;
+  font-size: 0.82rem;
+}
+
+/* v3.3.0+: 영어 뜻 출처 표기 */
+.dict-def-source {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: #999;
+  text-align: right;
+}
+
 .route-tree {
   padding: 12px 8px;
   font-size: 0.95rem;

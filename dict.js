@@ -20,7 +20,46 @@ function getCache() {
   return _dictCache;
 }
 
+// v3.3.0+: 영어 단어 뜻 — 서버(/api/dict?lang=en)가 Free Dictionary API → Wiktionary 순으로 조회
+// (dictionaryapi.dev 는 브라우저 직접 호출을 거부하므로 서버 경유 필수)
+const DICT_EN_CACHE_KEY = 'dictCacheEn_v1';
+let _dictCacheEn = null;
+
+function isEnglishWord(word) {
+  return /^[a-z]+$/i.test(String(word || ''));
+}
+
+function getCacheEn() {
+  if (!_dictCacheEn) {
+    try { _dictCacheEn = JSON.parse(localStorage.getItem(DICT_EN_CACHE_KEY) || '{}'); }
+    catch { _dictCacheEn = {}; }
+  }
+  return _dictCacheEn;
+}
+
+async function fetchDefEn(word) {
+  const w = String(word).toLowerCase();
+  const cache = getCacheEn();
+  const now = Date.now();
+  const hit = cache[w];
+  if (hit && (now - hit.t) < DICT_CACHE_TTL) return hit.entries;
+
+  let entries = [];
+  try {
+    const r = await fetch('/api/dict?lang=en&word=' + encodeURIComponent(w));
+    if (!r.ok) return []; // 서버 오류는 캐시하지 않음
+    const data = await r.json();
+    if (data.transient) return []; // 상위 사전 일시 오류 → 다음에 다시 시도
+    entries = data.entries || [];
+  } catch { return []; } // 오프라인 등
+
+  cache[w] = { t: now, entries };
+  try { localStorage.setItem(DICT_EN_CACHE_KEY, JSON.stringify(cache)); } catch { /* quota exceeded - 무시 */ }
+  return entries;
+}
+
 async function fetchDef(word) {
+  if (isEnglishWord(word)) return fetchDefEn(word); // v3.3.0+: 영어는 별도 경로
   const cache = getCache();
   const now = Date.now();
   const hit = cache[word];
@@ -58,6 +97,17 @@ const POS_COLORS = {
   '부사': '#ec4899',
   '조사': '#6b7280',
   '감탄사': '#f97316',
+  // v3.3.0+: 영어 품사 (includes 매칭이라 pronoun→noun, adverb→verb 보다 먼저 와야 함)
+  'pronoun': '#06b6d4',
+  'adverb': '#ec4899',
+  'adjective': '#f59e0b',
+  'noun': '#3b82f6',
+  'verb': '#ef4444',
+  'preposition': '#6b7280',
+  'conjunction': '#6b7280',
+  'interjection': '#f97316',
+  'numeral': '#10b981',
+  'determiner': '#a855f7',
 };
 
 function posColor(pos) {
